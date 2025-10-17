@@ -23,15 +23,27 @@ export function context(request) {
     }
   }
 
+  const session = request?.auth?.isAuthenticated ? request.auth.credentials : {}
+  const auth = {
+    isAuthenticated: request?.auth?.isAuthenticated ?? false,
+    sbi: session.sbi || '0000000000',
+    name: session.name || 'Unauthenticated user',
+    organisationId: session.organisationId,
+    role: session.role
+  }
+
   return {
     assetPath: `${assetPath}/assets`,
     serviceName: config.get('serviceName'),
+    serviceTitle: config.get('serviceTitle'),
     serviceUrl: '/',
     breadcrumbs: [],
     navigation: buildNavigation(request),
     getAssetPath(asset) {
       const webpackAssetPath = webpackManifest?.[asset]
       return `${assetPath}/${webpackAssetPath ?? asset}`
-    }
+    },
+    auth,
+    agreement: request?.auth?.credentials?.agreementData
   }
 }

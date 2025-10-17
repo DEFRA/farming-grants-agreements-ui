@@ -23,17 +23,35 @@ export function catchAll(request, h) {
   }
 
   const statusCode = response.output.statusCode
-  const errorMessage = statusCodeMessage(statusCode)
 
   if (statusCode >= statusCodes.internalServerError) {
     request.logger.error(response?.stack)
+  } else {
+    request.server.logger.info(response)
+  }
+
+  const templateData = {
+    errorMessage: response.message || statusCodeMessage(statusCode)
+  }
+
+  let template = 'error/index.njk'
+
+  if (response.output.statusCode === statusCodes.unauthorized) {
+    template = 'error/unauthorized.njk'
+  }
+
+  if (response.output.statusCode === statusCodes.notFound) {
+    template = 'error/not-found.njk'
   }
 
   return h
-    .view('error/index', {
-      pageTitle: errorMessage,
-      heading: statusCode,
-      message: errorMessage
-    })
-    .code(statusCode)
+    .view(template, templateData)
+    .code(response.output.statusCode)
+    .header(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    )
+    .header('Pragma', 'no-cache')
+    .header('Expires', '0')
+    .header('Surrogate-Control', 'no-store')
 }
