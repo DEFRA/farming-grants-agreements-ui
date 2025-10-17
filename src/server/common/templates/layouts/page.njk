@@ -3,9 +3,11 @@
 {# Import GOVUK components globally #}
 {% from "govuk/components/breadcrumbs/macro.njk" import govukBreadcrumbs %}
 {% from "govuk/components/service-navigation/macro.njk" import govukServiceNavigation %}
+{% from "govuk/components/phase-banner/macro.njk" import govukPhaseBanner %}
 
 {# Import custom components globally #}
 {% from "heading/macro.njk" import appHeading %}
+{% from "account-bar/macro.njk" import defraAccountBar %}
 
 {% set mainClasses = "app-main-wrapper" %}
 
@@ -19,18 +21,37 @@
     homepageUrl: "https://www.gov.uk/",
     classes: "app-header",
     containerClasses: "govuk-width-container",
-    serviceName: serviceName,
     serviceUrl: serviceUrl,
     useTudorCrown: true
   }) }}
 
   {{ govukServiceNavigation({
-    navigation: navigation
+    navigation: [{html: '<strong>' + serviceTitle + '</strong>'}]
   }) }}
+
+  <div class="govuk-width-container">
+    {{ govukPhaseBanner({
+      tag: {
+        text: "Beta"
+      },
+      html: '<span class="govuk-phase-banner__text">
+              This is a new service. Help us improve it and
+                <a class="govuk-link" href="#" target="_blank" rel="noopener noreferrer">
+                  give your feedback <span class="govuk-visually-hidden">(opens in new tab)</span>
+                </a>.
+            </span>'
+    }) }}
+
+    {{ defraAccountBar({
+      organisationName: agreement.applicant.business.name,
+      organisationId: agreement.identifiers.sbi,
+      name: agreement.applicant.customer.name.first + ' ' + agreement.applicant.customer.name.last
+    }) }}
+  </div>
 {% endblock %}
 
 {% block pageTitle %}
-  {{ pageTitle }} | {{ serviceName }}
+  {{ pageTitle }} - GOV.UK
 {% endblock %}
 
 {% block beforeContent %}
