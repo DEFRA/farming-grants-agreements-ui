@@ -25,7 +25,8 @@ describe('context and cache', () => {
   describe('#context', () => {
     const mockRequest = {
       path: '/',
-      pre: { data: { agreementData: 'mock agreement' } }
+      pre: { data: { agreementData: 'mock agreement' } },
+      headers: { 'x-csp-nonce': 'mock-nonce' }
     }
 
     describe('When webpack manifest file read succeeds', () => {
@@ -33,6 +34,7 @@ describe('context and cache', () => {
       let contextResult
 
       beforeAll(async () => {
+        process.env.SERVICE_VERSION = 'TEST'
         contextImport = await import('./context.js')
       })
 
@@ -51,6 +53,7 @@ describe('context and cache', () => {
           agreement: 'mock agreement',
           assetPath: '/public/assets',
           breadcrumbs: [],
+          cspNonce: 'mock-nonce',
           getAssetPath: expect.any(Function),
           baseUrl: '/',
           navigation: [
@@ -67,22 +70,23 @@ describe('context and cache', () => {
           ],
           serviceName: 'farming-grants-agreements-ui',
           serviceTitle: 'Farm payments',
-          serviceUrl: '/'
+          serviceUrl: '/',
+          serviceVersion: 'TEST'
         })
       })
 
       describe('With valid asset path', () => {
         test('Should provide expected asset path', () => {
-          expect(contextResult.getAssetPath('application.js')).toBe(
-            '/public/javascripts/application.js'
-          )
+          expect(
+            contextResult.getAssetPath('base-path', 'application.js')
+          ).toBe('base-path/public/javascripts/application.js')
         })
       })
 
       describe('With invalid asset path', () => {
         test('Should provide expected asset', () => {
-          expect(contextResult.getAssetPath('an-image.png')).toBe(
-            '/public/an-image.png'
+          expect(contextResult.getAssetPath('base-path', 'an-image.png')).toBe(
+            'base-path/public/an-image.png'
           )
         })
       })
@@ -110,13 +114,14 @@ describe('context and cache', () => {
   })
 
   describe('#context cache', () => {
-    const mockRequest = { path: '/' }
+    const mockRequest = { path: '/', headers: { 'x-csp-nonce': 'mock-nonce' } }
     let contextResult
 
     describe('Webpack manifest file cache', () => {
       let contextImport
 
       beforeAll(async () => {
+        process.env.SERVICE_VERSION = 'TEST'
         contextImport = await import('./context.js')
       })
 
@@ -144,6 +149,7 @@ describe('context and cache', () => {
           assetPath: '/public/assets',
           baseUrl: '/',
           breadcrumbs: [],
+          cspNonce: 'mock-nonce',
           getAssetPath: expect.any(Function),
           navigation: [
             {
@@ -159,7 +165,8 @@ describe('context and cache', () => {
           ],
           serviceName: 'farming-grants-agreements-ui',
           serviceTitle: 'Farm payments',
-          serviceUrl: '/'
+          serviceUrl: '/',
+          serviceVersion: 'TEST'
         })
       })
     })
