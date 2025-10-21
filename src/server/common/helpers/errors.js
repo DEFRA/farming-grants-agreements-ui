@@ -15,7 +15,7 @@ function statusCodeMessage(statusCode) {
   }
 }
 
-export function catchAll(request, h) {
+export const catchAll = (request, h) => {
   const { response } = request
 
   if (!('isBoom' in response)) {
@@ -23,17 +23,33 @@ export function catchAll(request, h) {
   }
 
   const statusCode = response.output.statusCode
-  const errorMessage = statusCodeMessage(statusCode)
 
   if (statusCode >= statusCodes.internalServerError) {
     request.logger.error(response?.stack)
+  } else {
+    request.logger.info(response)
   }
 
-  return h
-    .view('error/index', {
-      pageTitle: errorMessage,
-      heading: statusCode,
-      message: errorMessage
-    })
-    .code(statusCode)
+  const templateData = {
+    errorMessage: response.message || statusCodeMessage(statusCode)
+  }
+
+  let template = 'error/index.njk'
+
+  if (response.output.statusCode === statusCodes.unauthorized) {
+    template = 'error/unauthorized.njk'
+  }
+
+  if (response.output.statusCode === statusCodes.notFound) {
+    template = 'error/not-found.njk'
+  }
+
+  return h.view(template, templateData).code(response.output.statusCode)
+}
+
+export const errorHandler = {
+  name: 'errorHandler',
+  register: async function (server) {
+    server.ext('onPreResponse', catchAll)
+  }
 }
