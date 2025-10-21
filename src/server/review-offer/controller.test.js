@@ -1,10 +1,10 @@
 import { createServer } from '../server.js'
-import { statusCodes } from '../common/constants/status-codes.js'
 
-describe('#homeController', () => {
+describe('#reviewOfferController', () => {
   let server
 
   beforeAll(async () => {
+    globalThis.fetch = vi.fn()
     server = await createServer()
     await server.initialize()
   })
@@ -13,13 +13,26 @@ describe('#homeController', () => {
     await server.stop({ timeout: 0 })
   })
 
-  test('Should provide expected response', async () => {
-    const { result, statusCode } = await server.inject({
-      method: 'GET',
-      url: '/'
+  test('should call the backend API', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({})
     })
 
-    expect(result).toEqual(expect.stringContaining('Home |'))
-    expect(statusCode).toBe(statusCodes.ok)
+    await server.inject({
+      method: 'GET',
+      url: '/SFI123456789',
+      headers: {
+        'x-encrypted-auth': 'mock-auth'
+      }
+    })
+
+    expect(fetch).toHaveBeenCalledWith('http://localhost:3555/SFI123456789', {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-encrypted-auth': 'mock-auth'
+      },
+      method: 'POST'
+    })
   })
 })

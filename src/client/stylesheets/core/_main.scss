@@ -17,7 +17,7 @@
 }
 
 .dataset-info dd {
-  margin-left: 0px;
+  margin-left: 0;
   width: 35%;
 }
 
@@ -87,12 +87,12 @@ a:link,
     display: block;
   }
 
-  /* Hide sign out link in account bar */
+  // Hide sign out link in account bar
   .defra-account-bar .govuk-link {
     display: none !important;
   }
 
-  /* Force the account bar to remain two columns in print */
+  // Force the account bar to remain two columns in print
   .defra-account-bar__row {
     display: flex !important;
     justify-content: space-between;
@@ -100,13 +100,14 @@ a:link,
     gap: 0;
   }
 
-  /* Override your earlier 'grid columns = 100%' rule just for this row */
+  // Override your earlier 'grid columns = 100%' rule just for this row
   .defra-account-bar__row .defra-account-bar__left {
     width: 66.666% !important;
     max-width: none !important;
     text-align: left;
     break-inside: avoid;
   }
+
   .defra-account-bar__row .defra-account-bar__right {
     width: 33.333% !important;
     max-width: none !important;

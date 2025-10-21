@@ -55,4 +55,3 @@ Object.entries(filters).forEach(([name, filter]) => {
 })
 
 nunjucksEnvironment.addGlobal('buildUrl', (...args) => path.join(...args))
-

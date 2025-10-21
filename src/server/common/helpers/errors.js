@@ -15,7 +15,7 @@ function statusCodeMessage(statusCode) {
   }
 }
 
-export function catchAll(request, h) {
+export const catchAll = (request, h) => {
   const { response } = request
 
   if (!('isBoom' in response)) {
@@ -27,7 +27,7 @@ export function catchAll(request, h) {
   if (statusCode >= statusCodes.internalServerError) {
     request.logger.error(response?.stack)
   } else {
-    request.server.logger.info(response)
+    request.logger.info(response)
   }
 
   const templateData = {
@@ -44,14 +44,12 @@ export function catchAll(request, h) {
     template = 'error/not-found.njk'
   }
 
-  return h
-    .view(template, templateData)
-    .code(response.output.statusCode)
-    .header(
-      'Cache-Control',
-      'no-store, no-cache, must-revalidate, proxy-revalidate'
-    )
-    .header('Pragma', 'no-cache')
-    .header('Expires', '0')
-    .header('Surrogate-Control', 'no-store')
+  return h.view(template, templateData).code(response.output.statusCode)
+}
+
+export const errorHander = {
+  name: 'errorHander',
+  register: async function (server) {
+    server.ext('onPreResponse', catchAll)
+  }
 }

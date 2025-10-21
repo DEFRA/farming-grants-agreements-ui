@@ -232,7 +232,7 @@ export const config = convict({
       default: 'http://localhost:3555',
       env: 'BACKEND_URL'
     }
-  },
+  }
 })
 
 config.validate({ allowed: 'strict' })
