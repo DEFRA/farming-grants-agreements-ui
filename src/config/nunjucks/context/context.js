@@ -5,6 +5,7 @@ import { config } from '../../config.js'
 import { buildNavigation } from './build-navigation.js'
 import { createLogger } from '../../../server/common/helpers/logging/logger.js'
 import { getBaseUrl } from '../../../server/common/helpers/base-url.js'
+import { getContentSecurityPolicyNonce } from '../../../server/common/helpers/content-security-policy-nonce.js'
 
 const logger = createLogger()
 const assetPath = config.get('assetPath')
@@ -29,13 +30,15 @@ export function context(request) {
     assetPath: `${assetPath}/assets`,
     serviceName: config.get('serviceName'),
     serviceTitle: config.get('serviceTitle'),
+    serviceVersion: config.get('serviceVersion'),
     serviceUrl: '/',
     breadcrumbs: [],
     navigation: buildNavigation(request),
-    getAssetPath(asset) {
+    getAssetPath(baseUrl, asset) {
       const webpackAssetPath = webpackManifest?.[asset]
-      return `${assetPath}/${webpackAssetPath ?? asset}`
+      return path.join(baseUrl, assetPath, webpackAssetPath ?? asset)
     },
-    agreement: request.pre?.data?.agreementData
+    agreement: request.pre?.data?.agreementData,
+    cspNonce: getContentSecurityPolicyNonce(request)
   }
 }
