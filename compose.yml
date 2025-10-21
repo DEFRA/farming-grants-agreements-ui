@@ -2,7 +2,7 @@ version: '3.4'
 services:
   localstack:
     image: localstack/localstack:3.0.2
-#    container_name: localstack
+    container_name: localstack
     ports:
       - '4566:4566' # LocalStack Gateway
       - '4510-4559:4510-4559' # external services port range
@@ -104,6 +104,8 @@ services:
       VIEW_AGREEMENT_URI: ${VIEW_AGREEMENT_URI:-http://localhost:3555}
       SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED: ${SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED:-io.onsite.agreement.status.updated}
       SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED": ${SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED:-arn:aws:sns:eu-west-2:332499610595:agreement_status_updated}
+      FILES_S3_BUCKET: ${FILES_S3_BUCKET:-farming-grants-agreements-pdf-bucket}
+      FILES_S3_PREFIX: ${FILES_S3_PREFIX:-agreements}
     networks:
       - cdp-tenant
 
