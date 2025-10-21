@@ -23,7 +23,10 @@ describe('context and cache', () => {
   })
 
   describe('#context', () => {
-    const mockRequest = { path: '/' }
+    const mockRequest = {
+      path: '/',
+      pre: { data: { agreementData: 'mock agreement' } }
+    }
 
     describe('When webpack manifest file read succeeds', () => {
       let contextImport
@@ -45,9 +48,11 @@ describe('context and cache', () => {
 
       test('Should provide expected context', () => {
         expect(contextResult).toEqual({
+          agreement: 'mock agreement',
           assetPath: '/public/assets',
           breadcrumbs: [],
           getAssetPath: expect.any(Function),
+          baseUrl: '/',
           navigation: [
             {
               current: true,
@@ -61,6 +66,7 @@ describe('context and cache', () => {
             }
           ],
           serviceName: 'farming-grants-agreements-ui',
+          serviceTitle: 'Farm payments',
           serviceUrl: '/'
         })
       })
@@ -134,7 +140,9 @@ describe('context and cache', () => {
 
       test('Should provide expected context', () => {
         expect(contextResult).toEqual({
+          agreement: undefined,
           assetPath: '/public/assets',
+          baseUrl: '/',
           breadcrumbs: [],
           getAssetPath: expect.any(Function),
           navigation: [
@@ -150,6 +158,7 @@ describe('context and cache', () => {
             }
           ],
           serviceName: 'farming-grants-agreements-ui',
+          serviceTitle: 'Farm payments',
           serviceUrl: '/'
         })
       })

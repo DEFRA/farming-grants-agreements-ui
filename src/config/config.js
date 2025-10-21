@@ -46,6 +46,11 @@ export const config = convict({
     format: String,
     default: 'farming-grants-agreements-ui'
   },
+  serviceTitle: {
+    doc: 'Service Title',
+    format: String,
+    default: 'Farm payments'
+  },
   root: {
     doc: 'Project root',
     format: String,
@@ -218,6 +223,14 @@ export const config = convict({
       format: String,
       default: 'x-cdp-request-id',
       env: 'TRACING_HEADER'
+    }
+  },
+  backend: {
+    url: {
+      doc: 'The farming-grants-agreements-api base URL',
+      format: String,
+      default: 'http://localhost:3555',
+      env: 'BACKEND_URL'
     }
   }
 })

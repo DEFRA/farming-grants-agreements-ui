@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 import nunjucks from 'nunjucks'
 import hapiVision from '@hapi/vision'
 import { fileURLToPath } from 'node:url'
@@ -53,3 +53,5 @@ Object.entries(globals).forEach(([name, global]) => {
 Object.entries(filters).forEach(([name, filter]) => {
   nunjucksEnvironment.addFilter(name, filter)
 })
+
+nunjucksEnvironment.addGlobal('buildUrl', (...args) => path.join(...args))
