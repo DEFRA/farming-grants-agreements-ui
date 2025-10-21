@@ -5,7 +5,7 @@ import Scooter from '@hapi/scooter'
 import { router } from './router.js'
 import { config } from '../config/config.js'
 import { pulse } from './common/helpers/pulse.js'
-import { errorHander } from './common/helpers/errors.js'
+import { errorHandler } from './common/helpers/errors.js'
 import { nunjucksConfig } from '../config/nunjucks/nunjucks.js'
 import { setupProxy } from './common/helpers/proxy/setup-proxy.js'
 import { requestTracing } from './common/helpers/request-tracing.js'
@@ -62,7 +62,7 @@ export async function createServer() {
     sessionCache,
     nunjucksConfig,
     Scooter,
-    errorHander,
+    errorHandler,
     noCacheHeaders,
     contentSecurityPolicy,
     router // Register all the controllers/routes defined in src/server/router.js

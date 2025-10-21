@@ -47,8 +47,8 @@ export const catchAll = (request, h) => {
   return h.view(template, templateData).code(response.output.statusCode)
 }
 
-export const errorHander = {
-  name: 'errorHander',
+export const errorHandler = {
+  name: 'errorHandler',
   register: async function (server) {
     server.ext('onPreResponse', catchAll)
   }
