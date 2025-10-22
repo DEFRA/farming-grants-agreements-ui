@@ -2,7 +2,6 @@ version: '3.4'
 services:
   localstack:
     image: localstack/localstack:3.0.2
-    container_name: localstack
     ports:
       - '4566:4566' # LocalStack Gateway
       - '4510-4559:4510-4559' # external services port range
@@ -12,7 +11,6 @@ services:
       DEBUG: ${DEBUG:-1}
       LS_LOG: WARN # Localstack DEBUG Level
       SERVICES: s3,sqs,sns,firehose
-      LOCALSTACK_HOST: 127.0.0.1
       MONITOR_SQS: ${MONITOR_SQS:-true}
     volumes:
       - '${TMPDIR:-/tmp}/localstack:/var/lib/localstack'
@@ -21,74 +19,77 @@ services:
     healthcheck:
       test: ['CMD', 'curl', 'localhost:4566']
       interval: 5s
+      timeout: 3s
       start_period: 5s
       retries: 3
     networks:
       - cdp-tenant
 
-  farming-grants-agreements-redis:
+  redis:
     image: redis:7.2.3-alpine3.18
     ports:
       - '6379:6379'
     restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - cdp-tenant
 
-  farming-grants-agreements-mongodb:
+  mongodb:
     image: mongo:6.0.13
     networks:
       - cdp-tenant
     ports:
       - '27017:27017'
     volumes:
-      - mongodb-data:/data
+      - mongodb-data:/data/db
     restart: always
+    healthcheck:
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-################################################################################
-
+  ##############################################################################
+  # UI
+  ##############################################################################
   farming-grants-agreements-ui:
     build: ./
     ports:
       - '127.0.0.1:3000:3000'
-    links:
-      - 'localstack:localstack'
-      - 'farming-grants-agreements-redis:redis'
-      - 'farming-grants-agreements-api:farming-grants-agreements-api'
     depends_on:
-      localstack:
-        condition: service_healthy
       farming-grants-agreements-api:
-        condition: service_started
-      farming-grants-agreements-redis:
-        condition: service_started
-    env_file:
-      - 'compose/aws.env'
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       PORT: 3000
-      NODE_ENV: development
-      REDIS_HOST: redis
-      LOCALSTACK_ENDPOINT: http://localstack:4566
-      USE_SINGLE_INSTANCE_CACHE: true
-      BACKEND_URL: http://farming-grants-agreements-api:3555
+      NODE_ENV: ${NODE_ENV:-development}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      USE_SINGLE_INSTANCE_CACHE: ${USE_SINGLE_INSTANCE_CACHE:-true}
+      BACKEND_URL: ${BACKEND_URL:-http://farming-grants-agreements-api:3555}
     networks:
       - cdp-tenant
 
+  ##############################################################################
+  # API
+  ##############################################################################
   farming-grants-agreements-api:
-    image: defradigital/farming-grants-agreements-api-cdp-agreement-api:latest
+    image: defradigital/farming-grants-agreements-api:latest
     ports:
-      - '127.0.0.1:3555:3555'
-    links:
-      - 'localstack:localstack'
-      - 'farming-grants-agreements-mongodb:mongodb'
+      - '3555:3555'
     depends_on:
       localstack:
         condition: service_healthy
-      farming-grants-agreements-mongodb:
-        condition: service_started
+      mongodb:
+        condition: service_healthy
     env_file:
       - 'compose/aws.env'
     environment:
-      PAYMENT_HUB_LOGGING: true
+      PAYMENT_HUB_LOGGING: ${PAYMENT_HUB_LOGGING:-true}
       PORT: 3555
       NODE_ENV: ${NODE_ENV:-development}
       LOCALSTACK_ENDPOINT: ${LOCALSTACK_ENDPOINT:-http://localstack:4566}
@@ -106,10 +107,14 @@ services:
       SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED": ${SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED:-arn:aws:sns:eu-west-2:332499610595:agreement_status_updated}
       FILES_S3_BUCKET: ${FILES_S3_BUCKET:-farming-grants-agreements-pdf-bucket}
       FILES_S3_PREFIX: ${FILES_S3_PREFIX:-agreements}
+    healthcheck:
+      test: [ "CMD", "curl", "-fsS", "http://localhost:3555/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - cdp-tenant
-
-################################################################################
 
 volumes:
   mongodb-data:
