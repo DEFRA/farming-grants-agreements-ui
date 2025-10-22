@@ -31,18 +31,21 @@ describe('#errors', () => {
 
 describe('#catchAll', () => {
   const mockLogger = { info: vi.fn(), error: vi.fn() }
-  const mockStack = 'Mock error stack'
+  let mockErrorResponse
   const errorPage = 'error/index.njk'
-  const mockRequest = (statusCode) => ({
-    response: {
+  const mockRequest = (statusCode) => {
+    mockErrorResponse = {
       isBoom: true,
-      stack: mockStack,
       output: {
         statusCode
       }
-    },
-    logger: mockLogger
-  })
+    }
+
+    return {
+      response: mockErrorResponse,
+      logger: mockLogger
+    }
+  }
   const mockToolkitView = vi.fn()
   const mockToolkitCode = vi.fn()
   const mockToolkit = {
@@ -54,7 +57,7 @@ describe('#catchAll', () => {
   test('Should provide expected "Not Found" page', () => {
     catchAll(mockRequest(statusCodes.notFound), mockToolkit)
 
-    expect(mockLogger.error).not.toHaveBeenCalledWith(mockStack)
+    expect(mockLogger.error).not.toHaveBeenCalledWith(mockErrorResponse)
     expect(mockToolkitView).toHaveBeenCalledWith('error/not-found.njk', {
       errorMessage: 'Page not found'
     })
@@ -64,7 +67,7 @@ describe('#catchAll', () => {
   test('Should provide expected "Forbidden" page', () => {
     catchAll(mockRequest(statusCodes.forbidden), mockToolkit)
 
-    expect(mockLogger.error).not.toHaveBeenCalledWith(mockStack)
+    expect(mockLogger.error).not.toHaveBeenCalledWith(mockErrorResponse)
     expect(mockToolkitView).toHaveBeenCalledWith(errorPage, {
       errorMessage: 'Forbidden'
     })
@@ -74,7 +77,7 @@ describe('#catchAll', () => {
   test('Should provide expected "Unauthorized" page', () => {
     catchAll(mockRequest(statusCodes.unauthorized), mockToolkit)
 
-    expect(mockLogger.error).not.toHaveBeenCalledWith(mockStack)
+    expect(mockLogger.error).not.toHaveBeenCalledWith(mockErrorResponse)
     expect(mockToolkitView).toHaveBeenCalledWith('error/unauthorized.njk', {
       errorMessage: 'Unauthorized'
     })
@@ -84,7 +87,7 @@ describe('#catchAll', () => {
   test('Should provide expected "Bad Request" page', () => {
     catchAll(mockRequest(statusCodes.badRequest), mockToolkit)
 
-    expect(mockLogger.error).not.toHaveBeenCalledWith(mockStack)
+    expect(mockLogger.error).not.toHaveBeenCalledWith(mockErrorResponse)
     expect(mockToolkitView).toHaveBeenCalledWith(errorPage, {
       errorMessage: 'Bad Request'
     })
@@ -94,7 +97,7 @@ describe('#catchAll', () => {
   test('Should provide expected default page', () => {
     catchAll(mockRequest(statusCodes.imATeapot), mockToolkit)
 
-    expect(mockLogger.error).not.toHaveBeenCalledWith(mockStack)
+    expect(mockLogger.error).not.toHaveBeenCalledWith(mockErrorResponse)
     expect(mockToolkitView).toHaveBeenCalledWith(errorPage, {
       errorMessage: 'Something went wrong'
     })
@@ -104,7 +107,7 @@ describe('#catchAll', () => {
   test('Should provide expected "Something went wrong" page and log error for internalServerError', () => {
     catchAll(mockRequest(statusCodes.internalServerError), mockToolkit)
 
-    expect(mockLogger.error).toHaveBeenCalledWith(mockStack)
+    expect(mockLogger.error).toHaveBeenCalledWith(mockErrorResponse)
     expect(mockToolkitView).toHaveBeenCalledWith(errorPage, {
       errorMessage: 'Something went wrong'
     })

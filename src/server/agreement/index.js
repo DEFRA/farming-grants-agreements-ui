@@ -5,14 +5,13 @@ const getAgreementData = async (request, h) => {
   const { agreementId } = request.params
   const action = request?.payload?.action
 
-  const { agreementData, pageData } = await apiRequest({
+  const data = await apiRequest({
     agreementId,
-    method: 'POST',
-    auth: request.headers['x-encrypted-auth'],
-    ...(action ? { body: { action } } : {})
+    method: action === 'accept-offer' ? 'POST' : 'GET',
+    auth: request.headers['x-encrypted-auth']
   })
 
-  return { agreementData, pageData }
+  return data
 }
 
 /**
@@ -29,7 +28,7 @@ export const agreement = {
           path: '/{agreementId}',
           options: {
             pre: [
-              { method: getAgreementData, assign: 'data' } // Injects into `request.pre?.data.user`
+              { method: getAgreementData, assign: 'data' } // Injects into `request.pre?.data`
             ]
           },
           ...agreementController

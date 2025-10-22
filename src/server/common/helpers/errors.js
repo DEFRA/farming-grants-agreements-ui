@@ -24,11 +24,9 @@ export const catchAll = (request, h) => {
 
   const statusCode = response.output.statusCode
 
-  if (statusCode >= statusCodes.internalServerError) {
-    request.logger.error(response?.stack)
-  } else {
-    request.logger.info(response)
-  }
+  request.logger[
+    statusCode >= statusCodes.internalServerError ? 'error' : 'info'
+  ](response)
 
   const templateData = {
     errorMessage: response.message || statusCodeMessage(statusCode)

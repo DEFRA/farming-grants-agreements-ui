@@ -24,7 +24,10 @@ export const apiRequest = async ({
     if (response.status === statusCodes.notFound) {
       throw Boom.notFound(`Offer not found with ID ${agreementId}`)
     }
-    if (response.status === statusCodes.forbidden) {
+    if (
+      response.status === statusCodes.unauthorized ||
+      response.status === statusCodes.forbidden
+    ) {
       throw Boom.unauthorized(
         'Your account is not authorised to view/accept this offer agreement'
       )
