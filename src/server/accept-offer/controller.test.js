@@ -32,11 +32,9 @@ describe('#acceptOfferController', () => {
 
     expect(fetch).toHaveBeenCalledWith('http://localhost:3555/SFI123456789', {
       headers: {
-        'Content-Type': 'application/json',
         'x-encrypted-auth': 'mock-auth'
       },
-      method: 'POST',
-      body: '{"action":"display-accept"}'
+      method: 'GET'
     })
   })
 
@@ -62,8 +60,7 @@ describe('#acceptOfferController', () => {
         'Content-Type': 'application/json',
         'x-encrypted-auth': 'mock-auth'
       },
-      method: 'POST',
-      body: '{"action":"accept-offer"}'
+      method: 'POST'
     })
   })
 })

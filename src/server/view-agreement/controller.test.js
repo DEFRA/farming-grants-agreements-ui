@@ -32,11 +32,9 @@ describe('#viewAgreementController', () => {
 
     expect(fetch).toHaveBeenCalledWith('http://localhost:3555/SFI123456789', {
       headers: {
-        'Content-Type': 'application/json',
         'x-encrypted-auth': 'mock-auth'
       },
-      method: 'POST',
-      body: '{"action":"view-agreement"}'
+      method: 'GET'
     })
   })
 })

@@ -1,10 +1,36 @@
+import { getAgreementCalculations } from '../common/helpers/get-agreement-calculations.js'
+
 export const viewAgreementController = {
   async handler(request, h) {
-    const { pageData } = request.pre?.data
+    const { agreementData } = request.pre?.data || {}
+
+    const {
+      applicant: {
+        business: {
+          address: {
+            line1,
+            line2,
+            line3,
+            line4,
+            line5,
+            street,
+            city,
+            postalCode
+          } = {}
+        } = {}
+      } = {}
+    } = agreementData
+
+    const agreementName =
+      agreementData.agreementName || 'Sustainable Farming Incentive agreement'
 
     return h.view('view-agreement/index', {
-      pageTitle: pageData.agreementName,
-      ...pageData
+      pageTitle: agreementName,
+      agreementName,
+      address: [line1, line2, line3, line4, line5, street, city, postalCode]
+        .filter(Boolean)
+        .join(', '),
+      ...getAgreementCalculations(agreementData)
     })
   }
 }

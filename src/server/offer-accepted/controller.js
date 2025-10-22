@@ -1,10 +1,14 @@
+import { getFirstPaymentDate } from '../common/helpers/get-first-payment-date.js'
+
 export const offerAcceptedController = {
   async handler(request, h) {
-    const { pageData } = request.pre?.data
+    const { agreementData } = request.pre?.data
 
     return h.view('offer-accepted/index', {
       pageTitle: 'Offer accepted',
-      ...pageData
+      nearestQuarterlyPaymentDate: getFirstPaymentDate(
+        agreementData.payment.agreementStartDate
+      )
     })
   }
 }

@@ -109,7 +109,7 @@
             <table class="govuk-table govuk-table--small-text-until-tablet" data-test-id="landTable">
                 <thead class="govuk-table__head">
                     <tr class="govuk-table__row">
-                        {% for heading in agreement.agreementLand.headings %}
+                        {% for heading in agreementLand.headings %}
                             <th scope="col" class="govuk-table__header"
                               {% for key, value in heading.attributes %}
                                   {{ key }}="{{ value }}"
@@ -119,7 +119,7 @@
                     </tr>
                 </thead>
                 <tbody class="govuk-table__body">
-                    {% for row in agreement.agreementLand.data %}
+                    {% for row in agreementLand.data %}
                     <tr class="govuk-table__row" data-test-id="landTableRow{{ loop.index }}">
                         {% for cell in row %}
                         <td class="govuk-table__cell"
@@ -143,7 +143,7 @@
             <table class="govuk-table govuk-table--small-text-until-tablet table-bordered" data-test-id="actionsTable">
                 <thead class="govuk-table__head">
                     <tr class="govuk-table__row">
-                        {% for heading in agreement.summaryOfActions.headings %}
+                        {% for heading in summaryOfActions.headings %}
                         <th scope="col" class="govuk-table__header"
                           {% for key, value in heading.attributes %}
                             {{ key }}="{{ value }}"
@@ -153,7 +153,7 @@
                     </tr>
                 </thead>
                 <tbody class="govuk-table__body">
-                    {% for row in agreement.summaryOfActions.data %}
+                    {% for row in summaryOfActions.data %}
                     <tr class="govuk-table__row" data-test-id="actionsTableRow{{ loop.index }}">
                         {% for cell in row %}
                         <td class="govuk-table__cell"
@@ -183,7 +183,7 @@
             <table class="govuk-table govuk-table--small-text-until-tablet table-bordered" data-test-id="paymentsTable">
                 <thead class="govuk-table__head">
                     <tr class="govuk-table__row">
-                        {% for heading in agreement.summaryOfPayments.headings %}
+                        {% for heading in summaryOfPayments.headings %}
                             <th scope="col" class="govuk-table__header"
                               {% for key, value in heading.attributes %}
                                   {{ key }}="{{ value }}"
@@ -193,7 +193,7 @@
                     </tr>
                 </thead>
                 <tbody class="govuk-table__body">
-                    {% for row in agreement.summaryOfPayments.data %}
+                    {% for row in summaryOfPayments.data %}
                     <tr class="govuk-table__row" data-test-id="paymentsTableRow{{ loop.index }}">
                         {% for cell in row %}
                         <td class="govuk-table__cell"
@@ -224,7 +224,7 @@
             </p>
             <table class="govuk-table govuk-table--small-text-until-tablet table-bordered" data-test-id="scheduleTable">
                 <thead class="govuk-table__head">
-                    {% for heading in agreement.annualPaymentSchedule.headings %}
+                    {% for heading in annualPaymentSchedule.headings %}
                         <th scope="col" class="govuk-table__header"
                           {% for key, value in heading.attributes %}
                               {{ key }}="{{ value }}"
@@ -233,7 +233,7 @@
                     {% endfor %}
                 </thead>
                 <tbody class="govuk-table__body">
-                    {% for row in agreement.annualPaymentSchedule.data %}
+                    {% for row in annualPaymentSchedule.data %}
                     <tr class="govuk-table__row" data-test-id="scheduleTableRow{{ loop.index }}">
                         {% for cell in row %}
                         <td class="govuk-table__cell"
