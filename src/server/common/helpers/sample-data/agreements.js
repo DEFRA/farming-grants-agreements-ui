@@ -1,6 +1,5 @@
 export default [
   {
-    _id: '68fa51d0206fcc31cb4b4512',
     notificationMessageId: 'b6cc5590-80f6-46ce-b5a5-14c7986591f4',
     agreementName: 'Example agreement 2',
     correlationId: 'c3ef6a9d-1785-4653-894f-d681caef4c4b',
@@ -10,8 +9,7 @@ export default [
       sbi: '106284736',
       frn: 'frn',
       crn: 'crn',
-      defraId: 'defraId',
-      _id: '68fa51d0206fcc31cb4b4513'
+      defraId: 'defraId'
     },
     status: 'offered',
     agreement: '68fa51d0206fcc31cb4b450d',
@@ -23,10 +21,8 @@ export default [
         parcelId: '8083',
         appliedFor: {
           unit: 'ha',
-          quantity: 4.53411078,
-          _id: '68fa51d0206fcc31cb4b4515'
-        },
-        _id: '68fa51d0206fcc31cb4b4514'
+          quantity: 4.53411078
+        }
       }
     ],
     payment: {
@@ -45,8 +41,7 @@ export default [
           rateInPence: 1060,
           annualPaymentPence: 4806,
           sheetId: 'SD6743',
-          parcelId: '8083',
-          _id: '68fa51d0206fcc31cb4b4517'
+          parcelId: '8083'
         }
       },
       agreementLevelItems: {
@@ -54,8 +49,7 @@ export default [
           code: 'CMOR1',
           description: 'CMOR1: Assess moorland and produce a written record',
           version: 1,
-          annualPaymentPence: 27200,
-          _id: '68fa51d0206fcc31cb4b4518'
+          annualPaymentPence: 27200
         }
       },
       payments: [
@@ -65,16 +59,13 @@ export default [
           lineItems: [
             {
               parcelItemId: 1,
-              paymentPence: 1204,
-              _id: '68fa51d0206fcc31cb4b451a'
+              paymentPence: 1204
             },
             {
               agreementLevelItemId: 1,
-              paymentPence: 6803,
-              _id: '68fa51d0206fcc31cb4b451b'
+              paymentPence: 6803
             }
-          ],
-          _id: '68fa51d0206fcc31cb4b4519'
+          ]
         },
         {
           totalPaymentPence: 8001,
@@ -82,16 +73,13 @@ export default [
           lineItems: [
             {
               parcelItemId: 1,
-              paymentPence: 1201,
-              _id: '68fa51d0206fcc31cb4b451d'
+              paymentPence: 1201
             },
             {
               agreementLevelItemId: 1,
-              paymentPence: 6800,
-              _id: '68fa51d0206fcc31cb4b451e'
+              paymentPence: 6800
             }
-          ],
-          _id: '68fa51d0206fcc31cb4b451c'
+          ]
         },
         {
           totalPaymentPence: 8001,
@@ -99,16 +87,13 @@ export default [
           lineItems: [
             {
               parcelItemId: 1,
-              paymentPence: 1201,
-              _id: '68fa51d0206fcc31cb4b4520'
+              paymentPence: 1201
             },
             {
               agreementLevelItemId: 1,
-              paymentPence: 6800,
-              _id: '68fa51d0206fcc31cb4b4521'
+              paymentPence: 6800
             }
-          ],
-          _id: '68fa51d0206fcc31cb4b451f'
+          ]
         },
         {
           totalPaymentPence: 8001,
@@ -116,16 +101,13 @@ export default [
           lineItems: [
             {
               parcelItemId: 1,
-              paymentPence: 1201,
-              _id: '68fa51d0206fcc31cb4b4523'
+              paymentPence: 1201
             },
             {
               agreementLevelItemId: 1,
-              paymentPence: 6800,
-              _id: '68fa51d0206fcc31cb4b4524'
+              paymentPence: 6800
             }
-          ],
-          _id: '68fa51d0206fcc31cb4b4522'
+          ]
         },
         {
           totalPaymentPence: 8001,
@@ -133,16 +115,13 @@ export default [
           lineItems: [
             {
               parcelItemId: 1,
-              paymentPence: 1201,
-              _id: '68fa51d0206fcc31cb4b4526'
+              paymentPence: 1201
             },
             {
               agreementLevelItemId: 1,
-              paymentPence: 6800,
-              _id: '68fa51d0206fcc31cb4b4527'
+              paymentPence: 6800
             }
-          ],
-          _id: '68fa51d0206fcc31cb4b4525'
+          ]
         },
         {
           totalPaymentPence: 8001,
@@ -150,16 +129,13 @@ export default [
           lineItems: [
             {
               parcelItemId: 1,
-              paymentPence: 1201,
-              _id: '68fa51d0206fcc31cb4b4529'
+              paymentPence: 1201
             },
             {
               agreementLevelItemId: 1,
-              paymentPence: 6800,
-              _id: '68fa51d0206fcc31cb4b452a'
+              paymentPence: 6800
             }
-          ],
-          _id: '68fa51d0206fcc31cb4b4528'
+          ]
         },
         {
           totalPaymentPence: 8001,
@@ -167,16 +143,13 @@ export default [
           lineItems: [
             {
               parcelItemId: 1,
-              paymentPence: 1201,
-              _id: '68fa51d0206fcc31cb4b452c'
+              paymentPence: 1201
             },
             {
               agreementLevelItemId: 1,
-              paymentPence: 6800,
-              _id: '68fa51d0206fcc31cb4b452d'
+              paymentPence: 6800
             }
-          ],
-          _id: '68fa51d0206fcc31cb4b452b'
+          ]
         },
         {
           totalPaymentPence: 8001,
@@ -184,16 +157,13 @@ export default [
           lineItems: [
             {
               parcelItemId: 1,
-              paymentPence: 1201,
-              _id: '68fa51d0206fcc31cb4b452f'
+              paymentPence: 1201
             },
             {
               agreementLevelItemId: 1,
-              paymentPence: 6800,
-              _id: '68fa51d0206fcc31cb4b4530'
+              paymentPence: 6800
             }
-          ],
-          _id: '68fa51d0206fcc31cb4b452e'
+          ]
         },
         {
           totalPaymentPence: 8001,
@@ -201,16 +171,13 @@ export default [
           lineItems: [
             {
               parcelItemId: 1,
-              paymentPence: 1201,
-              _id: '68fa51d0206fcc31cb4b4532'
+              paymentPence: 1201
             },
             {
               agreementLevelItemId: 1,
-              paymentPence: 6800,
-              _id: '68fa51d0206fcc31cb4b4533'
+              paymentPence: 6800
             }
-          ],
-          _id: '68fa51d0206fcc31cb4b4531'
+          ]
         },
         {
           totalPaymentPence: 8001,
@@ -218,16 +185,13 @@ export default [
           lineItems: [
             {
               parcelItemId: 1,
-              paymentPence: 1201,
-              _id: '68fa51d0206fcc31cb4b4535'
+              paymentPence: 1201
             },
             {
               agreementLevelItemId: 1,
-              paymentPence: 6800,
-              _id: '68fa51d0206fcc31cb4b4536'
+              paymentPence: 6800
             }
-          ],
-          _id: '68fa51d0206fcc31cb4b4534'
+          ]
         },
         {
           totalPaymentPence: 8001,
@@ -235,16 +199,13 @@ export default [
           lineItems: [
             {
               parcelItemId: 1,
-              paymentPence: 1201,
-              _id: '68fa51d0206fcc31cb4b4538'
+              paymentPence: 1201
             },
             {
               agreementLevelItemId: 1,
-              paymentPence: 6800,
-              _id: '68fa51d0206fcc31cb4b4539'
+              paymentPence: 6800
             }
-          ],
-          _id: '68fa51d0206fcc31cb4b4537'
+          ]
         },
         {
           totalPaymentPence: 8001,
@@ -252,28 +213,23 @@ export default [
           lineItems: [
             {
               parcelItemId: 1,
-              paymentPence: 1201,
-              _id: '68fa51d0206fcc31cb4b453b'
+              paymentPence: 1201
             },
             {
               agreementLevelItemId: 1,
-              paymentPence: 6800,
-              _id: '68fa51d0206fcc31cb4b453c'
+              paymentPence: 6800
             }
-          ],
-          _id: '68fa51d0206fcc31cb4b453a'
+          ]
         }
-      ],
-      _id: '68fa51d0206fcc31cb4b4516'
+      ]
     },
     applicant: {
       business: {
         name: 'J&S Hartley',
         email: {
-          address: 'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test',
-          _id: '68fa51d0206fcc31cb4b453f'
+          address: 'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test'
         },
-        phone: { mobile: '01234031670', _id: '68fa51d0206fcc31cb4b4540' },
+        phone: { mobile: '01234031670' },
         address: {
           line1: 'Mason House Farm Clitheroe Rd',
           line2: 'Bashall Eaves',
@@ -282,24 +238,18 @@ export default [
           line5: null,
           street: 'Bartindale Road',
           city: 'Clitheroe',
-          postalCode: 'BB7 3DD',
-          _id: '68fa51d0206fcc31cb4b4541'
-        },
-        _id: '68fa51d0206fcc31cb4b453e'
+          postalCode: 'BB7 3DD'
+        }
       },
       customer: {
         name: {
           title: 'Mr.',
           first: 'Edward',
           middle: 'Paul',
-          last: 'Jones',
-          _id: '68fa51d0206fcc31cb4b4543'
-        },
-        _id: '68fa51d0206fcc31cb4b4542'
-      },
-      _id: '68fa51d0206fcc31cb4b453d'
+          last: 'Jones'
+        }
+      }
     },
-    __v: 0,
     createdAt: '2025-10-23T16:03:28.545Z',
     updatedAt: '2025-10-23T16:03:28.548Z',
     agreementNumber: 'SFI987654321',
