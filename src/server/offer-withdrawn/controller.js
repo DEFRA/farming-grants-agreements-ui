@@ -1,10 +1,7 @@
 export const offerWithdrawnController = {
   async handler(request, h) {
-    const { agreement } = request.pre?.data
-
     return h.view('offer-withdrawn/index', {
-      pageTitle: 'Do do',
-      ...agreement
+      pageTitle: 'You have requested an update to your offer'
     })
   }
 }
