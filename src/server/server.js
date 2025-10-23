@@ -20,7 +20,7 @@ export async function createServer() {
   setupProxy()
   const server = hapi.server({
     host: config.get('host'),
-    port: config.get('port'),
+    port: process.env?.VITEST ? '3001' : config.get('port'),
     routes: {
       validate: {
         options: {
