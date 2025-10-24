@@ -43,7 +43,9 @@ function buildCspHeader(opts) {
   return Object.keys(directiveMap)
     .map((key) => {
       const value = opts[key]
-      if (!value) return null
+      if (!value) {
+        return null
+      }
       const directive = directiveMap[key]
       const vals = Array.isArray(value) ? value.join(' ') : String(value)
       return `${directive} ${vals}`
@@ -65,7 +67,7 @@ const contentSecurityPolicy = {
     // Ensure Boom error responses get the same CSP header
     server.ext('onPreResponse', (request, h) => {
       const response = request.response
-      if (response && response.isBoom) {
+      if (response?.isBoom) {
         // Boom responses expose headers on response.output.headers
         response.output = response.output || {}
         response.output.headers = response.output.headers || {}

@@ -1,7 +1,7 @@
 import { agreementController } from './controller.js'
 import { apiRequest } from '../common/helpers/api.js'
 
-const getAgreementData = async (request, h) => {
+const getAgreementData = async (request) => {
   const { agreementId } = request.params
   const action = request?.payload?.action
 

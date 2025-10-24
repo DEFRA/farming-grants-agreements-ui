@@ -10,7 +10,7 @@ import {
 export const reviewOfferController = {
   async handler(request, h) {
     const { agreementData: { actionApplications, payment } = {} } =
-      request.pre?.data
+      request.pre?.data || {}
 
     const codeDescriptions = Object.values(payment.parcelItems).reduce(
       (prev, i) => ({

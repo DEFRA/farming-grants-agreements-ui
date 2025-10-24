@@ -6,7 +6,7 @@ export const acceptOfferController = {
   async handler(request, h) {
     const action = request?.payload?.action
     const { agreementId } = request.params
-    const { agreementData } = request.pre?.data
+    const { agreementData } = request.pre?.data || {}
 
     if (action === 'accept-offer' && agreementData.status === 'offered') {
       return h.redirect(path.join(getBaseUrl(request), agreementId))

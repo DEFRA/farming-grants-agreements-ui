@@ -4,7 +4,7 @@
  */
 export const noCacheHeaders = {
   name: 'noCacheHeaders',
-  register: async function (server, options) {
+  register: async function (server) {
     server.ext('onPreResponse', (request, h) => {
       const response = request.response
 
