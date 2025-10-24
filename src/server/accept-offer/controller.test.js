@@ -1,66 +1,66 @@
+import path from 'node:path'
+
+import { Pact } from '@pact-foundation/pact'
+
 import { createServer } from '../server.js'
+import sampleData from '../common/helpers/sample-data/index.js'
+import { config } from '../../config/config.js'
 
 describe('#acceptOfferController', () => {
-  let server
+  describe('before accepting the offer', () => {
+    let server
 
-  beforeAll(async () => {
-    globalThis.fetch = vi.fn()
-    server = await createServer()
-    await server.initialize()
-  })
-
-  afterAll(async () => {
-    await server.stop({ timeout: 0 })
-  })
-
-  test('should call the backend API before accepting', async () => {
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({})
+    const provider = new Pact({
+      consumer: 'farming-grants-agreements-ui',
+      provider: 'farming-grants-agreements-api',
+      dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
+      pactfileWriteMode: 'update'
     })
 
-    await server.inject({
-      method: 'POST',
-      url: '/SFI123456789',
-      headers: {
-        'x-encrypted-auth': 'mock-auth'
-      },
-      payload: {
-        action: 'display-accept'
-      }
+    beforeAll(async () => {
+      server = await createServer()
+      await server.initialize()
     })
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:3555/SFI123456789', {
-      headers: {
-        'x-encrypted-auth': 'mock-auth'
-      },
-      method: 'GET'
-    })
-  })
-
-  test('should call the backend API when accepting', async () => {
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({})
+    afterAll(async () => {
+      await server?.stop({ timeout: 0 })
     })
 
-    await server.inject({
-      method: 'POST',
-      url: '/SFI123456789',
-      headers: {
-        'x-encrypted-auth': 'mock-auth'
-      },
-      payload: {
-        action: 'accept-offer'
-      }
-    })
+    test('displays the are you sure you want to accept the offer page', async () => {
+      return await provider
+        .addInteraction()
+        .given('A customer has an agreement offer')
+        .uponReceiving('a request from the customer to view their offer')
+        .withRequest('GET', '/SFI987654321', (builder) => {
+          builder.headers({ 'x-encrypted-auth': 'mock-auth' })
+        })
+        .willRespondWith(200, (builder) => {
+          builder.headers({ 'Content-Type': 'application/json' })
+          builder.jsonBody({
+            agreementData: { ...sampleData.agreements[0], status: 'offered' }
+          })
+        })
+        .executeTest(async (mockServer) => {
+          config.set('backend.url', mockServer.url)
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:3555/SFI123456789', {
-      headers: {
-        'Content-Type': 'application/json',
-        'x-encrypted-auth': 'mock-auth'
-      },
-      method: 'POST'
+          const { statusCode, result } = await server.inject({
+            method: 'POST',
+            url: '/SFI987654321',
+            headers: {
+              'x-encrypted-auth': 'mock-auth'
+            },
+            payload: {
+              action: 'display-accept'
+            }
+          })
+
+          expect(statusCode).toBe(200)
+          expect(result).toContain('Accept your offer')
+          expect(result).toContain(
+            'you are entering into a legally binding agreement with Defra'
+          )
+          expect(result).toContain('Accept offer')
+        })
     })
   })
 })

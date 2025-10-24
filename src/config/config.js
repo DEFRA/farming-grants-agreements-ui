@@ -32,7 +32,7 @@ export const config = convict({
   port: {
     doc: 'The port to bind.',
     format: 'port',
-    default: 3000,
+    default: process.env?.VITEST ? 3001 : 3000,
     env: 'PORT'
   },
   staticCacheTimeout: {

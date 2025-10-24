@@ -9,7 +9,7 @@ describe('#contentSecurityPolicy', () => {
   })
 
   afterAll(async () => {
-    await server.stop({ timeout: 0 })
+    await server?.stop({ timeout: 0 })
   })
 
   test('Should set the CSP policy header', async () => {
