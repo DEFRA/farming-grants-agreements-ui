@@ -10,7 +10,7 @@ describe('#agreementController', () => {
   })
 
   afterAll(async () => {
-    await server.stop({ timeout: 0 })
+    await server?.stop({ timeout: 0 })
   })
 
   test('should call the backend API', async () => {
