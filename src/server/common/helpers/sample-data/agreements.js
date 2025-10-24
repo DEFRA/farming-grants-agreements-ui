@@ -1,3 +1,14 @@
+const lineItems = [
+  {
+    parcelItemId: 1,
+    paymentPence: 1201
+  },
+  {
+    agreementLevelItemId: 1,
+    paymentPence: 6800
+  }
+]
+
 export default [
   {
     notificationMessageId: 'b6cc5590-80f6-46ce-b5a5-14c7986591f4',
@@ -70,156 +81,57 @@ export default [
         {
           totalPaymentPence: 8001,
           paymentDate: '2026-03-05',
-          lineItems: [
-            {
-              parcelItemId: 1,
-              paymentPence: 1201
-            },
-            {
-              agreementLevelItemId: 1,
-              paymentPence: 6800
-            }
-          ]
+          lineItems
         },
         {
           totalPaymentPence: 8001,
           paymentDate: '2026-06-05',
-          lineItems: [
-            {
-              parcelItemId: 1,
-              paymentPence: 1201
-            },
-            {
-              agreementLevelItemId: 1,
-              paymentPence: 6800
-            }
-          ]
+          lineItems
         },
         {
           totalPaymentPence: 8001,
           paymentDate: '2026-09-07',
-          lineItems: [
-            {
-              parcelItemId: 1,
-              paymentPence: 1201
-            },
-            {
-              agreementLevelItemId: 1,
-              paymentPence: 6800
-            }
-          ]
+          lineItems
         },
         {
           totalPaymentPence: 8001,
           paymentDate: '2026-12-07',
-          lineItems: [
-            {
-              parcelItemId: 1,
-              paymentPence: 1201
-            },
-            {
-              agreementLevelItemId: 1,
-              paymentPence: 6800
-            }
-          ]
+          lineItems
         },
         {
           totalPaymentPence: 8001,
           paymentDate: '2027-03-05',
-          lineItems: [
-            {
-              parcelItemId: 1,
-              paymentPence: 1201
-            },
-            {
-              agreementLevelItemId: 1,
-              paymentPence: 6800
-            }
-          ]
+          lineItems
         },
         {
           totalPaymentPence: 8001,
           paymentDate: '2027-06-07',
-          lineItems: [
-            {
-              parcelItemId: 1,
-              paymentPence: 1201
-            },
-            {
-              agreementLevelItemId: 1,
-              paymentPence: 6800
-            }
-          ]
+          lineItems
         },
         {
           totalPaymentPence: 8001,
           paymentDate: '2027-09-06',
-          lineItems: [
-            {
-              parcelItemId: 1,
-              paymentPence: 1201
-            },
-            {
-              agreementLevelItemId: 1,
-              paymentPence: 6800
-            }
-          ]
+          lineItems
         },
         {
           totalPaymentPence: 8001,
           paymentDate: '2027-12-06',
-          lineItems: [
-            {
-              parcelItemId: 1,
-              paymentPence: 1201
-            },
-            {
-              agreementLevelItemId: 1,
-              paymentPence: 6800
-            }
-          ]
+          lineItems
         },
         {
           totalPaymentPence: 8001,
           paymentDate: '2028-03-06',
-          lineItems: [
-            {
-              parcelItemId: 1,
-              paymentPence: 1201
-            },
-            {
-              agreementLevelItemId: 1,
-              paymentPence: 6800
-            }
-          ]
+          lineItems
         },
         {
           totalPaymentPence: 8001,
           paymentDate: '2028-06-05',
-          lineItems: [
-            {
-              parcelItemId: 1,
-              paymentPence: 1201
-            },
-            {
-              agreementLevelItemId: 1,
-              paymentPence: 6800
-            }
-          ]
+          lineItems
         },
         {
           totalPaymentPence: 8001,
           paymentDate: '2028-09-05',
-          lineItems: [
-            {
-              parcelItemId: 1,
-              paymentPence: 1201
-            },
-            {
-              agreementLevelItemId: 1,
-              paymentPence: 6800
-            }
-          ]
+          lineItems
         }
       ]
     },

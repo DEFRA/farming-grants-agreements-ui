@@ -13,6 +13,9 @@ const isProduction = process.env.NODE_ENV === 'production'
 const isTest = process.env.NODE_ENV === 'test'
 const isDevelopment = process.env.NODE_ENV === 'development'
 
+const defaultPort = 3000
+const defaultVitestPort = 3001
+
 convict.addFormats(convictFormatWithValidator)
 
 export const config = convict({
@@ -32,7 +35,7 @@ export const config = convict({
   port: {
     doc: 'The port to bind.',
     format: 'port',
-    default: process.env?.VITEST ? 3001 : 3000,
+    default: process.env?.VITEST ? defaultVitestPort : defaultPort,
     env: 'PORT'
   },
   staticCacheTimeout: {

@@ -9,7 +9,7 @@ export const agreementController = {
    */
   handler: (request, h) => {
     const action = request.payload?.action
-    const { agreementData } = request.pre?.data
+    const { agreementData } = request.pre?.data || {}
 
     const controller = getControllerByAction(agreementData.status)(action)
     if (!controller?.handler) {
