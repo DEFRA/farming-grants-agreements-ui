@@ -7,7 +7,7 @@ import sampleData from '../common/helpers/sample-data/index.js'
 import { config } from '../../config/config.js'
 
 describe('#acceptOfferController', () => {
-  describe('before accepting the offer', () => {
+  describe('after accepting the offer', () => {
     let server
 
     const provider = new Pact({
@@ -26,40 +26,42 @@ describe('#acceptOfferController', () => {
       await server?.stop({ timeout: 0 })
     })
 
-    test('displays the are you sure you want to accept the offer page', async () => {
+    test('sends the offer accepted action to the backend and redirects to the offer accepted page', async () => {
       return await provider
         .addInteraction()
         .given('A customer has an agreement offer')
-        .uponReceiving('a request from the customer to view their offer')
-        .withRequest('GET', '/SFI987654321', (builder) => {
-          builder.headers({ 'x-encrypted-auth': 'mock-auth' })
+        .uponReceiving('a request from the customer to accept their offer')
+        .withRequest('POST', '/SFI987654321', (builder) => {
+          builder.headers({
+            'Content-Type': 'application/json',
+            'x-encrypted-auth': 'mock-auth'
+          })
         })
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: { ...sampleData.agreements[0], status: 'offered' }
+            agreementData: {
+              ...sampleData.agreements[0],
+              status: 'offered'
+            }
           })
         })
         .executeTest(async (mockServer) => {
           config.set('backend.url', mockServer.url)
 
-          const { statusCode, result } = await server.inject({
+          const { statusCode, headers } = await server.inject({
             method: 'POST',
             url: '/SFI987654321',
             headers: {
               'x-encrypted-auth': 'mock-auth'
             },
             payload: {
-              action: 'display-accept'
+              action: 'accept-offer'
             }
           })
 
-          expect(statusCode).toBe(200)
-          expect(result).toContain('Accept your offer')
-          expect(result).toContain(
-            'you are entering into a legally binding agreement with Defra'
-          )
-          expect(result).toContain('Accept offer')
+          expect(statusCode).toBe(302)
+          expect(headers.location).toBe('/SFI987654321')
         })
     })
   })
