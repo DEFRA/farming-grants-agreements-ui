@@ -56,23 +56,23 @@ services:
   ##############################################################################
   # UI
   ##############################################################################
-  farming-grants-agreements-ui:
-    build: ./
-    ports:
-      - '127.0.0.1:3000:3000'
-    depends_on:
-      farming-grants-agreements-api:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      PORT: 3000
-      NODE_ENV: ${NODE_ENV:-development}
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      USE_SINGLE_INSTANCE_CACHE: ${USE_SINGLE_INSTANCE_CACHE:-true}
-      BACKEND_URL: ${BACKEND_URL:-http://farming-grants-agreements-api:3555}
-    networks:
-      - cdp-tenant
+#  farming-grants-agreements-ui:
+#    build: ./
+#    ports:
+#      - '127.0.0.1:3000:3000'
+#    depends_on:
+#      farming-grants-agreements-api:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#    environment:
+#      PORT: 3000
+#      NODE_ENV: ${NODE_ENV:-development}
+#      REDIS_HOST: ${REDIS_HOST:-redis}
+#      USE_SINGLE_INSTANCE_CACHE: ${USE_SINGLE_INSTANCE_CACHE:-true}
+#      BACKEND_URL: ${BACKEND_URL:-http://farming-grants-agreements-api:3555}
+#    networks:
+#      - cdp-tenant
 
   ##############################################################################
   # API
@@ -101,6 +101,7 @@ services:
       QUEUE_NAME: ${QUEUE_NAME:-create_agreement}
       ENABLE_TEST_ENDPOINTS: ${ENABLE_TEST_ENDPOINTS:-true}
       JWT_ENABLED: ${JWT_ENABLED:-false}
+      AGREEMENTS_JWT_SECRET: ${AGREEMENTS_JWT_SECRET:-a-string-secret-at-least-256-bits-long}
       ENABLE_PAYMENT_HUB: ${ENABLE_PAYMENT_HUB:-false}
       VIEW_AGREEMENT_URI: ${VIEW_AGREEMENT_URI:-http://localhost:3555}
       SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED: ${SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED:-io.onsite.agreement.status.updated}

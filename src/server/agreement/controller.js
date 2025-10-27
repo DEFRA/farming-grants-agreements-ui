@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom'
 
 import { getControllerByAction } from '../common/helpers/get-controller-by-action.js'
+import { viewAgreementController } from '../view-agreement/controller.js'
 
 export const agreementController = {
   /**
@@ -10,6 +11,11 @@ export const agreementController = {
   handler: (request, h) => {
     const action = request.payload?.action
     const { agreementData } = request.pre?.data || {}
+    const { showAgreement } = request.pre?.data || false
+
+    if (showAgreement) {
+      return viewAgreementController.handler(request, h)
+    }
 
     const controller = getControllerByAction(agreementData.status)(action)
     if (!controller?.handler) {
