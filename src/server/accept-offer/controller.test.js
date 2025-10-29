@@ -1,18 +1,20 @@
 import path from 'node:path'
 
-import { Pact } from '@pact-foundation/pact'
+import { Pact, MatchersV2 } from '@pact-foundation/pact'
 
 import { createServer } from '../server.js'
-import sampleData from '../common/helpers/sample-data/index.js'
+import { expectedAgreement } from '../common/helpers/sample-data/__test__/expected-agreement.mock.js'
 import { config } from '../../config/config.js'
+
+const { like } = MatchersV2
 
 describe('#acceptOfferController', () => {
   describe('before accepting the offer', () => {
     let server
 
     const provider = new Pact({
-      consumer: 'farming-grants-agreements-ui',
-      provider: 'farming-grants-agreements-api',
+      consumer: 'farming-grants-agreements-ui-rest',
+      provider: 'farming-grants-agreements-api-rest',
       dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
       pactfileWriteMode: 'update'
     })
@@ -37,7 +39,7 @@ describe('#acceptOfferController', () => {
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: { ...sampleData.agreements[0], status: 'offered' }
+            agreementData: { ...expectedAgreement, status: like('offered') }
           })
         })
         .executeTest(async (mockServer) => {
