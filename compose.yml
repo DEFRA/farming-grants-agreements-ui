@@ -56,23 +56,23 @@ services:
   ##############################################################################
   # UI
   ##############################################################################
-#  farming-grants-agreements-ui:
-#    build: ./
-#    ports:
-#      - '127.0.0.1:3000:3000'
-#    depends_on:
-#      farming-grants-agreements-api:
-#        condition: service_healthy
-#      redis:
-#        condition: service_healthy
-#    environment:
-#      PORT: 3000
-#      NODE_ENV: ${NODE_ENV:-development}
-#      REDIS_HOST: ${REDIS_HOST:-redis}
-#      USE_SINGLE_INSTANCE_CACHE: ${USE_SINGLE_INSTANCE_CACHE:-true}
-#      BACKEND_URL: ${BACKEND_URL:-http://farming-grants-agreements-api:3555}
-#    networks:
-#      - cdp-tenant
+  farming-grants-agreements-ui:
+    build: ./
+    ports:
+      - '127.0.0.1:3000:3000'
+    depends_on:
+      farming-grants-agreements-api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      NODE_ENV: ${NODE_ENV:-development}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      USE_SINGLE_INSTANCE_CACHE: ${USE_SINGLE_INSTANCE_CACHE:-true}
+      BACKEND_URL: ${BACKEND_URL:-http://farming-grants-agreements-api:3555}
+    networks:
+      - cdp-tenant
 
   ##############################################################################
   # API

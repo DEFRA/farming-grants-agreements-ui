@@ -26,7 +26,6 @@ const {
   }
 })
 
-// IMPORTANT: specifiers must match how your code imports them from THIS test file location.
 vi.mock('../view-agreement/controller.js', () => ({
   viewAgreementController: { handler: viewHandlerMock }
 }))
@@ -144,10 +143,7 @@ describe('agreement routes – showAgreement short-circuit', () => {
       payload: { action: 'unknown-action' }
     })
 
-    // Assert Boom.badRequest → 400 with message
     expect(res.statusCode).toBe(400)
-
-    // Sanity: did not hit the view path; did route through the action picker
     expect(viewHandlerMock).not.toHaveBeenCalled()
     expect(getControllerByActionMock).toHaveBeenCalledWith('offered')
   })
