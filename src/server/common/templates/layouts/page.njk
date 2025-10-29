@@ -29,7 +29,7 @@
     navigation: [{html: '<strong>' + serviceTitle + '</strong>'}]
   }) }}
 
-  <div class="govuk-width-container">
+  <aside class="govuk-width-container">
     {{ govukPhaseBanner({
       tag: {
         text: "Beta"
@@ -47,7 +47,7 @@
       organisationId: agreement.identifiers.sbi,
       name: agreement.applicant.customer.name.first + ' ' + agreement.applicant.customer.name.last
     }) }}
-  </div>
+  </aside>
 {% endblock %}
 
 {% block pageTitle %}
