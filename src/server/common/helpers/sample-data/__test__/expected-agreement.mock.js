@@ -45,5 +45,6 @@ export const expectedAgreement = {
     }
   ]),
   createdAt: mockDate,
-  updatedAt: mockDate
+  updatedAt: mockDate,
+  version: like(1)
 }
