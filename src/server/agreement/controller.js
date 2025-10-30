@@ -10,8 +10,7 @@ export const agreementController = {
    */
   handler: (request, h) => {
     const action = request.payload?.action
-    const { agreementData } = request.pre?.data || {}
-    const { showAgreement } = request.pre?.data || false
+    const { agreementData, showAgreement = false } = request.pre?.data || {}
 
     if (showAgreement) {
       return viewAgreementController.handler(request, h)
