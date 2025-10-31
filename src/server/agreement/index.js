@@ -2,20 +2,12 @@ import { agreementController } from './controller.js'
 import { apiRequest } from '../common/helpers/api.js'
 
 const getAgreementData = async (request) => {
-  const { agreementId } = request.params
+  const { agreementId = '' } = request.params
   const action = request?.payload?.action
 
-  return await apiRequest({
+  return apiRequest({
     agreementId,
     method: action === 'accept-offer' ? 'POST' : 'GET',
-    auth: request.headers['x-encrypted-auth']
-  })
-}
-
-const getAgreementsByAuth = async (request) => {
-  return await apiRequest({
-    agreementId: '',
-    method: 'GET',
     auth: request.headers['x-encrypted-auth']
   })
 }
@@ -40,10 +32,10 @@ export const agreement = {
           ...agreementController
         },
         {
-          method: 'GET',
+          method: ['GET', 'POST'],
           path: '/',
           options: {
-            pre: [{ method: getAgreementsByAuth, assign: 'data' }]
+            pre: [{ method: getAgreementData, assign: 'data' }]
           },
           ...agreementController
         }
