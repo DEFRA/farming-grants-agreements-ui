@@ -34,7 +34,7 @@ describe('#offerWithdrawnController', () => {
       .uponReceiving(
         'a request from the customer to view their withdrawn offer'
       )
-      .withRequest('GET', '/SFI987654321', (builder) => {
+      .withRequest('GET', '/', (builder) => {
         builder.headers({ 'x-encrypted-auth': 'mock-auth' })
       })
       .willRespondWith(200, (builder) => {
@@ -48,7 +48,7 @@ describe('#offerWithdrawnController', () => {
 
         const { statusCode, result } = await server.inject({
           method: 'GET',
-          url: '/SFI987654321',
+          url: '/',
           headers: {
             'x-encrypted-auth': 'mock-auth'
           }

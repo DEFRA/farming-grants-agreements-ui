@@ -1,5 +1,6 @@
 import { agreementController } from './controller.js'
 import { apiRequest } from '../common/helpers/api.js'
+import { viewAgreementController } from '../view-agreement/controller.js'
 
 const getAgreementData = async (request) => {
   const { agreementId = '' } = request.params
@@ -23,21 +24,20 @@ export const agreement = {
       server.route([
         {
           method: ['GET', 'POST'],
-          path: '/{agreementId}',
+          path: '/',
           options: {
-            pre: [
-              { method: getAgreementData, assign: 'data' } // Injects into `request.pre?.data`
-            ]
+            // Injects into `request.pre?.data`
+            pre: [{ method: getAgreementData, assign: 'data' }]
           },
           ...agreementController
         },
         {
-          method: ['GET', 'POST'],
-          path: '/',
+          method: 'GET',
+          path: '/{agreementId}',
           options: {
             pre: [{ method: getAgreementData, assign: 'data' }]
           },
-          ...agreementController
+          ...viewAgreementController
         }
       ])
     }
