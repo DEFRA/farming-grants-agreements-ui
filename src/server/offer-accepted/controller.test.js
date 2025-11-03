@@ -32,7 +32,7 @@ describe('#offerAcceptedController', () => {
       .addInteraction()
       .given('A customer has an accepted agreement offer')
       .uponReceiving('a request from the customer to view their offer')
-      .withRequest('GET', '/SFI987654321', (builder) => {
+      .withRequest('GET', '/', (builder) => {
         builder.headers({ 'x-encrypted-auth': 'mock-auth' })
       })
       .willRespondWith(200, (builder) => {
@@ -46,7 +46,7 @@ describe('#offerAcceptedController', () => {
 
         const { statusCode, result } = await server.inject({
           method: 'GET',
-          url: '/SFI987654321',
+          url: '/',
           headers: {
             'x-encrypted-auth': 'mock-auth'
           }
