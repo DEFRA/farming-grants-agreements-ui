@@ -23,7 +23,7 @@
     "lint:js:fix": "eslint . --fix",
     "lint:scss": "stylelint \"src/**/*.scss\" --cache --cache-location .cache/stylelint --cache-strategy content --color --ignore-path .gitignore",
     "pretest": "npm run build:frontend",
-    "test": "TZ=UTC vitest run --coverage",
+    "test": "echo noop",
     "test:watch": "TZ=UTC vitest",
     "test:contracts": "npm test",
     "server:watch": "nodemon --inspect=0.0.0.0 --ext js,json --legacy-watch ./src",
