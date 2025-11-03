@@ -33,7 +33,7 @@ describe('#acceptOfferController', () => {
         .addInteraction()
         .given('A customer has an agreement offer')
         .uponReceiving('a request from the customer to accept their offer')
-        .withRequest('POST', '/SFI987654321', (builder) => {
+        .withRequest('POST', '/', (builder) => {
           builder.headers({
             'Content-Type': 'application/json',
             'x-encrypted-auth': 'mock-auth'
@@ -53,7 +53,7 @@ describe('#acceptOfferController', () => {
 
           const { statusCode, headers } = await server.inject({
             method: 'POST',
-            url: '/SFI987654321',
+            url: '/',
             headers: {
               'x-encrypted-auth': 'mock-auth'
             },
@@ -63,7 +63,7 @@ describe('#acceptOfferController', () => {
           })
 
           expect(statusCode).toBe(302)
-          expect(headers.location).toBe('/SFI987654321')
+          expect(headers.location).toBe('/')
         })
     })
   })
