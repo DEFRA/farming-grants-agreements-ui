@@ -9,16 +9,17 @@ const mockDate = iso8601DateTimeWithMillis('2025-12-31T23:59:59.999Z')
 
 export const expectedAgreement = {
   ...sampleData.agreements[0],
+  agreementNumber: like('SFI987654321'),
   notificationMessageId: like('00000000-0000-4000-8000-000000000300'),
   agreement: like('f00000000000000000000204'),
   correlationId,
   invoice: like([
     {
-      agreementNumber: 'SFI987654321',
+      agreementNumber: like('SFI987654321'),
       correlationId,
       invoiceNumber: 'FRPS2',
       paymentHubRequest: {
-        agreementNumber: 'SFI987654321',
+        agreementNumber: like('SFI987654321'),
         correlationId,
         dueDate: '2025-12-05',
         frn: 'frn',
