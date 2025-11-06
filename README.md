@@ -174,11 +174,11 @@ Run:
 docker run -p 3000:3000 farming-grants-agreements-ui
 ```
 
-### Running the agreements-api service with JWT authentication enabled
+### Running the agreements app with JWT authentication enabled
 
 1. Ensure JWT is enabled in your .env file:
 
-- `JWT_ENABLED=true`
+   - `JWT_ENABLED=true`
 
 2. Start the stack (MongoDB, LocalStack and this service):
 
@@ -186,7 +186,10 @@ docker run -p 3000:3000 farming-grants-agreements-ui
    docker compose up -d --build
    ```
 
-3. Verify containers are healthy (example output):
+3. Verify containers are running:
+   ```bash
+   docker compose ps
+   ```
 
 ```
    NAME                                                           COMMAND                  STATE     PORTS
@@ -196,6 +199,8 @@ farming-grants-agreements-ui-localstack-1                      "docker-entrypoin
 farming-grants-agreements-ui-mongodb-1                         "docker-entrypoint.s…"   running   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
 farming-grants-agreements-ui-redis-1                           "docker-entrypoint.s…"   running   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
 ```
+
+4. Verify containers are healthy (example output):
 
 ## API endpoints
 
@@ -217,42 +222,6 @@ Requirements:
 - The `source` claim must be one of `defra` (farmer) or `entra` (case worker).
 - When `source=defra`, you can include an `sbi` claim to test farmer-scoped endpoints.
 
-Run examples:
-
-- With the secret provided as an argument:
-
-  ```bash
-  node ./scripts/gen-auth-header.js --source defra --sbi 106284777 \
-    --secret "a-string-secret-at-least-256-bits-long"
-  ```
-
-- Or using an environment variable for the secret (recommended):
-
-  ```bash
-  AGREEMENTS_JWT_SECRET="a-string-secret-at-least-256-bits-long" \
-  node ./scripts/gen-auth-header.js --source entra
-  ```
-
-Expected output (example):
-
-```
-UI/API header { 'x-encrypted-auth': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....' }
-```
-
-Copy the token value and use it in your requests. For example:
-
-```bash
-curl -sS http://localhost:3555/ \
-  -H "x-encrypted-auth: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...."
-```
-
-Notes:
-
-- On Windows PowerShell, use double quotes around arguments and escape as needed, for example:
-  ```powershell
-  $env:AGREEMENTS_JWT_SECRET="a-string-secret-at-least-256-bits-long"; `
-  node ./scripts/gen-auth-header.js --source defra --sbi 106284777
-  ```
 - The script validates `--source` and will exit with an error if the value is not `defra` or `entra` or if the secret is missing.
 
 Sample token for farmer's (`source=defra`) data:
@@ -272,7 +241,7 @@ Example decoded payload:
 }
 ```
 
-Sample token for case worker's (`source=entra`) data:
+Sample token for caseworker's (`source=entra`) data:
 
 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gQm9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMiwic291cmNlIjoiZW50cmEifQ.aKtZl5K7iTQ-XI0V1Uga4eR_zjPxX41MTJmzR9lBV7I`
 
@@ -296,11 +265,7 @@ A local environment with:
 - Redis
 - MongoDB
 - This service.
-- A commented out backend example.
-
-```bash
-docker compose up --build -d
-```
+- The backend service.
 
 ### Viewing messages in LocalStack SQS
 
