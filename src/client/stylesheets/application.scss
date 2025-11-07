@@ -8,27 +8,41 @@
 
 
 /* Print watermark for view-agreement page */
+/* Use a real DOM element to avoid pseudo-element caching across multiple print invocations */
+.print-watermark { display: none; }
+
 @media print {
-  /* Target both the body class and the wrapper, to be resilient across print stacks */
+  /* Disable any existing pseudo-element watermark to prevent duplicates */
   body.view-agreement-has-watermark::before,
   body[class*="view-agreement-has-watermark"]::before,
   body.view-agreement-has-watermark .with-watermark::before {
-    content: 'DRAFT AGREEMENT';
+    content: none !important;
+  }
+
+  /* Hide any stale watermark nodes (we clone a fresh one each print) */
+  .print-watermark.print-watermark--stale {
+    display: none !important;
+  }
+
+  /* Show and position the DOM-based watermark so it reliably appears every time */
+  body.view-agreement-has-watermark .print-watermark {
+    display: block;
     position: fixed;
-    bottom: 4mm;
-    right: 8mm;
-    top: auto;
+    bottom: 12mm; /* a little lower to avoid overlap as requested */
+    right: 14mm;
     left: auto;
+    top: auto;
     transform: none;
-    font-size: 20pt;
-    font-weight: 900;
-    color: rgba(0, 0, 0, 0.18);
+    font-size: 22pt;
+    font-weight: 900; /* extra bold for print */
+    color: rgba(0, 0, 0, 0.22);
     letter-spacing: 0.5px;
     white-space: nowrap;
     z-index: 1000;
     pointer-events: none;
     mix-blend-mode: multiply;
     -webkit-print-color-adjust: exact;
+    page-break-inside: avoid;
     print-color-adjust: exact;
   }
 }
@@ -40,6 +54,27 @@
   body.view-agreement-has-watermark .govuk-main-wrapper {
     margin-top: 20px !important;
   }
+
+  /* Show an additional top-right label inside the fixed notification banner, every page */
+  body.view-agreement-has-watermark .print-banner-watermark {
+    display: inline-block !important;
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-weight: 900;
+    font-size: 12pt;
+    color: #0b0c0c;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    white-space: nowrap;
+    z-index: 10001;
+  }
+}
+
+/* Hide banner watermark on screen */
+body.view-agreement-has-watermark .print-banner-watermark {
+  display: none;
 }
 
 
@@ -137,5 +172,14 @@ body.view-agreement-has-watermark {
     max-width: none;
     box-sizing: border-box;
     font-weight: 400;
+  }
+}
+
+
+/* Force repaint on Chrome print preview for fixed positioned watermark (reliability fix) */
+@media print {
+  body.view-agreement-has-watermark.print-active .print-watermark {
+    /* Nudge transform to change composite layer and force repaint each time */
+    transform: translateZ(0.001px);
   }
 }
