@@ -5,3 +5,137 @@
 @use "core";
 @use "components";
 @use "partials";
+
+
+/* Print watermark for view-agreement page */
+@media print {
+  /* Target both the body class and the wrapper, to be resilient across print stacks */
+  body.view-agreement-has-watermark::before,
+  body[class*="view-agreement-has-watermark"]::before,
+  body.view-agreement-has-watermark .with-watermark::before {
+    content: 'DRAFT AGREEMENT';
+    position: fixed;
+    bottom: 4mm;
+    right: 8mm;
+    top: auto;
+    left: auto;
+    transform: none;
+    font-size: 20pt;
+    font-weight: 900;
+    color: rgba(0, 0, 0, 0.18);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    z-index: 1000;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+
+/* Print: */
+@media print {
+  /* Avoid overlap with main content */
+  body.view-agreement-has-watermark .govuk-main-wrapper {
+    margin-top: 20px !important;
+  }
+}
+
+
+/* View agreement banner and warning text adjustments */
+/* Scope to the draft/offered state only to avoid impacting other pages */
+body.view-agreement-has-watermark {
+  /* Notification banner: blue border only, no blue background */
+  .govuk-notification-banner {
+    font-family: GDS Transport, arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: transparent;
+    border: 5px solid #1d70b8;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.25;
+    margin-bottom: 30px;
+  }
+
+  .govuk-notification-banner__header {
+    background: transparent;
+    border-bottom: 0;
+    /* Remove all padding so there is no gap under the title */
+    padding: 0 !important;
+  }
+
+  .govuk-notification-banner__content {
+    color: #0b0c0c;
+    padding-top: 0 !important;
+    display: block;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+  }
+
+  /* Match requested styles for the notification banner title */
+  .govuk-notification-banner__title {
+    color: #b1b4b6;
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.25;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    margin: 0;
+  }
+
+  /* Position the warning icon just under the title and nudge content right */
+  .govuk-notification-banner .govuk-warning-text {
+    position: relative; /* positioning context for the icon */
+    /* Provide enough space for the icon + gap, and ensure full width */
+    padding-left: 50px; /* icon (~35px) + border + gap */
+    margin-top: 0 !important; /* remove excess gap under the title */
+    padding-top: 0 !important;
+    display: block;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    white-space: normal;
+  }
+
+  .govuk-notification-banner .govuk-warning-text__icon {
+    background: #0b0c0c;
+    border: 3px solid #0b0c0c;
+    border-radius: 50%;
+    box-sizing: border-box;
+    color: #fff;
+    display: inline-block;
+    font-size: 30px;
+    forced-color-adjust: none;
+    left: 0;
+    line-height: 29px;
+    margin-top: -7px;
+    min-height: 35px;
+    min-width: 35px;
+    position: absolute;
+    text-align: center;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  .govuk-notification-banner .govuk-warning-text__text {
+    display: block;
+    margin-left: 0;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    padding-left: 0;
+  }
+
+  .govuk-notification-banner .govuk-warning-text > span:not(.govuk-warning-text__icon):last-child {
+    display: block;
+    margin-left: 0;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    font-weight: 400;
+  }
+}
