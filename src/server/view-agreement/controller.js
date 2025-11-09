@@ -30,6 +30,7 @@ export const viewAgreementController = {
       address: [line1, line2, line3, line4, line5, street, city, postalCode]
         .filter(Boolean)
         .join(', '),
+      isDraftAgreement: agreementData?.status === 'offered',
       ...getAgreementCalculations(agreementData)
     })
   }
