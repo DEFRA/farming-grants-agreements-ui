@@ -80,11 +80,12 @@
     }
   ] %}
 
-  {% if isDevelopment %}
+  {% if not isProduction %}
     {% set footerLinks = footerLinks.concat([{
-      href: "./clear-application-state",
-      text: "Clear application state"
-    }]) %}
+        href: './clear-application-state',
+        text: 'Clear application state'
+      }])
+    %}
   {% endif %}
 
   {{ govukFooter({

@@ -72,7 +72,7 @@ describe('context and cache', () => {
           serviceTitle: 'Farm payments',
           serviceUrl: '/',
           serviceVersion: 'TEST',
-          isDevelopment: false
+          isProduction: false
         })
       })
 
@@ -168,7 +168,7 @@ describe('context and cache', () => {
           serviceTitle: 'Farm payments',
           serviceUrl: '/',
           serviceVersion: 'TEST',
-          isDevelopment: false
+          isProduction: false
         })
       })
     })

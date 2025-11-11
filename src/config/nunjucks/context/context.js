@@ -39,7 +39,7 @@ export function context(request) {
       return path.join(baseUrl, assetPath, webpackAssetPath ?? asset)
     },
     agreement: request.pre?.data?.agreementData,
-    isDevelopment: config.get('isDevelopment'),
+    isProduction: config.get('isProduction'),
     cspNonce: getContentSecurityPolicyNonce(request)
   }
 }
