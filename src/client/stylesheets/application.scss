@@ -27,17 +27,23 @@
   .view-agreement-has-watermark .print-watermark {
     display: block;
     position: fixed;
-    bottom: 12mm;
-    right: 14mm;
-    left: auto;
-    top: auto;
-    transform: none;
-    font-size: 22pt;
+
+    // Center on the page and rotate diagonally
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-35deg);
+
+    // Big, bold, GOV.UK font
     font-family: "GDS Transport", arial, sans-serif;
     font-weight: 900;
-    color: rgba(0, 0, 0, 0.22);
-    letter-spacing: 0.5px;
+    font-size: 120pt;
+
+    // Subtle but visible
+    color: rgba(0, 0, 0, 0.18);
+    letter-spacing: 2px;
     white-space: nowrap;
+
+    // Ensure it prints and doesn't interfere
     z-index: 1000;
     pointer-events: none;
     mix-blend-mode: multiply;
