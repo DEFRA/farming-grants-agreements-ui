@@ -71,7 +71,8 @@ describe('context and cache', () => {
           serviceName: 'farming-grants-agreements-ui',
           serviceTitle: 'Farm payments',
           serviceUrl: '/',
-          serviceVersion: 'TEST'
+          serviceVersion: 'TEST',
+          isDevelopment: false
         })
       })
 
@@ -166,7 +167,8 @@ describe('context and cache', () => {
           serviceName: 'farming-grants-agreements-ui',
           serviceTitle: 'Farm payments',
           serviceUrl: '/',
-          serviceVersion: 'TEST'
+          serviceVersion: 'TEST',
+          isDevelopment: false
         })
       })
     })
