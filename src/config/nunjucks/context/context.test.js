@@ -192,3 +192,33 @@ describe('context and cache', () => {
     })
   })
 })
+
+describe('SCSS request fallback to CSS when SCSS key missing in manifest', () => {
+  let contextImport
+  let contextResult
+
+  const mockRequest = {
+    path: '/',
+    pre: { data: { agreementData: 'mock agreement' } },
+    headers: { 'x-csp-nonce': 'mock-nonce' }
+  }
+
+  beforeAll(async () => {
+    vi.resetModules()
+    mockReadFileSync.mockReset()
+
+    // Provide a manifest that only contains the CSS key (no SCSS key)
+    mockReadFileSync.mockReturnValue(`{
+      "stylesheets/application.css": "stylesheets/application.css"
+    }`)
+
+    contextImport = await import('./context.js')
+    contextResult = contextImport.context(mockRequest)
+  })
+
+  test('maps SCSS request to existing CSS key in manifest', () => {
+    expect(
+      contextResult.getAssetPath('base-path', 'stylesheets/application.scss')
+    ).toBe('base-path/public/stylesheets/application.css')
+  })
+})
