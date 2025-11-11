@@ -5,3 +5,181 @@
 @use "core";
 @use "components";
 @use "partials";
+
+
+/* Print watermark for view-agreement page */
+/* Use a real DOM element to avoid pseudo-element caching across multiple print invocations */
+.print-watermark { display: none; }
+
+@media print {
+  /* Disable any existing pseudo-element watermark to prevent duplicates */
+  body.view-agreement-has-watermark::before,
+  body[class*="view-agreement-has-watermark"]::before,
+  body.view-agreement-has-watermark .with-watermark::before {
+    content: none !important;
+  }
+
+  /* Hide any stale watermark nodes (we clone a fresh one each print) */
+  .print-watermark.print-watermark--stale {
+    display: none !important;
+  }
+
+  /* Show and position the DOM-based watermark so it reliably appears every time */
+  body.view-agreement-has-watermark .print-watermark {
+    display: block;
+    position: fixed;
+    bottom: 12mm; /* a little lower to avoid overlap as requested */
+    right: 14mm;
+    left: auto;
+    top: auto;
+    transform: none;
+    font-size: 22pt;
+    font-weight: 900; /* extra bold for print */
+    color: rgba(0, 0, 0, 0.22);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    z-index: 1000;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    -webkit-print-color-adjust: exact;
+    page-break-inside: avoid;
+    print-color-adjust: exact;
+  }
+}
+
+
+/* Print: */
+@media print {
+  /* Avoid overlap with main content */
+  body.view-agreement-has-watermark .govuk-main-wrapper {
+    margin-top: 20px !important;
+  }
+
+  /* Show an additional top-right label inside the fixed notification banner, every page */
+  body.view-agreement-has-watermark .print-banner-watermark {
+    display: inline-block !important;
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-weight: 900;
+    font-size: 12pt;
+    color: #0b0c0c;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    white-space: nowrap;
+    z-index: 10001;
+  }
+}
+
+/* Hide banner watermark on screen */
+body.view-agreement-has-watermark .print-banner-watermark {
+  display: none;
+}
+
+
+/* View agreement banner and warning text adjustments */
+/* Scope to the draft/offered state only to avoid impacting other pages */
+body.view-agreement-has-watermark {
+  /* Notification banner: blue border only, no blue background */
+  .govuk-notification-banner {
+    font-family: GDS Transport, arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: transparent;
+    border: 5px solid #1d70b8;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.25;
+    margin-bottom: 30px;
+  }
+
+  .govuk-notification-banner__header {
+    background: transparent;
+    border-bottom: 0;
+    /* Remove all padding so there is no gap under the title */
+    padding: 0 !important;
+  }
+
+  .govuk-notification-banner__content {
+    color: #0b0c0c;
+    padding-top: 0 !important;
+    display: block;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+  }
+
+  /* Match requested styles for the notification banner title */
+  .govuk-notification-banner__title {
+    color: #b1b4b6;
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.25;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    margin: 0;
+  }
+
+  /* Position the warning icon just under the title and nudge content right */
+  .govuk-notification-banner .govuk-warning-text {
+    position: relative; /* positioning context for the icon */
+    /* Provide enough space for the icon + gap, and ensure full width */
+    padding-left: 50px; /* icon (~35px) + border + gap */
+    margin-top: 0 !important; /* remove excess gap under the title */
+    padding-top: 0 !important;
+    display: block;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    white-space: normal;
+  }
+
+  .govuk-notification-banner .govuk-warning-text__icon {
+    background: #0b0c0c;
+    border: 3px solid #0b0c0c;
+    border-radius: 50%;
+    box-sizing: border-box;
+    color: #fff;
+    display: inline-block;
+    font-size: 30px;
+    forced-color-adjust: none;
+    left: 0;
+    line-height: 29px;
+    margin-top: -7px;
+    min-height: 35px;
+    min-width: 35px;
+    position: absolute;
+    text-align: center;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  .govuk-notification-banner .govuk-warning-text__text {
+    display: block;
+    margin-left: 0;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    padding-left: 0;
+  }
+
+  .govuk-notification-banner .govuk-warning-text > span:not(.govuk-warning-text__icon):last-child {
+    display: block;
+    margin-left: 0;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    font-weight: 400;
+  }
+}
+
+
+/* Force repaint on Chrome print preview for fixed positioned watermark (reliability fix) */
+@media print {
+  body.view-agreement-has-watermark.print-active .print-watermark {
+    /* Nudge transform to change composite layer and force repaint each time */
+    transform: translateZ(0.001px);
+  }
+}

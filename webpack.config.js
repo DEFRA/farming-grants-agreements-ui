@@ -158,7 +158,7 @@ export default {
   },
   plugins: [
     new CleanWebpackPlugin(),
-    new WebpackAssetsManifest(),
+    new WebpackAssetsManifest({ output: 'assets-manifest.json' }),
     new CopyPlugin({
       patterns: [
         {
