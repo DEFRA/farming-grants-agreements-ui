@@ -35,8 +35,6 @@ export function context(request) {
     breadcrumbs: [],
     navigation: buildNavigation(request),
     getAssetPath(baseUrl, asset) {
-      // const webpackAssetPath = webpackManifest?.[asset]
-      // return path.join(baseUrl, assetPath, webpackAssetPath ?? asset)
       // Try exact key first
       let key = asset
       let webpackAssetPath = webpackManifest?.[key]
@@ -45,14 +43,18 @@ export function context(request) {
       if (!webpackAssetPath && key.endsWith('.scss')) {
         const cssKey = key.replace(/\.scss$/, '.css')
         webpackAssetPath = webpackManifest?.[cssKey]
-        if (webpackAssetPath) key = cssKey
+        if (webpackAssetPath) {
+          key = cssKey
+        }
       }
 
       // If not found and the request is for .css, try the corresponding .scss key
       if (!webpackAssetPath && key.endsWith('.css')) {
         const scssKey = key.replace(/\.css$/, '.scss')
         webpackAssetPath = webpackManifest?.[scssKey]
-        if (webpackAssetPath) key = scssKey
+        if (webpackAssetPath) {
+          key = scssKey
+        }
       }
 
       return path.join(baseUrl, assetPath, webpackAssetPath ?? key)
