@@ -72,7 +72,7 @@ describe('context and cache', () => {
           serviceTitle: 'Farm payments',
           serviceUrl: '/',
           serviceVersion: 'TEST',
-          isProduction: false
+          cdpEnvironment: 'local'
         })
       })
 
@@ -168,7 +168,7 @@ describe('context and cache', () => {
           serviceTitle: 'Farm payments',
           serviceUrl: '/',
           serviceVersion: 'TEST',
-          isProduction: false
+          cdpEnvironment: 'local'
         })
       })
     })
