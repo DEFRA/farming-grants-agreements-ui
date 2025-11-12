@@ -39,7 +39,7 @@ export function context(request) {
       return path.join(baseUrl, assetPath, webpackAssetPath ?? asset)
     },
     agreement: request.pre?.data?.agreementData,
-    isProduction: config.get('isProduction'),
+    cdpEnvironment: config.get('cdpEnvironment'),
     cspNonce: getContentSecurityPolicyNonce(request)
   }
 }

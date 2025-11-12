@@ -80,7 +80,7 @@
     }
   ] %}
 
-  {% if not isProduction %}
+  {% if cdpEnvironment !== 'prod' %}
     {% set footerLinks = footerLinks.concat([{
         href: './clear-application-state',
         text: 'Clear application state'
