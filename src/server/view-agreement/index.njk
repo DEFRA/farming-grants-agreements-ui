@@ -1,4 +1,4 @@
-{% set bodyClasses = "view-offer-page" ~ (" view-agreement-has-watermark" if showWatermark else "") %}
+{% set bodyClasses = "view-offer-page" ~ (" view-agreement-has-watermark" if isDraftAgreement else "") %}
 {% set mainClasses = "" %}
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
@@ -9,13 +9,13 @@
 
 {% block content %}
 
-  {% if showWatermark %}
+  {% if isDraftAgreement %}
   <div class="govuk-notification-banner" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
     <div class="govuk-notification-banner__header">
       <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">Important</h2>
-      {% if showWatermark %}
-            <span class="print-banner-watermark" aria-hidden="true">Draft Agreement</span>
-            {% endif %}
+      {% if isDraftAgreement %}
+         <span class="print-banner-watermark" aria-hidden="true">Draft Agreement</span>
+      {% endif %}
 
     </div>
     <div class="govuk-notification-banner__content">
@@ -33,12 +33,12 @@
   </div>
   {% endif %}
 
-  {% if showWatermark %}
+  {% if isDraftAgreement %}
     <div class="print-watermark" aria-hidden="true">DRAFT</div>
     <div class="print-watermark-header" aria-hidden="true">Draft Agreement</div>
   {% endif %}
 
-    <div class="with-watermark">
+  <div class="with-watermark">
 
 
 

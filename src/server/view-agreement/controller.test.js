@@ -67,8 +67,8 @@ describe('#viewAgreementController', () => {
   })
 })
 
-// Unit tests for showWatermark logic colocated in this existing test file
-describe('viewAgreementController.showWatermark (unit)', () => {
+// Unit tests for isDraftAgreement logic colocated in this existing test file
+describe('viewAgreementController.isDraftAgreement (unit)', () => {
   function createH() {
     return { view: vi.fn((template, context) => ({ template, context })) }
   }
@@ -94,7 +94,7 @@ describe('viewAgreementController.showWatermark (unit)', () => {
     }
   }
 
-  test("sets showWatermark true when agreement status is 'offered'", async () => {
+  test("sets isDraftAgreement true when agreement status is 'offered'", async () => {
     // Reset module cache and mock calculations helper before importing controller
     vi.resetModules()
     vi.doMock('../common/helpers/get-agreement-calculations.js', () => ({
@@ -114,10 +114,10 @@ describe('viewAgreementController.showWatermark (unit)', () => {
       'view-agreement/index',
       expect.any(Object)
     )
-    expect(context.showWatermark).toBe(true)
+    expect(context.isDraftAgreement).toBe(true)
   })
 
-  test("sets showWatermark false when agreement status is not 'offered'", async () => {
+  test("sets isDraftAgreement false when agreement status is not 'offered'", async () => {
     vi.resetModules()
     vi.doMock('../common/helpers/get-agreement-calculations.js', () => ({
       getAgreementCalculations: vi.fn(() => ({
@@ -136,6 +136,6 @@ describe('viewAgreementController.showWatermark (unit)', () => {
       'view-agreement/index',
       expect.any(Object)
     )
-    expect(context.showWatermark).toBe(false)
+    expect(context.isDraftAgreement).toBe(false)
   })
 })
