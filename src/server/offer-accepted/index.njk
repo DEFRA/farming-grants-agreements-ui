@@ -6,18 +6,15 @@
       <div class="govuk-grid-column-two-thirds">
         <div class="govuk-panel govuk-panel--confirmation">
           <h1 class="govuk-panel__title">
-            {{ pageTitle }}
+            {{ panelTitle }}
           </h1>
           <div class="govuk-panel__body">
-            The start date for these actions is<br/>
+            The start date for this agreement is<br/>
             {{ agreement.payment.agreementStartDate | formatDate('d MMMM yyyy') }}
           </div>
         </div>
         <div class="govuk-panel__body">
           <p class="govuk-body">Your agreement number is {{ agreement.agreementNumber }}.</p>
-          <h2 class="govuk-heading-m">
-            What happens next
-          </h2>
           <form method="post" class="govuk-!-display-inline">
             <p class="govuk-body">
               You can
@@ -26,17 +23,16 @@
                 name="action"
                 value="view-agreement"
                 class="govuk-body govuk-link link-button">
-                view your full agreement
+                view your agreement document
               </button>
-              including the terms and conditions for your selected actions.
+              including the terms and conditions for the agreement.
             </p>
           </form>
           <p class="govuk-body">
-            Read the guidance on <a href="https://www.gov.uk/find-funding-for-land-or-farms" class="govuk-link" rel="noopener noreferrer" target="_blank">funding for land or farms (opens in new tab)</a> to check what you must do to get paid for each action.
+            Read the <a href="https://www.gov.uk/find-funding-for-land-or-farms" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments information (opens in new tab)</a> to check what you must do to get paid for each of your selected actions.
           </p>
           {% if nearestQuarterlyPaymentDate %}
-            <p class="govuk-body">You will receive your first payment for these actions in
-              {{ nearestQuarterlyPaymentDate }}.</p>
+            <p class="govuk-body">You will receive your first payment for these actions in {{ nearestQuarterlyPaymentDate }}.</p>
           {% endif %}
         </div>
 
