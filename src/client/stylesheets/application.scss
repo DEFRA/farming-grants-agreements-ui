@@ -63,38 +63,9 @@
     margin-top: 20px !important;
   }
 
-  // Top-center print header visible on every printed page
-  .view-agreement-has-watermark .print-banner-watermark {
-    display: block !important;
-    position: fixed;
-    top: auto;
-    bottom: 2mm; // place in footer area to avoid overlap and ensure on every page
-    left: 0;
-    right: 0;
-    text-align: center;
-
-    font-family: "GDS Transport", arial, sans-serif;
-    font-weight: 900;
-    font-size: 12pt; // slightly larger for visibility
-    color: #6f777b;
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    white-space: nowrap;
-
-    z-index: 10001;
-    pointer-events: none;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    page-break-inside: avoid;
-  }
 
 }
 
-// Hide banner watermark on screen
-.view-agreement-has-watermark .print-banner-watermark {
-  display: none;
-}
 
 
 .view-agreement-has-watermark {
