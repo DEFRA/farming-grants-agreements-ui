@@ -1,7 +1,9 @@
 {% set bodyClasses = "accept-offer-page" %}
 {% set mainClasses = "" %}
+{% set pageScript = "accept-offer.js" %}
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 
 {% block beforeContent %}
   {{ super() }}
@@ -13,29 +15,52 @@
   <!-- Main Heading and Content -->
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-xl" style="font-family: 'GDS Transport', Arial, sans-serif; font-weight: bold;">{{ pageTitle }}</h1>
+      <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
 
-      <!-- Confirmation Text -->
-      <p class="govuk-body govuk-!-font-size-19" style="line-height:25px;">
-        If you accept this offer for funding, you confirm that:
-      </p>
+      <p class="govuk-body">Your agreement consists will consist of the:</p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>agreement document</li>
+        <li><a href="https://www.gov.uk/guidance/sfi-actions-for-soils" class="govuk-link" rel="noopener noreferrer" target="_blank">terms and conditions (opens in new tab)</a></li>
+        <li>actions you have selected</li>
+      </ul>
 
-      <!-- Confirmation Bullet Points -->
-      <ul class="govuk-list govuk-list--bullet govuk-!-font-size-19" style="line-height:25px;">
-        <li>you are entering into a legally binding agreement with Defra</li>
-        <li>you and your land will remain eligible for the duration of the actions you have selected</li>
-        <li>you will get any required regulatory consents, permissions and licences before you do your selected actions</li>
-        <li>you will complete your selected actions by following the guidance on <a href="https://www.gov.uk/find-funding-for-land-or-farms" class="govuk-link" rel="noopener noreferrer" target="_blank">funding for land or farms (opens in new tab)</a> that explains what you must do to get paid</li>
-        <li>you will submit an annual declaration to confirm you have complied, or expect to have complied with the requirements of the actions you have selected for that year - the Rural Payments Agency will contact you when you need to do this</li>
-        <li>you will comply with the <a href="#" class="govuk-link">terms and conditions (opens in new tab)</a> for your selected actions</li>
+      <p class="govuk-body">By accepting this offer, you confirm that:</p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>you will comply with the obligations under the your agreement</li>
+        <li>the information you gave and the declarations you made in your application remain true and accurate to the best of your knowledge and belief</li>
+        <li>you have full capacity and authority to enter into the agreement</li>
+        <li>you are not aware of any circumstances which would render you ineligible or otherwise prevent you from complying with your obligation under the agreement</li>
+        <li>your obligations under the agreement do not and will not duplicate or conflict in whole or in part with any other legal or contractual obligations you are subject to</li>
+        <li>you will at all times comply with all relevant law (as defined in the terms and conditions) in the performance of your obligations under the agreement</li>
+      </ul>
+
+      <p class="govuk-body">If you are accepting this offer on behalf of the agreement holder, you confirm you are authorised to:</p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>accept this agreement on the agreement holder's behalf</li>
+        <li>enter into the agreement on the agreement holder's behalf</li>
       </ul>
 
       <!-- Accept Button -->
       <form method="post" id="accept-offer-form">
+        {{ govukCheckboxes({
+          idPrefix: "confirm",
+          name: "confirm",
+          items: [
+            {
+              value: "confirmed",
+              text: "I confirm I have read the information in the this previous section and accept this agreement offer. I accept it either on my own behalf, or as someone authorised to act on behalf of the agreement holder."
+            }
+          ]
+        }) }}
+
         {{ govukButton({
           text: "Accept offer",
           name: "action",
-          value: "accept-offer"
+          value: "accept-offer",
+          disabled: true,
+          attributes: {
+            id: "accept-offer-button"
+          }
         }) }}
       </form>
 

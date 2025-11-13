@@ -96,5 +96,8 @@
 {% block bodyEnd %}
   <script type="module" src="{{ getAssetPath(baseUrl, 'application.js') }}"
   nonce="{{cspNonce}}"></script>
+  {% if pageScript %}
+  <script src="{{ getAssetPath(baseUrl, pageScript) }}"></script>
+  {% endif %}
   {% if serviceVersion %}<!-- {{ serviceVersion }} -->{% endif %}
 {% endblock %}
