@@ -6,6 +6,7 @@ export const offerAcceptedController = {
 
     return h.view('offer-accepted/index', {
       pageTitle: 'Offer accepted',
+      panelTitle: 'Agreement offer accepted',
       nearestQuarterlyPaymentDate: getFirstPaymentDate(
         agreementData.payment.agreementStartDate
       )

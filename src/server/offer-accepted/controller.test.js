@@ -54,7 +54,8 @@ describe('#offerAcceptedController', () => {
 
         expect(statusCode).toBe(200)
         expect(result).toContain('Offer accepted')
-        expect(result).toContain('The start date for these actions is')
+        expect(result).toContain('Agreement offer accepted')
+        expect(result).toContain('The start date for this agreement is')
         expect(result).toContain('1 September 2025')
         expect(result).toContain('SFI987654321')
       })
