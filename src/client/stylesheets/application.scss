@@ -31,24 +31,16 @@
   .view-agreement-has-watermark .print-watermark {
     display: block;
     position: fixed;
-
-    // Center on the page and rotate for diagonal effect
     top: 50%;
     left: 50%;
     right: auto;
     transform: translate(-50%, -50%) rotate(-35deg);
-
-    // Big, bold GOV.UK font
     font-family: "GDS Transport", arial, sans-serif;
     font-weight: 900;
     font-size: 120pt;
-
-    // Subtle but visible
     color: rgba(0, 0, 0, 0.18);
     letter-spacing: 2px;
     white-space: nowrap;
-
-    // Ensure it prints and doesn't interfere
     z-index: 1000;
     pointer-events: none;
     mix-blend-mode: multiply;
@@ -84,7 +76,7 @@
     font-family: "GDS Transport", arial, sans-serif;
     font-weight: 900;
     font-size: 12pt; // slightly larger for visibility
-    color: #6f777b; // GOV.UK secondary text grey: lighter to reduce visual weight
+    color: #6f777b;
     background: transparent;
     padding: 0;
     margin: 0;
@@ -105,8 +97,6 @@
 }
 
 
-// View agreement banner and warning text adjustments
-// Scope to the draft/offered state only to avoid impacting other pages
 .view-agreement-has-watermark {
   // Notification banner: blue border only, no blue background
   .govuk-notification-banner {
@@ -124,7 +114,6 @@
   .govuk-notification-banner__header {
     background: transparent;
     border-bottom: 0;
-    // Remove all padding so there is no gap under the title
     padding: 0 !important;
   }
 
