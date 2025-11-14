@@ -53,7 +53,7 @@ describe('#reviewOfferController', () => {
         })
 
         expect(statusCode).toBe(200)
-        expect(result).toContain('Review your funding offer')
+        expect(result).toContain('Review your agreement offer')
         expect(result).toContain('Assess moorland and produce a written record')
         expect(result).toContain('CMOR1')
         expect(result).toContain('SD6743')
