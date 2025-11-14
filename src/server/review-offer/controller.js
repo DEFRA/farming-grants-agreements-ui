@@ -1,3 +1,4 @@
+import { differenceInYears, parseISO } from 'date-fns'
 import {
   calculateFirstPaymentForAgreementLevelItem,
   calculateFirstPaymentForParcelItem,
@@ -20,6 +21,12 @@ export const reviewOfferController = {
       {}
     )
 
+    // Calculate duration in years using date-fns
+    const durationInYears = differenceInYears(
+      parseISO(payment.agreementEndDate),
+      parseISO(payment.agreementStartDate)
+    )
+
     const quarterlyPayment = payment.payments?.[payment.payments?.length - 1]
 
     const payments = [
@@ -27,6 +34,7 @@ export const reviewOfferController = {
         ...i,
         description: codeDescriptions[i.code],
         unit: i.unit.replace(/s$/, ''),
+        duration: durationInYears,
         quarterlyPayment: quarterlyPayment?.lineItems.find(
           (li) => li.parcelItemId === Number(key)
         )?.paymentPence,
@@ -44,6 +52,7 @@ export const reviewOfferController = {
           ...i,
           description: `One-off payment per agreement per year for ${codeDescriptions[i.code]}`,
           rateInPence: i.annualPaymentPence,
+          duration: durationInYears,
           quarterlyPayment: quarterlyPayment?.lineItems.find(
             (li) => li.agreementLevelItemId === Number(key)
           )?.paymentPence,
@@ -61,7 +70,7 @@ export const reviewOfferController = {
     ].sort((a, b) => a.code.localeCompare(b.code))
 
     return h.view('review-offer/index', {
-      pageTitle: 'Review your funding offer',
+      pageTitle: 'Review your agreement offer',
       actionApplications,
       codeDescriptions,
       payments,
