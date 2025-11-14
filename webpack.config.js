@@ -22,6 +22,9 @@ export default {
   entry: {
     application: {
       import: ['./javascripts/application.js', './stylesheets/application.scss']
+    },
+    'accept-offer': {
+      import: './javascripts/accept-offer.js'
     }
   },
   experiments: {
