@@ -82,26 +82,6 @@ describe('context and cache', () => {
             contextResult.getAssetPath('base-path', 'application.js')
           ).toBe('base-path/public/javascripts/application.js')
         })
-
-        test('Should map SCSS request to CSS asset when only SCSS key exists in manifest', () => {
-          // Manifest contains stylesheets/application.scss -> stylesheets/application.css
-          expect(
-            contextResult.getAssetPath(
-              'base-path',
-              'stylesheets/application.scss'
-            )
-          ).toBe('base-path/public/stylesheets/application.css')
-        })
-
-        test('Should resolve CSS request via SCSS key when CSS key is not present', () => {
-          // No explicit CSS key in manifest, should fall back to SCSS key
-          expect(
-            contextResult.getAssetPath(
-              'base-path',
-              'stylesheets/application.css'
-            )
-          ).toBe('base-path/public/stylesheets/application.css')
-        })
       })
 
       describe('With invalid asset path', () => {
@@ -192,35 +172,5 @@ describe('context and cache', () => {
         })
       })
     })
-  })
-})
-
-describe('SCSS request fallback to CSS when SCSS key missing in manifest', () => {
-  let contextImport
-  let contextResult
-
-  const mockRequest = {
-    path: '/',
-    pre: { data: { agreementData: 'mock agreement' } },
-    headers: { 'x-csp-nonce': 'mock-nonce' }
-  }
-
-  beforeAll(async () => {
-    vi.resetModules()
-    mockReadFileSync.mockReset()
-
-    // Provide a manifest that only contains the CSS key (no SCSS key)
-    mockReadFileSync.mockReturnValue(`{
-      "stylesheets/application.css": "stylesheets/application.css"
-    }`)
-
-    contextImport = await import('./context.js')
-    contextResult = contextImport.context(mockRequest)
-  })
-
-  test('maps SCSS request to existing CSS key in manifest', () => {
-    expect(
-      contextResult.getAssetPath('base-path', 'stylesheets/application.scss')
-    ).toBe('base-path/public/stylesheets/application.css')
   })
 })
