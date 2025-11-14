@@ -43,30 +43,30 @@
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
             <dl class="govuk-body dataset-info">
-                <dd>
+                <dt>
                     Agreement holder:
-                </dd>
-                <dt>{{ agreement.applicant.business.name }}</dt>
-                <dd>
+                </dt>
+                <dd>{{ agreement.applicant.business.name }}</dd>
+                <dt>
                     SBI:
-                </dd>
-                <dt>{{ agreement.identifiers.sbi }}</dt>
-                <dd>
+                </dt>
+                <dd>{{ agreement.identifiers.sbi }}</dd>
+                <dt>
                     Address:
-                </dd>
-                <dt>{{ address }}</dt>
-                <dd>
+                </dt>
+                <dd>{{ address }}</dd>
+                <dt>
                     Agreement name:
-                </dd>
-                <dt>{{ agreementName }}</dt>
-                <dd>
+                </dt>
+                <dd>{{ agreementName }}</dd>
+                <dt>
                     Agreement number:
-                </dd>
-                <dt>{{ agreement.agreementNumber }}</dt>
-                <dd>
+                </dt>
+                <dd>{{ agreement.agreementNumber }}</dd>
+                <dt>
                     Start date:
-                </dd>
-                <dt>{{ agreement.payment.agreementStartDate | formatDate("d MMMM yyyy") }}</dt>
+                </dt>
+                <dd>{{ agreement.payment.agreementStartDate | formatDate("d MMMM yyyy") }}</dd>
             </dl>
         </div>
     </div>

@@ -16,7 +16,7 @@
   text-decoration: none;
 }
 
-.dataset-info dd {
+.dataset-info dt {
   margin-left: 0;
   width: 35%;
 }
@@ -28,9 +28,9 @@
   vertical-align: text-top;
 }
 
-.dataset-info dt {
-  width: 30%;
+.dataset-info dd {
   font-weight: bold;
+  width: 30%;
   white-space: nowrap;
   margin-right: 5px;
 }
