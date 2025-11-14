@@ -82,26 +82,6 @@ describe('context and cache', () => {
             contextResult.getAssetPath('base-path', 'application.js')
           ).toBe('base-path/public/javascripts/application.js')
         })
-
-        // test('Should map SCSS request to CSS asset when only SCSS key exists in manifest', () => {
-        //   // Manifest contains stylesheets/application.scss -> stylesheets/application.css
-        //   expect(
-        //     contextResult.getAssetPath(
-        //       'base-path',
-        //       'stylesheets/application.scss'
-        //     )
-        //   ).toBe('base-path/public/stylesheets/application.css')
-        // })
-        //
-        // test('Should resolve CSS request via SCSS key when CSS key is not present', () => {
-        //   // No explicit CSS key in manifest, should fall back to SCSS key
-        //   expect(
-        //     contextResult.getAssetPath(
-        //       'base-path',
-        //       'stylesheets/application.css'
-        //     )
-        //   ).toBe('base-path/public/stylesheets/application.css')
-        // })
       })
 
       describe('With invalid asset path', () => {
