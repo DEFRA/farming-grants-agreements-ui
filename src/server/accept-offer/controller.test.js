@@ -57,9 +57,12 @@ describe('#acceptOfferController', () => {
           })
 
           expect(statusCode).toBe(200)
-          expect(result).toContain('Accept your offer')
+          expect(result).toContain('Accept your agreement offer')
           expect(result).toContain(
-            'you are entering into a legally binding agreement with Defra'
+            'Your agreement consists will consist of the:'
+          )
+          expect(result).toContain(
+            'you will comply with the obligations under the your agreement'
           )
           expect(result).toContain('Accept offer')
         })

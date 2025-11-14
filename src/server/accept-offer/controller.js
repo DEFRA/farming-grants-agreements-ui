@@ -13,7 +13,7 @@ export const acceptOfferController = {
     }
 
     return h.view('accept-offer/index', {
-      pageTitle: 'Accept your offer'
+      pageTitle: 'Accept your agreement offer'
     })
   }
 }
