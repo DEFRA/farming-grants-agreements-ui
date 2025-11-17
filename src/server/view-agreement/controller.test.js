@@ -33,7 +33,7 @@ describe('#viewAgreementController', () => {
       .addInteraction()
       .given('A customer has an accepted agreement offer')
       .uponReceiving('a request from the customer to view their offer')
-      .withRequest('GET', '/', (builder) => {
+      .withRequest('GET', '/SFI987654321', (builder) => {
         builder.headers({ 'x-encrypted-auth': 'mock-auth' })
       })
       .willRespondWith(200, (builder) => {
@@ -46,13 +46,10 @@ describe('#viewAgreementController', () => {
         config.set('backend.url', mockServer.url)
 
         const { statusCode, result } = await server.inject({
-          method: 'POST',
-          url: '/',
+          method: 'GET',
+          url: '/SFI987654321',
           headers: {
             'x-encrypted-auth': 'mock-auth'
-          },
-          payload: {
-            action: 'view-agreement'
           }
         })
 
