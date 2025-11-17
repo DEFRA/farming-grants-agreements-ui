@@ -2,9 +2,33 @@
 {% set mainClasses = "" %}
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/details/macro.njk" import govukDetails %}
 
 {% block content %}
   <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+  <p class="govuk-body">If you accept this agreement offer, the resulting agreement will be between Defra and:</p>
+
+  <p class="govuk-body">
+    {{ agreement.applicant.business.name }}<br>
+    {{ agreement.applicant.business.address.line1 }}, {{ agreement.applicant.business.address.town }}, {{ agreement.applicant.business.address.postcode }}<br>
+    SBI: {{ agreement.identifiers.sbi }}
+  </p>
+
+  <p class="govuk-body">Your agreement will start on the first day of the month after you accept this offer.</p>
+
+  <p class="govuk-body">
+    The <a href="https://www.gov.uk/guidance/sfi-terms-and-conditions" class="govuk-link" rel="noopener noreferrer" target="_blank">terms and conditions (opens in new tab)</a> and <a href="https://www.gov.uk/guidance/sfi-actions-find-funding-for-land-based-environmental-actions" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments information (opens in new tab)</a> set out the rules:
+  </p>
+
+  <ul class="govuk-list govuk-list--bullet">
+    <li>which apply to your agreement</li>
+    <li>you must follow when you enter your agreement</li>
+  </ul>
+
+  <p class="govuk-body">
+    <a href="#" class="govuk-link" data-module="print-link" data-print-link-module-started="true">Print this agreement offer</a>
+  </p>
 
   <table class="govuk-table">
     <caption class="govuk-table__caption govuk-table__caption--m">Actions</caption>
@@ -13,17 +37,20 @@
         <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Action</th>
         <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Code</th>
         <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Land parcel</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="white-space: nowrap;">Quantity</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="white-space: nowrap;">Quantity (ha)</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Duration</th>
       </tr>
     </thead>
     <tbody class="govuk-table__body">
       {% for action in actionApplications %}
+        {% set actionPayment = payments | selectattr('code', 'equalto', action.code) | first %}
         <tr class="govuk-table__row" id="actionRow{{ loop.index }}">
           <td class="govuk-table__cell govuk-!-font-size-19" id="actionTableActionRow{{ loop.index }}">{{ codeDescriptions[action.code] }}</td>
           <td class="govuk-table__cell govuk-!-font-size-19" id="actionTableCodeRow{{ loop.index }}">{{ action.code }}</td>
           <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;" id="actionTableLandParcelRow{{ loop.index }}">{{ action.sheetId }}
             {{ action.parcelId }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;" id="actionTableQuantityRow{{ loop.index }}">{{ action.appliedFor.quantity | round(4) }}&nbsp;{{ action.appliedFor.unit }}</td>
+          <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;" id="actionTableQuantityRow{{ loop.index }}">{{ action.appliedFor.quantity | round(4) }}</td>
+          <td class="govuk-table__cell govuk-!-font-size-19" id="actionTableDurationRow{{ loop.index }}">{{ actionPayment.duration }} {{ 'year' if actionPayment.duration == 1 else 'years' }}</td>
         </tr>
       {% endfor %}
     </tbody>
@@ -32,13 +59,27 @@
   <br>
   <h2 class="govuk-heading-m">Payments</h2>
   <p class="govuk-body govuk-!-font-size-19">
-    If you accept this offer, you will receive these payments for each action.
-    <br>
-    <br>
-    You will usually receive your first payment in the fourth month after your
-    <br>
-    agreement's start date.
+    If you accept this agreement offer, you will receive the following payments for each action.
   </p>
+  <p class="govuk-body govuk-!-font-size-19">
+    You will receive your payments in 4 instalments. Your first payment may be a different amount due to the Rural Payments Agency rounding it up. Your other payments are equally split.
+  </p>
+  <p class="govuk-body govuk-!-font-size-19">
+    You will usually receive your first payment in the fourth month after your agreement's start date.
+  </p>
+
+   <h3 class="govuk-heading-s">Additional yearly payments</h3>
+  {% for payment in payments %}
+    {% if payment.description.startsWith('One-off') %}
+      <p class="govuk-body govuk-!-font-size-19">
+        There is a payment of {{ payment.rateInPence | formatPenceCurrency }} per agreement per year for action '{{ codeDescriptions[payment.code] }}: {{ payment.code }} '.
+      </p>
+      <p class="govuk-body govuk-!-font-size-19">
+        You will receive this payment if you are not already doing this action on another land parcel.
+      </p>
+    {% endif %}
+  {% endfor %}
+
   <table class="govuk-table">
     <thead class="govuk-table__head">
       <tr class="govuk-table__row">
@@ -89,5 +130,6 @@
     }) }}
   </form>
 
+  {% set section = { message: 'Contact the Rural Payments Agency (RPA) to update your offer.' } %}
   {% include "partials/help/update.njk" %}
 {% endblock %}

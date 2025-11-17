@@ -16,13 +16,16 @@ createAll(Radios)
 createAll(SkipLink)
 
 document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.querySelector('.gem-c-print-link__button')
-  if (!btn) {
-    return
-  }
-  btn.type = 'button'
-  btn.addEventListener('click', (e) => {
-    e.preventDefault()
-    window.print()
+  const printElements = document.querySelectorAll(
+    '.gem-c-print-link__button, [data-module="print-link"]'
+  )
+  printElements.forEach((element) => {
+    if (element.tagName === 'BUTTON') {
+      element.type = 'button'
+    }
+    element.addEventListener('click', (e) => {
+      e.preventDefault()
+      window.print()
+    })
   })
 })
