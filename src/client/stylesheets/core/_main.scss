@@ -115,12 +115,14 @@ a:link,
   }
 
   .dataset-info dd {
-    width: 30% !important;
+    width: 60% !important;
     margin-left: 0 !important;
+    white-space: normal !important;
+    word-break: break-word;
   }
 
   .dataset-info dt {
-    width: 68% !important;
+    width: 38% !important;
     white-space: normal !important;
     word-wrap: break-word;
   }
