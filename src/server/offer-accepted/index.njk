@@ -17,7 +17,7 @@
           <p class="govuk-body">Your agreement number is {{ agreement.agreementNumber }}.</p>
           <p class="govuk-body">
             You can
-            <a href="{{ buildUrl(baseUrl) }}{{ agreement.agreementNumber }}" class="govuk-link">
+            <a href="{{ buildUrl(baseUrl, agreement.agreementNumber) }}" class="govuk-link">
               view your agreement document
             </a>
             including the terms and conditions for the agreement.
