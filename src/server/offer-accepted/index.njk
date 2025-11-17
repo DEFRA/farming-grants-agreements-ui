@@ -15,19 +15,13 @@
         </div>
         <div class="govuk-panel__body">
           <p class="govuk-body">Your agreement number is {{ agreement.agreementNumber }}.</p>
-          <form method="post" class="govuk-!-display-inline">
-            <p class="govuk-body">
-              You can
-              <button
-                type="submit"
-                name="action"
-                value="view-agreement"
-                class="govuk-body govuk-link link-button">
-                view your agreement document
-              </button>
-              including the terms and conditions for the agreement.
-            </p>
-          </form>
+          <p class="govuk-body">
+            You can
+            <a href="{{ buildUrl(baseUrl) }}{{ agreement.agreementNumber }}" class="govuk-link">
+              view your agreement document
+            </a>
+            including the terms and conditions for the agreement.
+          </p>
           <p class="govuk-body">
             Read the <a href="https://www.gov.uk/find-funding-for-land-or-farms" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments information (opens in new tab)</a> to check what you must do to get paid for each of your selected actions.
           </p>
