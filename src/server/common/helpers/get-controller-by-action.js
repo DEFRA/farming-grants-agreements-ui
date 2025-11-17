@@ -2,7 +2,6 @@ import Boom from '@hapi/boom'
 
 import { reviewOfferController } from '../../review-offer/controller.js'
 import { acceptOfferController } from '../../accept-offer/controller.js'
-import { viewAgreementController } from '../../view-agreement/controller.js'
 import { offerAcceptedController } from '../../offer-accepted/controller.js'
 import { offerWithdrawnController } from '../../offer-withdrawn/controller.js'
 
@@ -20,16 +19,7 @@ export const getControllerByAction = (agreementStatus) => {
       }
     }
   } else if (agreementStatus === 'accepted') {
-    chooseControllerByActionOffer = (action) => {
-      switch (action) {
-        case 'view-agreement':
-          return viewAgreementController
-        case 'accept-offer':
-        case 'offer-accepted':
-        default:
-          return offerAcceptedController
-      }
-    }
+    chooseControllerByActionOffer = () => offerAcceptedController
   } else if (agreementStatus === 'withdrawn') {
     chooseControllerByActionOffer = () => offerWithdrawnController
   } else {

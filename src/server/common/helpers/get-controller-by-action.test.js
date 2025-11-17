@@ -4,7 +4,6 @@ import { getControllerByAction } from './get-controller-by-action.js'
 
 import { reviewOfferController } from '../../review-offer/controller.js'
 import { acceptOfferController } from '../../accept-offer/controller.js'
-import { viewAgreementController } from '../../view-agreement/controller.js'
 import { offerAcceptedController } from '../../offer-accepted/controller.js'
 import { offerWithdrawnController } from '../../offer-withdrawn/controller.js'
 
@@ -20,10 +19,8 @@ describe('#getControllerByAction', () => {
     expect(chooser()).toBe(reviewOfferController)
   })
 
-  test("when status is 'accepted' returns viewAgreementController for view-agreement and offerAcceptedController for other actions/default", () => {
+  test("when status is 'accepted' returns offerAcceptedController for other actions/default", () => {
     const chooser = getControllerByAction('accepted')
-
-    expect(chooser('view-agreement')).toBe(viewAgreementController)
 
     expect(chooser('accept-offer')).toBe(offerAcceptedController)
     expect(chooser('offer-accepted')).toBe(offerAcceptedController)
