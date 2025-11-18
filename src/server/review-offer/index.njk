@@ -62,7 +62,7 @@
     If you accept this agreement offer, you will receive the following payments for each action.
   </p>
   <p class="govuk-body govuk-!-font-size-19">
-    You will receive your payments in 4 instalments. Your first payment may be a different amount due to the Rural Payments Agency rounding it up. Your other payments are equally split.
+    You will receive your payments in 4 instalments. Your first payment may be a different amount due to the Rural Payments Agency rounding it up. Your other 3 payments are evenly split.
   </p>
   <p class="govuk-body govuk-!-font-size-19">
     You will usually receive your first payment in the fourth month after your agreement's start date.
@@ -72,7 +72,7 @@
   {% for payment in payments %}
     {% if payment.description.startsWith('One-off') %}
       <p class="govuk-body govuk-!-font-size-19">
-        There is a payment of {{ payment.rateInPence | formatPenceCurrency }} per agreement per year for action '{{ codeDescriptions[payment.code] }}: {{ payment.code }} '.
+        There is a payment of {{ payment.rateInPence | formatPenceCurrency }} per agreement per year for action '{{ codeDescriptions[payment.code] }}: {{ payment.code }}'.
       </p>
       <p class="govuk-body govuk-!-font-size-19">
         You will receive this payment if you are not already doing this action on another land parcel.
@@ -110,7 +110,7 @@
       <tr>
         <td class="govuk-table__cell" style="border-bottom: none;"></td>
         <td class="govuk-table__cell" style="border-bottom: none;"></td>
-        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="border-bottom: none;">Total payment</td>
+        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="border-bottom: none;"></td>
         <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align:right; border-bottom: none;" id="paymentsTableTotalFirstPayment">
           {{ totalFirstPayment | formatPenceCurrency }}
         </td>
