@@ -11,16 +11,34 @@ const mockLoggerError = vi.fn()
 
 vi.mock('ioredis', () => ({
   ...vi.importActual('ioredis'),
-  Cluster: vi.fn().mockReturnValue({ on: () => ({}) }),
-  Redis: vi.fn().mockReturnValue({ on: () => ({}) })
+  Cluster: vi.fn(function () {
+    return {
+      on: function () {
+        return {}
+      }
+    }
+  }),
+  Redis: vi.fn(function () {
+    return {
+      on: function () {
+        return {}
+      }
+    }
+  })
 }))
 vi.mock('@hapi/catbox-redis')
 vi.mock('@hapi/catbox-memory')
 vi.mock('../logging/logger.js', () => ({
-  createLogger: () => ({
-    info: (...args) => mockLoggerInfo(...args),
-    error: (...args) => mockLoggerError(...args)
-  })
+  createLogger: function () {
+    return {
+      info: function (...args) {
+        return mockLoggerInfo(...args)
+      },
+      error: function (...args) {
+        return mockLoggerError(...args)
+      }
+    }
+  }
 }))
 
 describe('#getCacheEngine', () => {
