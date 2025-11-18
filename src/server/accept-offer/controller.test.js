@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { Pact, MatchersV2 } from '@pact-foundation/pact'
+import { MatchersV2, Pact } from '@pact-foundation/pact'
 
 import { createServer } from '../server.js'
 import { expectedAgreement } from '../common/helpers/sample-data/__test__/expected-agreement.mock.js'
@@ -58,11 +58,9 @@ describe('#acceptOfferController', () => {
 
           expect(statusCode).toBe(200)
           expect(result).toContain('Accept your agreement offer')
+          expect(result).toContain('Your agreement will consist of the:')
           expect(result).toContain(
-            'Your agreement consists will consist of the:'
-          )
-          expect(result).toContain(
-            'you will comply with the obligations under the your agreement'
+            'you will comply with the obligations under your agreement'
           )
           expect(result).toContain('Accept offer')
         })
