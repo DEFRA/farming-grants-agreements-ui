@@ -11,7 +11,7 @@
 
   <p class="govuk-body">
     {{ agreement.applicant.business.name }}<br>
-    {{ agreement.applicant.business.address.line1 }}, {{ agreement.applicant.business.address.town }}, {{ agreement.applicant.business.address.postcode }}<br>
+    {{ getAddress(agreement) }}<br>
     SBI: {{ agreement.identifiers.sbi }}
   </p>
 
