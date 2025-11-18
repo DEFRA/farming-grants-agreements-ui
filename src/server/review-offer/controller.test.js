@@ -54,6 +54,9 @@ describe('#reviewOfferController', () => {
 
         expect(statusCode).toBe(200)
         expect(result).toContain('Review your agreement offer')
+        expect(result).toContain(
+          '3 Example Lane, Example Village, Example Lane, Exampleton, ZZ99 3ZZ'
+        )
         expect(result).toContain('Assess moorland and produce a written record')
         expect(result).toContain('CMOR1')
         expect(result).toContain('AA0006')

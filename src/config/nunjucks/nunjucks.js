@@ -55,3 +55,26 @@ Object.entries(filters).forEach(([name, filter]) => {
 })
 
 nunjucksEnvironment.addGlobal('buildUrl', (...args) => path.join(...args))
+
+nunjucksEnvironment.addGlobal('getAddress', (agreementData) => {
+  const {
+    applicant: {
+      business: {
+        address: {
+          line1,
+          line2,
+          line3,
+          line4,
+          line5,
+          street,
+          city,
+          postalCode
+        } = {}
+      } = {}
+    } = {}
+  } = agreementData
+
+  return [line1, line2, line3, line4, line5, street, city, postalCode]
+    .filter(Boolean)
+    .join(', ')
+})

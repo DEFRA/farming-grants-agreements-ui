@@ -54,7 +54,7 @@
                 <dt>
                     Address:
                 </dt>
-                <dd>{{ address }}</dd>
+                <dd>{{ getAddress(agreement) }}</dd>
                 <dt>
                     Agreement name:
                 </dt>
@@ -134,7 +134,7 @@
             </p>
             <h2 id="parties" class="govuk-heading-l">2. Parties to the agreement</h2>
             <p class="govuk-body">This Agreement is between:</p>
-            <p class="govuk-body">You, {{ agreement.applicant.business.name }}, of {{ address }}
+            <p class="govuk-body">You, {{ agreement.applicant.business.name }}, of {{ getAddress(agreement) }}
                 and the Rural Payments Agency (acting as a delivery body on behalf of the Department for Environment, Food and
                 Rural Affairs), PO Box 324, Worksop, S95 1DF ("us", "we", "our").
             </p>
