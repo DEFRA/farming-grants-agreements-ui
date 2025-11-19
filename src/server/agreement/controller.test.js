@@ -91,6 +91,33 @@ describe('#agreementController', () => {
       expect(result).toContain('Unable to load agreement')
     })
 
+    test('should show "not found" error page when not found', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: async () => ({})
+      })
+
+      const { statusCode, result } = await server.inject({
+        method: 'GET',
+        url: '/SFI123456789',
+        headers: {
+          'x-encrypted-auth': 'mock-auth'
+        }
+      })
+
+      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/SFI123456789', {
+        headers: {
+          'x-encrypted-auth': 'mock-auth'
+        },
+        method: 'GET',
+        signal: expect.any(AbortSignal)
+      })
+
+      expect(statusCode).toBe(statusCodes.notFound)
+      expect(result).toContain('Page not found')
+    })
+    
     test('should show "not authorised" error page when not authorised', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
