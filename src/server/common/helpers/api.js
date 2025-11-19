@@ -9,16 +9,28 @@ export const apiRequest = async ({
   auth,
   body
 }) => {
-  const response = await fetch(`${config.get('backend.url')}/${agreementId}`, {
-    method,
-    headers: {
-      ...(method.toUpperCase() !== 'GET'
-        ? { 'Content-Type': 'application/json' }
-        : {}),
-      'x-encrypted-auth': auth
-    },
-    ...(body ? { body: JSON.stringify(body) } : {})
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(
+    () => controller.abort(new Error('Network timed out while fetching data')),
+    config.get('backend.timeout')
+  )
+
+  let response
+  try {
+    response = await fetch(`${config.get('backend.url')}/${agreementId}`, {
+      method,
+      headers: {
+        ...(method.toUpperCase() !== 'GET'
+          ? { 'Content-Type': 'application/json' }
+          : {}),
+        'x-encrypted-auth': auth
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+      signal: controller.signal
+    })
+  } finally {
+    clearTimeout(timeoutId)
+  }
 
   if (!response.ok) {
     if (response.status === statusCodes.notFound) {
