@@ -60,6 +60,34 @@ describe('#agreementController', () => {
         signal: expect.any(AbortSignal)
       })
     })
+
+    test('should call the backend API with POST data', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({})
+      })
+
+      await server.inject({
+        method: 'POST',
+        url: '/',
+        headers: {
+          'x-encrypted-auth': 'mock-auth'
+        },
+        payload: {
+          action: 'accept-offer'
+        }
+      })
+
+      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/', {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-encrypted-auth': 'mock-auth'
+        },
+        method: 'POST',
+        body: '{"action":"accept-offer"}',
+        signal: expect.any(AbortSignal)
+      })
+    })
   })
 
   describe('failure', () => {
@@ -117,7 +145,7 @@ describe('#agreementController', () => {
       expect(statusCode).toBe(statusCodes.notFound)
       expect(result).toContain('Page not found')
     })
-    
+
     test('should show "not authorised" error page when not authorised', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
