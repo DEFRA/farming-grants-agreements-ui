@@ -249,6 +249,12 @@ export const config = convict({
       format: String,
       default: 'http://localhost:3555',
       env: 'BACKEND_URL'
+    },
+    timeout: {
+      doc: 'The farming-grants-agreements-api timeout in ms',
+      format: Number,
+      default: 30000,
+      env: 'BACKEND_TIMEOUT'
     }
   }
 })
