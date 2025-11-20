@@ -5,11 +5,13 @@ import { viewAgreementController } from '../view-agreement/controller.js'
 const getAgreementData = async (request) => {
   const { agreementId = '' } = request.params
   const action = request?.payload?.action
+  const method = action === 'accept-offer' ? 'POST' : 'GET'
 
   return apiRequest({
     agreementId,
-    method: action === 'accept-offer' ? 'POST' : 'GET',
-    auth: request.headers['x-encrypted-auth']
+    method,
+    auth: request.headers['x-encrypted-auth'],
+    body: method === 'POST' ? request.payload : undefined
   })
 }
 

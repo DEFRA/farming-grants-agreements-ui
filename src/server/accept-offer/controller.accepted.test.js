@@ -38,6 +38,9 @@ describe('#acceptOfferController', () => {
             'Content-Type': 'application/json',
             'x-encrypted-auth': 'mock-auth'
           })
+          builder.jsonBody({
+            action: 'accept-offer'
+          })
         })
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
