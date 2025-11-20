@@ -5,33 +5,39 @@
 {% from "govuk/components/details/macro.njk" import govukDetails %}
 
 {% block content %}
-  <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
 
-  <p class="govuk-body">If you accept this agreement offer, the resulting agreement will be between Defra and:</p>
+      <p class="govuk-body">If you accept this agreement offer, the resulting agreement will be between Defra and:</p>
 
-  <p class="govuk-body">
-    {{ agreement.applicant.business.name }}<br>
-    {{ getAddress(agreement) }}<br>
-    SBI: {{ agreement.identifiers.sbi }}
-  </p>
+      <p class="govuk-body">
+        {{ agreement.applicant.business.name }}<br>
+        {{ getAddress(agreement) }}<br>
+        SBI: {{ agreement.identifiers.sbi }}
+      </p>
 
-  <p class="govuk-body">Your agreement will start on the first day of the month after you accept this offer.</p>
+      <p class="govuk-body">Your agreement will start on the first day of the month after you accept this offer.</p>
 
-  <p class="govuk-body">
-    The <a href="https://www.gov.uk/guidance/sfi-terms-and-conditions" class="govuk-link" rel="noopener noreferrer" target="_blank">terms and conditions (opens in new tab)</a> and <a href="https://www.gov.uk/guidance/sfi-actions-find-funding-for-land-based-environmental-actions" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments information (opens in new tab)</a> set out the rules:
-  </p>
+      <p class="govuk-body">
+        The <a href="https://www.gov.uk/guidance/sfi-terms-and-conditions" class="govuk-link" rel="noopener noreferrer" target="_blank">terms and conditions (opens in new tab)</a> and <a href="https://www.gov.uk/guidance/sfi-actions-find-funding-for-land-based-environmental-actions" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments information (opens in new tab)</a> set out the rules:
+      </p>
 
-  <ul class="govuk-list govuk-list--bullet">
-    <li>which apply to your agreement</li>
-    <li>you must follow when you enter your agreement</li>
-  </ul>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>which apply to your agreement</li>
+        <li>you must follow when you enter your agreement</li>
+      </ul>
 
-  <p class="govuk-body">
-    <a href="{{ buildUrl(baseUrl, agreement.agreementNumber) }}" class="govuk-link">Print this agreement offer</a>
-  </p>
+      <p class="govuk-body">
+        <a href="{{ buildUrl(baseUrl, agreement.agreementNumber) }}" class="govuk-link">Print this agreement offer</a>
+      </p>
+    </div>
+  </div>
 
+  <br>
+
+  <h2 class="govuk-heading-l">Actions</h2>
   <table class="govuk-table">
-    <caption class="govuk-table__caption govuk-table__caption--m">Actions</caption>
     <thead class="govuk-table__head">
       <tr class="govuk-table__row">
         <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Action</th>
@@ -57,28 +63,33 @@
   </table>
 
   <br>
-  <h2 class="govuk-heading-m">Payments</h2>
-  <p class="govuk-body govuk-!-font-size-19">
-    If you accept this agreement offer, you will receive the following payments for each action.
-  </p>
-  <p class="govuk-body govuk-!-font-size-19">
-    You will receive your payments in 4 instalments. Your first payment may be a different amount due to the Rural Payments Agency rounding it up. Your other 3 payments are evenly split.
-  </p>
-  <p class="govuk-body govuk-!-font-size-19">
-    You will usually receive your first payment in the fourth month after your agreement's start date.
-  </p>
 
-   <h3 class="govuk-heading-s">Additional yearly payments</h3>
-  {% for payment in payments %}
-    {% if payment.description.startsWith('One-off') %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h2 class="govuk-heading-l">Payments</h2>
       <p class="govuk-body govuk-!-font-size-19">
-        There is a payment of {{ payment.rateInPence | formatPenceCurrency }} per agreement per year for action '{{ codeDescriptions[payment.code] }}: {{ payment.code }}'.
+        If you accept this agreement offer, you will receive the following payments for each action.
       </p>
       <p class="govuk-body govuk-!-font-size-19">
-        You will receive this payment if you are not already doing this action on another land parcel.
+        You will receive your payments in 4 instalments. Your first payment may be a different amount due to the Rural Payments Agency rounding it up. Your other 3 payments are evenly split.
       </p>
-    {% endif %}
-  {% endfor %}
+      <p class="govuk-body govuk-!-font-size-19">
+        You will usually receive your first payment in the fourth month after your agreement's start date.
+      </p>
+
+       <h3 class="govuk-heading-s">Additional yearly payments</h3>
+      {% for payment in payments %}
+        {% if payment.description.startsWith('One-off') %}
+          <p class="govuk-body govuk-!-font-size-19">
+            There is a payment of {{ payment.rateInPence | formatPenceCurrency }} per agreement per year for action '{{ codeDescriptions[payment.code] }}: {{ payment.code }}'.
+          </p>
+          <p class="govuk-body govuk-!-font-size-19">
+            You will receive this payment if you are not already doing this action on another land parcel.
+          </p>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
 
   <table class="govuk-table">
     <thead class="govuk-table__head">
