@@ -45,7 +45,24 @@ export const apiRequest = async ({
       )
     }
 
-    throw new Error('Unable to load agreement', { cause: response })
+    const responseText = await response.text().catch(() => '')
+
+    let message = 'Unable to load agreement.'
+
+    try {
+      const body = JSON.parse(responseText)
+
+      if (body && typeof body.errorMessage === 'string') {
+        const shortError = body.errorMessage.split('{')[0].trim()
+        message += ` ${shortError}`
+      } else {
+        message += ` ${response.status} ${response.statusText}`
+      }
+    } catch {
+      message += ` ${response.status} ${response.statusText}`
+    }
+
+    throw new Error(message, { cause: response })
   }
 
   return response.json()
