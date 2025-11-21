@@ -50,10 +50,10 @@ export const apiRequest = async ({
     let message = 'Unable to load agreement.'
 
     try {
-      const body = JSON.parse(responseText)
+      const responseBody = JSON.parse(responseText)
 
-      if (body && typeof body.errorMessage === 'string') {
-        const shortError = body.errorMessage.split('{')[0].trim()
+      if (responseBody && typeof responseBody.errorMessage === 'string') {
+        const shortError = responseBody.errorMessage.split('{')[0].trim()
         message += ` ${shortError}`
       } else {
         message += ` ${response.status} ${response.statusText}`
