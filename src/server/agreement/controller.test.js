@@ -95,7 +95,11 @@ describe('#agreementController', () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: async () => ({})
+        statusText: 'Internal Server Error',
+        text: async () =>
+          JSON.stringify({
+            errorMessage: 'Backend failure {Some detailed stack trace}'
+          })
       })
 
       const { statusCode, result } = await server.inject({
@@ -116,7 +120,7 @@ describe('#agreementController', () => {
 
       expect(statusCode).toBe(statusCodes.internalServerError)
       expect(result).toContain('Sorry, there is a problem with the service')
-      expect(result).toContain('Unable to load agreement')
+      expect(result).toContain('Unable to load agreement. Backend failure')
     })
 
     test('should show "not found" error page when not found', async () => {
