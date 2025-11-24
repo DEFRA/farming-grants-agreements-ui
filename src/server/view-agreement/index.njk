@@ -3,31 +3,20 @@
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
-
-
-
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
 
 {% block content %}
 
   {% if isDraftAgreement %}
-  <div class="govuk-notification-banner" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
-    <div class="govuk-notification-banner__header">
-      <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">Important</h2>
+    {% set html %}
+      <p class="govuk-notification-banner__heading">This is a draft version of your agreement</p>
+      <p>You will receive the final agreement once you accept your agreement offer.</p>
+      <p>Your agreement will start on the first day of the month after you accept your offer. The start date shown here is an example, based on if you accepted your offer today.</p>
+    {% endset %}
 
-    </div>
-    <div class="govuk-notification-banner__content">
-      <div class="govuk-warning-text">
-        <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-        <strong class="govuk-warning-text__text">
-          <span class="govuk-visually-hidden">Warning</span>
-          This is the draft version of your agreement.
-        </strong>
-        <span>
-          You will receive the final version of your agreement once you have accepted your agreement offer.
-        </span>
-      </div>
-    </div>
-  </div>
+    {{ govukNotificationBanner({
+      html: html
+    }) }}
   {% endif %}
 
   {% if isDraftAgreement %}
