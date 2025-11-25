@@ -1,5 +1,8 @@
 // Accept offer page - conditional button based on checkbox
 
+const DISABLED_BUTTON_CLASS = 'govuk-button--disabled'
+const ARIA_DISABLED_ATTR = 'aria-disabled'
+
 /**
  * Initialize checkbox-to-button functionality
  * Exported for testing purposes
@@ -19,13 +22,13 @@ export function initCheckbox() {
       if (checkbox.checked) {
         button.disabled = false
         button.removeAttribute('disabled')
-        button.setAttribute('aria-disabled', 'false')
-        button.classList.remove('govuk-button--disabled')
+        button.setAttribute(ARIA_DISABLED_ATTR, 'false')
+        button.classList.remove(DISABLED_BUTTON_CLASS)
       } else {
         button.disabled = true
         button.setAttribute('disabled', 'disabled')
-        button.setAttribute('aria-disabled', 'true')
-        button.classList.add('govuk-button--disabled')
+        button.setAttribute(ARIA_DISABLED_ATTR, 'true')
+        button.classList.add(DISABLED_BUTTON_CLASS)
       }
     }
 
@@ -33,8 +36,8 @@ export function initCheckbox() {
     // This ensures the button works without JS but is controlled by checkbox when JS is enabled
     button.disabled = true
     button.setAttribute('disabled', 'disabled')
-    button.setAttribute('aria-disabled', 'true')
-    button.classList.add('govuk-button--disabled')
+    button.setAttribute(ARIA_DISABLED_ATTR, 'true')
+    button.classList.add(DISABLED_BUTTON_CLASS)
 
     // Update button state based on current checkbox state
     updateButtonState()
