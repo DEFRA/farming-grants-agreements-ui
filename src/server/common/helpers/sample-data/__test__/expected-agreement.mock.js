@@ -9,6 +9,12 @@ const mockDate = iso8601DateTimeWithMillis('2025-12-31T23:59:59.999Z')
 
 export const expectedAgreement = {
   ...sampleData.agreements[0],
+  identifiers: {
+    sbi: like('106284736'),
+    frn: 'frn',
+    crn: 'crn',
+    defraId: 'defraId'
+  },
   agreementNumber: like('SFI987654321'),
   notificationMessageId: like('b6cc5590-80f6-46ce-b5a5-14c7986591f4'),
   agreement: like('6900dfdd7fca822e749bb327'),
@@ -36,7 +42,7 @@ export const expectedAgreement = {
         invoiceNumber: 'FRPS2',
         marketingYear: 2025,
         paymentRequestNumber: 1,
-        sbi: '106284736',
+        sbi: like('106284736'),
         schedule: null,
         sourceSystem: 'AHWR',
         value: 96018
