@@ -29,7 +29,14 @@ export function initCheckbox() {
       }
     }
 
-    // Ensure button is disabled initially
+    // Disable button initially when JS is available (progressive enhancement)
+    // This ensures the button works without JS but is controlled by checkbox when JS is enabled
+    button.disabled = true
+    button.setAttribute('disabled', 'disabled')
+    button.setAttribute('aria-disabled', 'true')
+    button.classList.add('govuk-button--disabled')
+
+    // Update button state based on current checkbox state
     updateButtonState()
 
     // Add event listeners

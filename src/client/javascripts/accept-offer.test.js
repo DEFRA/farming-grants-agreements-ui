@@ -31,9 +31,7 @@ describe('accept-offer.js', () => {
 
           <button
             id="accept-offer-button"
-            class="govuk-button govuk-button--disabled"
-            disabled
-            aria-disabled="true"
+            class="govuk-button"
           >
             Accept offer
           </button>
@@ -54,13 +52,17 @@ describe('accept-offer.js', () => {
 
   describe('initCheckbox function', () => {
     it('should initialize checkbox and button with event listeners', () => {
-      // Call the actual function
-      initCheckbox()
-
       const checkbox = document.querySelector('#confirm')
       const button = document.getElementById('accept-offer-button')
 
-      // Button should be disabled initially
+      // Button should be enabled before JS runs (progressive enhancement)
+      expect(button.disabled).toBe(false)
+      expect(button.classList.contains('govuk-button--disabled')).toBe(false)
+
+      // Call the actual function - this should disable the button
+      initCheckbox()
+
+      // Button should be disabled after JS initializes
       expect(button.disabled).toBe(true)
       expect(button.classList.contains('govuk-button--disabled')).toBe(true)
 
@@ -159,7 +161,15 @@ describe('accept-offer.js', () => {
       expect(button.id).toBe('accept-offer-button')
     })
 
-    it('should have button disabled initially', () => {
+    it('should have button enabled initially before JS runs', () => {
+      const button = document.getElementById('accept-offer-button')
+      expect(button.disabled).toBe(false)
+      expect(button.getAttribute('aria-disabled')).toBeNull()
+      expect(button.classList.contains('govuk-button--disabled')).toBe(false)
+    })
+
+    it('should have button disabled after JS initializes', () => {
+      initCheckbox()
       const button = document.getElementById('accept-offer-button')
       expect(button.disabled).toBe(true)
       expect(button.getAttribute('aria-disabled')).toBe('true')
