@@ -39,7 +39,8 @@ describe('#acceptOfferController', () => {
             'x-encrypted-auth': 'mock-auth'
           })
           builder.jsonBody({
-            action: 'accept-offer'
+            action: 'accept-offer',
+            confirm: 'confirmed'
           })
         })
         .willRespondWith(200, (builder) => {
@@ -61,12 +62,98 @@ describe('#acceptOfferController', () => {
               'x-encrypted-auth': 'mock-auth'
             },
             payload: {
-              action: 'accept-offer'
+              action: 'accept-offer',
+              confirm: 'confirmed'
             }
           })
 
           expect(statusCode).toBe(302)
           expect(headers.location).toBe('/')
+        })
+    })
+
+    test('returns 400 when checkbox is not checked', async () => {
+      return await provider
+        .addInteraction()
+        .given('A customer has an agreement offer')
+        .uponReceiving(
+          'a POST request to accept offer without checkbox confirmation'
+        )
+        .withRequest('POST', '/', (builder) => {
+          builder.headers({
+            'Content-Type': 'application/json',
+            'x-encrypted-auth': 'mock-auth'
+          })
+          builder.jsonBody({
+            action: 'accept-offer'
+          })
+        })
+        .willRespondWith(200, (builder) => {
+          builder.headers({ 'Content-Type': 'application/json' })
+          builder.jsonBody({
+            agreementData: { ...expectedAgreement, status: like('offered') }
+          })
+        })
+        .executeTest(async (mockServer) => {
+          config.set('backend.url', mockServer.url)
+
+          const { statusCode, result } = await server.inject({
+            method: 'POST',
+            url: '/',
+            headers: {
+              'x-encrypted-auth': 'mock-auth'
+            },
+            payload: {
+              action: 'accept-offer'
+              // confirm is missing - checkbox not checked
+            }
+          })
+
+          expect(statusCode).toBe(400)
+          expect(result).toContain('Please agree with the Terms and Conditions')
+        })
+    })
+
+    test('returns 400 when confirm value is not "confirmed"', async () => {
+      return await provider
+        .addInteraction()
+        .given('A customer has an agreement offer')
+        .uponReceiving(
+          'a POST request to accept offer with invalid confirm value'
+        )
+        .withRequest('POST', '/', (builder) => {
+          builder.headers({
+            'Content-Type': 'application/json',
+            'x-encrypted-auth': 'mock-auth'
+          })
+          builder.jsonBody({
+            action: 'accept-offer',
+            confirm: 'invalid-value'
+          })
+        })
+        .willRespondWith(200, (builder) => {
+          builder.headers({ 'Content-Type': 'application/json' })
+          builder.jsonBody({
+            agreementData: { ...expectedAgreement, status: like('offered') }
+          })
+        })
+        .executeTest(async (mockServer) => {
+          config.set('backend.url', mockServer.url)
+
+          const { statusCode, result } = await server.inject({
+            method: 'POST',
+            url: '/',
+            headers: {
+              'x-encrypted-auth': 'mock-auth'
+            },
+            payload: {
+              action: 'accept-offer',
+              confirm: 'invalid-value'
+            }
+          })
+
+          expect(statusCode).toBe(400)
+          expect(result).toContain('Please agree with the Terms and Conditions')
         })
     })
   })
