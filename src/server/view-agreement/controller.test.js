@@ -32,7 +32,9 @@ describe('#viewAgreementController', () => {
     return await provider
       .addInteraction()
       .given('A customer has an accepted agreement offer')
-      .uponReceiving('a request from the customer to view their offer')
+      .uponReceiving(
+        'a request from the customer to view their agreement details'
+      )
       .withRequest('GET', '/SFI987654321', (builder) => {
         builder.headers({ 'x-encrypted-auth': 'mock-auth' })
       })

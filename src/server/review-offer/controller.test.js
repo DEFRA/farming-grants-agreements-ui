@@ -31,7 +31,7 @@ describe('#reviewOfferController', () => {
     return await provider
       .addInteraction()
       .given('A customer has an agreement offer')
-      .uponReceiving('a request from the customer to view their offer')
+      .uponReceiving('a request from the customer to review their offer')
       .withRequest('GET', '/', (builder) => {
         builder.headers({ 'x-encrypted-auth': 'mock-auth' })
       })
