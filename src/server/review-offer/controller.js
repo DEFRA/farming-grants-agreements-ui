@@ -10,7 +10,7 @@ import {
 
 export const reviewOfferController = {
   async handler(request, h) {
-    const { agreementData: { actionApplications, payment } = {} } =
+    const { agreementData: { application, payment } = {} } =
       request.pre?.data || {}
 
     const codeDescriptions = Object.values(payment.parcelItems).reduce(
@@ -71,7 +71,7 @@ export const reviewOfferController = {
 
     return h.view('review-offer/index', {
       pageTitle: 'Review your agreement offer',
-      actionApplications,
+      parcels: application.parcel,
       codeDescriptions,
       payments,
       totalQuarterly: quarterlyPayment?.totalPaymentPence,

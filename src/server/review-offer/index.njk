@@ -48,18 +48,46 @@
       </tr>
     </thead>
     <tbody class="govuk-table__body">
-      {% for action in actionApplications %}
-        {% set actionPayment = payments | selectattr('code', 'equalto', action.code) | first %}
-        <tr class="govuk-table__row" id="actionRow{{ loop.index }}">
-          <td class="govuk-table__cell govuk-!-font-size-19" id="actionTableActionRow{{ loop.index }}">{{ codeDescriptions[action.code] }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" id="actionTableCodeRow{{ loop.index }}">{{ action.code }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;" id="actionTableLandParcelRow{{ loop.index }}">{{ action.sheetId }}
-            {{ action.parcelId }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;" id="actionTableQuantityRow{{ loop.index }}">{{ action.appliedFor.quantity | round(4) }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" id="actionTableDurationRow{{ loop.index }}">{{ actionPayment.duration }} {{ 'year' if actionPayment.duration == 1 else 'years' }}</td>
-        </tr>
+      {# running index across all rows #}
+      {% set rowIndex = 0 %}
+
+      {% for parcel in parcels %}
+        {% for action in parcel.actions %}
+          {% set rowIndex = rowIndex + 1 %}
+
+          <tr class="govuk-table__row" id="actionRow{{ rowIndex }}">
+            <td class="govuk-table__cell govuk-!-font-size-19"
+                id="actionTableActionRow{{ rowIndex }}">
+              {{ codeDescriptions[action.code] }}
+            </td>
+
+            <td class="govuk-table__cell govuk-!-font-size-19"
+                id="actionTableCodeRow{{ rowIndex }}">
+              {{ action.code }}
+            </td>
+
+            <td class="govuk-table__cell govuk-!-font-size-19"
+                style="white-space: nowrap;"
+                id="actionTableLandParcelRow{{ rowIndex }}">
+              {{ parcel.sheetId }} {{ parcel.parcelId }}
+            </td>
+
+            <td class="govuk-table__cell govuk-!-font-size-19"
+                style="white-space: nowrap;"
+                id="actionTableQuantityRow{{ rowIndex }}">
+              {{ action.appliedFor.quantity | round(4) }}
+            </td>
+
+            <td class="govuk-table__cell govuk-!-font-size-19"
+                id="actionTableDurationRow{{ rowIndex }}">
+              {{ action.durationYears }}
+              {{ 'year' if action.durationYears == 1 else 'years' }}
+            </td>
+          </tr>
+        {% endfor %}
       {% endfor %}
     </tbody>
+
   </table>
 
   <br>
