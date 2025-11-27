@@ -54,8 +54,6 @@
       {% for parcel in parcels %}
         {% for action in parcel.actions %}
           {% set rowIndex = rowIndex + 1 %}
-          {# keep this if you still need payments lookup by action code #}
-          {% set actionPayment = payments | selectattr('code', 'equalto', action.code) | first %}
 
           <tr class="govuk-table__row" id="actionRow{{ rowIndex }}">
             <td class="govuk-table__cell govuk-!-font-size-19"
