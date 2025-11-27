@@ -229,6 +229,21 @@ describe('#agreementController', () => {
   })
 
   describe('handler', () => {
+    test('throws when agreement data is missing a status', () => {
+      const request = {
+        payload: { action: 'any-action' },
+        pre: {
+          data: {
+            agreementData: {}
+          }
+        }
+      }
+
+      expect(() => agreementController.handler(request, {})).toThrow(
+        'Agreement is in an unknown state'
+      )
+    })
+
     test('throws bad request when the chosen controller has no handler', () => {
       const action = 'unsupported-action'
       const request = {
