@@ -1,4 +1,6 @@
+import { agreementController } from './controller.js'
 import { createServer } from '../server.js'
+import * as getControllerByActionModule from '../common/helpers/get-controller-by-action.js'
 import { statusCodes } from '../common/constants/status-codes.js'
 
 describe('#agreementController', () => {
@@ -223,6 +225,51 @@ describe('#agreementController', () => {
       expect(statusCode).toBe(statusCodes.internalServerError)
       expect(result).toContain('Sorry, there is a problem with the service')
       expect(result).toContain('Network timed out while fetching data')
+    })
+  })
+
+  describe('handler', () => {
+    test('throws when agreement data is missing a status', () => {
+      const request = {
+        payload: { action: 'any-action' },
+        pre: {
+          data: {
+            agreementData: {}
+          }
+        }
+      }
+
+      expect(() => agreementController.handler(request, {})).toThrow(
+        'Agreement is in an unknown state'
+      )
+    })
+
+    test('throws bad request when the chosen controller has no handler', () => {
+      const action = 'unsupported-action'
+      const request = {
+        payload: { action },
+        pre: {
+          data: {
+            agreementData: {
+              status: 'offered'
+            }
+          }
+        }
+      }
+
+      const chooseController = vi.fn().mockReturnValue({})
+      const getControllerSpy = vi
+        .spyOn(getControllerByActionModule, 'getControllerByAction')
+        .mockReturnValue(chooseController)
+
+      expect(() => agreementController.handler(request, {})).toThrow(
+        `Unrecognised action in POST payload: ${action}`
+      )
+
+      expect(getControllerSpy).toHaveBeenCalledWith('offered')
+      expect(chooseController).toHaveBeenCalledWith(action)
+
+      getControllerSpy.mockRestore()
     })
   })
 })
