@@ -162,6 +162,30 @@ export default [
         }
       }
     },
+    application: {
+      parcel: [
+        {
+          sheetId: 'SD6743',
+          parcelId: '8083',
+          area: {
+            unit: 'ha',
+            quantity: 5.2182
+          },
+          actions: [
+            {
+              code: 'CMOR1',
+              version: 1,
+              durationYears: 3,
+              appliedFor: {
+                unit: 'ha',
+                quantity: 4.53411078
+              }
+            }
+          ]
+        }
+      ],
+      agreement: []
+    },
     createdAt: '2025-10-23T16:03:28.545Z',
     updatedAt: '2025-10-23T16:03:28.548Z',
     agreementNumber: 'SFI987654321',
