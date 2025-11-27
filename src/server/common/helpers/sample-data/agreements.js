@@ -25,17 +25,7 @@ export default [
     status: 'offered',
     agreement: '68fa51d0206fcc31cb4b450d',
     scheme: 'SFI',
-    actionApplications: [
-      {
-        code: 'CMOR1',
-        sheetId: 'SD6743',
-        parcelId: '8083',
-        appliedFor: {
-          unit: 'ha',
-          quantity: 4.53411078
-        }
-      }
-    ],
+    actionApplications: [],
     payment: {
       agreementStartDate: '2025-09-01',
       agreementEndDate: '2028-09-01',
@@ -161,6 +151,30 @@ export default [
           last: 'Jones'
         }
       }
+    },
+    application: {
+      parcel: [
+        {
+          sheetId: 'SD6743',
+          parcelId: '8083',
+          area: {
+            unit: 'ha',
+            quantity: 5.2182
+          },
+          actions: [
+            {
+              code: 'CMOR1',
+              version: 1,
+              durationYears: 3,
+              appliedFor: {
+                unit: 'ha',
+                quantity: 4.53411078
+              }
+            }
+          ]
+        }
+      ],
+      agreement: []
     },
     createdAt: '2025-10-23T16:03:28.545Z',
     updatedAt: '2025-10-23T16:03:28.548Z',
