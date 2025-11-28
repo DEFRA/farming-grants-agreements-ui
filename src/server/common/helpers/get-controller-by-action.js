@@ -1,7 +1,10 @@
 import Boom from '@hapi/boom'
 
 import { reviewOfferController } from '../../review-offer/controller.js'
-import { acceptOfferController } from '../../accept-offer/controller.js'
+import {
+  acceptOfferController,
+  validateAcceptOfferController
+} from '../../accept-offer/controller.js'
 import { offerAcceptedController } from '../../offer-accepted/controller.js'
 import { offerWithdrawnController } from '../../offer-withdrawn/controller.js'
 
@@ -10,6 +13,8 @@ export const getControllerByAction = (agreementStatus) => {
   if (agreementStatus === 'offered') {
     chooseControllerByActionOffer = (action) => {
       switch (action) {
+        case 'validate-accept-offer':
+          return validateAcceptOfferController
         case 'display-accept':
         case 'accept-offer':
           return acceptOfferController
