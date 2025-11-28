@@ -1,3 +1,7 @@
+import { MatchersV3 } from '@pact-foundation/pact'
+
+const { like } = MatchersV3
+
 const lineItems = [
   {
     parcelItemId: 1,
@@ -153,7 +157,7 @@ export default [
       }
     },
     application: {
-      parcel: [
+      parcel: like([
         {
           sheetId: 'SD6743',
           parcelId: '8083',
@@ -173,7 +177,7 @@ export default [
             }
           ]
         }
-      ],
+      ]),
       agreement: []
     },
     createdAt: '2025-10-23T16:03:28.545Z',
