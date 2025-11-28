@@ -11,6 +11,8 @@ export const getControllerByAction = (agreementStatus) => {
     chooseControllerByActionOffer = (action) => {
       switch (action) {
         case 'display-accept':
+        case 'validate-accept-offer':
+          return acceptOfferController
         case 'accept-offer':
           return acceptOfferController
         case 'review-offer':
