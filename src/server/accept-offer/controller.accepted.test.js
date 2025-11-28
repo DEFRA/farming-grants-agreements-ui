@@ -11,29 +11,26 @@ import * as apiModule from '../common/helpers/api.js'
 const { like } = MatchersV2
 
 describe('#acceptOfferController', () => {
-  describe('after accepting the offer', () => {
-    let server
+  let server
 
-    const provider = new Pact({
-      consumer: 'farming-grants-agreements-ui-rest',
-      provider: 'farming-grants-agreements-api-rest',
-      dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
-      pactfileWriteMode: 'update'
-    })
+  const provider = new Pact({
+    consumer: 'farming-grants-agreements-ui-rest',
+    provider: 'farming-grants-agreements-api-rest',
+    dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
+    pactfileWriteMode: 'update'
+  })
 
-    beforeAll(async () => {
-      server = await createServer()
-      await server.initialize()
-    })
+  beforeAll(async () => {
+    server = await createServer()
+    await server.initialize()
+  })
 
-    afterAll(async () => {
-      await server?.stop({ timeout: 0 })
-    })
+  afterAll(async () => {
+    await server?.stop({ timeout: 0 })
+  })
 
+  describe('accept-offer action', () => {
     // This test verifies the POST interaction with the backend API
-    // Note: This only tests the second API call (POST to accept offer)
-    // The first API call (GET to fetch data) is handled by the pre-handler
-    // and is tested in other test files
     test('sends the accept-offer action to the backend API', async () => {
       return await provider
         .addInteraction()
@@ -60,8 +57,7 @@ describe('#acceptOfferController', () => {
         .executeTest(async (mockServer) => {
           config.set('backend.url', mockServer.url)
 
-          // Directly test the API request our controller makes
-          // This verifies the contract between our app and the backend
+          // Directly test the API request
           const response = await fetch(mockServer.url, {
             method: 'POST',
             headers: {
@@ -77,7 +73,9 @@ describe('#acceptOfferController', () => {
           expect(data.agreementData.status).toBe('accepted')
         })
     })
+  })
 
+  describe('validateAcceptOfferController', () => {
     test('returns 200 with error when checkbox is not checked', async () => {
       return await provider
         .addInteraction()
@@ -172,18 +170,13 @@ describe('#acceptOfferController', () => {
         .executeTest(async (mockServer) => {
           config.set('backend.url', mockServer.url)
 
-          // Mock the POST apiRequest call to avoid template rendering issues
+          // Mock POST apiRequest to avoid template rendering issues
           apiRequestSpy.mockImplementation(async (options) => {
             if (options.method === 'POST') {
               return {
                 agreementData: {
                   ...expectedAgreement,
-                  status: 'accepted',
-                  payment: {
-                    ...expectedAgreement.payment,
-                    agreementStartDate: '2025-01-01'
-                  },
-                  agreementNumber: 'AG-12345'
+                  status: 'accepted'
                 }
               }
             }
@@ -206,7 +199,7 @@ describe('#acceptOfferController', () => {
             }
           })
 
-          // Verify that apiRequest was called with POST (validation passed)
+          // Verify validation passed and POST was called
           expect(apiRequestSpy).toHaveBeenCalledWith({
             agreementId: '',
             method: 'POST',
@@ -214,7 +207,6 @@ describe('#acceptOfferController', () => {
             body: { action: 'accept-offer' }
           })
 
-          // Clean up the spy
           apiRequestSpy.mockRestore()
         })
     })
