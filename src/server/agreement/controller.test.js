@@ -229,6 +229,16 @@ describe('#agreementController', () => {
   })
 
   describe('handler', () => {
+    test('throws when pre handler data is missing entirely', () => {
+      const request = {
+        payload: { action: 'any-action' }
+      }
+
+      expect(() => agreementController.handler(request, {})).toThrow(
+        /Cannot read properties of undefined \(reading 'status'\)/
+      )
+    })
+
     test('throws when agreement data is missing a status', () => {
       const request = {
         payload: { action: 'any-action' },
