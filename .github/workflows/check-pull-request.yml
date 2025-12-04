@@ -83,7 +83,7 @@ jobs:
           export PACT_BROKER_PASSWORD="$PACT_PASS"
           SERVICE_VERSION=$(git describe --tags --abbrev=0) npm run test:contracts
 
-      # temporary spike activity to establish connectivity, would not publish on PR normally
+      # temporary spike activity to establish connectivity, would not publish on PR normally like this
       - name: Publish pacts
         env:
           PACT_BROKER_BASE_URL: https://ffc-pact-broker.azure.defra.cloud
