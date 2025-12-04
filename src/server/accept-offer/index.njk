@@ -42,10 +42,11 @@
        </ul>
 
       <!-- Accept Button -->
-      <form method="post" id="accept-offer-form">
+      <form method="post" action="{{ buildUrl(baseUrl) }}" id="accept-offer-form">
         {{ govukCheckboxes({
           idPrefix: "confirm",
           name: "confirm",
+          errorMessage: errorMessage,
           items: [
             {
               value: "confirmed",
@@ -57,7 +58,7 @@
         {{ govukButton({
           text: "Accept offer",
           name: "action",
-          value: "accept-offer",
+          value: "validate-accept-offer",
           attributes: {
             id: "accept-offer-button"
           }
