@@ -14,6 +14,8 @@ const dateOptions = {
   day: 'numeric'
 }
 
+const GOV_UK_FONT_WEIGHT_BOLD = 'govuk-!-font-weight-bold'
+
 const noWrap = { attributes: { style: 'white-space: nowrap' } }
 
 /**
@@ -78,6 +80,121 @@ const getSummaryOfActions = (agreementData) => {
   }
 }
 
+const buildParcelRows = (firstPayment, subsequentPayment, parcelItems = {}) =>
+  Object.entries(parcelItems).map(([key, payment]) => [
+    { text: payment.code },
+    { text: payment.description },
+    { text: round(payment.quantity, 4) },
+    {
+      text: `${formatPenceCurrency(payment.rateInPence)} per ${payment.unit.replace(/s$/, '')}`
+    },
+    {
+      text: formatPenceCurrency(
+        calculateFirstPaymentForParcelItem(firstPayment, key)
+      )
+    },
+    {
+      text: formatPenceCurrency(
+        calculateSubsequentPaymentForParcelItem(subsequentPayment, key)
+      )
+    },
+    { text: formatPenceCurrency(payment.annualPaymentPence) }
+  ])
+
+const buildAgreementLevelRows = (
+  firstPayment,
+  subsequentPayment,
+  agreementLevelItems = {}
+) =>
+  Object.entries(agreementLevelItems).map(([key, payment]) => {
+    const description = payment.description?.replace(`${payment.code}: `, '')
+    return [
+      { text: payment.code },
+      { text: `One-off payment per agreement per year for ${description}` },
+      { text: '' },
+      { text: '' },
+      {
+        text: formatPenceCurrency(
+          calculateFirstPaymentForAgreementLevelItem(firstPayment, key)
+        )
+      },
+      {
+        text: formatPenceCurrency(
+          calculateSubsequentPaymentForAgreementLevelItem(
+            subsequentPayment,
+            key
+          )
+        )
+      },
+      { text: formatPenceCurrency(payment.annualPaymentPence) }
+    ]
+  })
+
+const sumPaymentValues = (calculator, payment, items = {}) =>
+  Object.keys(items).reduce((sum, key) => sum + calculator(payment, key), 0)
+
+const sumAnnualPayments = (items = {}) =>
+  Object.values(items).reduce(
+    (sum, p) => sum + (Number(p.annualPaymentPence) || 0),
+    0
+  )
+
+const calculatePaymentTotals = (payment, firstPayment, subsequentPayment) => {
+  const parcelItems = payment?.parcelItems
+  const agreementLevelItems = payment?.agreementLevelItems
+
+  const firstTotal =
+    sumPaymentValues(
+      calculateFirstPaymentForParcelItem,
+      firstPayment,
+      parcelItems
+    ) +
+    sumPaymentValues(
+      calculateFirstPaymentForAgreementLevelItem,
+      firstPayment,
+      agreementLevelItems
+    )
+
+  const subsequentTotal =
+    sumPaymentValues(
+      calculateSubsequentPaymentForParcelItem,
+      subsequentPayment,
+      parcelItems
+    ) +
+    sumPaymentValues(
+      calculateSubsequentPaymentForAgreementLevelItem,
+      subsequentPayment,
+      agreementLevelItems
+    )
+
+  const annualTotal =
+    sumAnnualPayments(parcelItems) + sumAnnualPayments(agreementLevelItems)
+
+  return { firstTotal, subsequentTotal, annualTotal }
+}
+
+const buildTotalsRow = ({ firstTotal, subsequentTotal, annualTotal }) => [
+  { text: '' },
+  { text: '' },
+  { text: '' },
+  { text: '' },
+  {
+    text: formatPenceCurrency(firstTotal),
+    attributes: { class: GOV_UK_FONT_WEIGHT_BOLD }
+  },
+  {
+    text: formatPenceCurrency(subsequentTotal),
+    attributes: { class: GOV_UK_FONT_WEIGHT_BOLD }
+  },
+  {
+    text: formatPenceCurrency(annualTotal),
+    attributes: { class: GOV_UK_FONT_WEIGHT_BOLD }
+  }
+]
+
+const sortRowsByCode = (rows) =>
+  rows.sort((a, b) => a[0].text.localeCompare(b[0].text))
+
 /**
  * Creates a summary of payments for the agreement
  * @param {object} agreementData - The agreement data object
@@ -86,6 +203,26 @@ const getSummaryOfActions = (agreementData) => {
 const getSummaryOfPayments = (agreementData) => {
   const firstPayment = agreementData.payment?.payments?.[0]
   const subsequentPayment = agreementData.payment?.payments?.[1]
+
+  const parcelRows = buildParcelRows(
+    firstPayment,
+    subsequentPayment,
+    agreementData.payment?.parcelItems
+  )
+  const agreementLevelRows = buildAgreementLevelRows(
+    firstPayment,
+    subsequentPayment,
+    agreementData.payment?.agreementLevelItems
+  )
+  const totalsRow = buildTotalsRow(
+    calculatePaymentTotals(
+      agreementData.payment,
+      firstPayment,
+      subsequentPayment
+    )
+  )
+
+  const dataRows = sortRowsByCode([...parcelRows, ...agreementLevelRows])
 
   return {
     headings: [
@@ -97,59 +234,7 @@ const getSummaryOfPayments = (agreementData) => {
       { text: 'Subsequent payments' },
       { text: 'Total yearly payment' }
     ],
-    data: [
-      ...Object.entries(agreementData.payment.parcelItems).map(
-        ([key, payment]) => [
-          { text: payment.code },
-          { text: payment.description },
-          { text: round(payment.quantity, 4) },
-          {
-            text: `${formatPenceCurrency(payment.rateInPence)} per ${payment.unit.replace(/s$/, '')}`
-          },
-          {
-            text: formatPenceCurrency(
-              calculateFirstPaymentForParcelItem(firstPayment, key)
-            )
-          },
-          {
-            text: formatPenceCurrency(
-              calculateSubsequentPaymentForParcelItem(subsequentPayment, key)
-            )
-          },
-          { text: formatPenceCurrency(payment.annualPaymentPence) }
-        ]
-      ),
-      ...Object.entries(agreementData.payment.agreementLevelItems).map(
-        ([key, payment]) => {
-          const description = payment.description?.replace(
-            `${payment.code}: `,
-            ''
-          )
-          return [
-            { text: payment.code },
-            {
-              text: `One-off payment per agreement per year for ${description}`
-            },
-            { text: '' },
-            { text: '' },
-            {
-              text: formatPenceCurrency(
-                calculateFirstPaymentForAgreementLevelItem(firstPayment, key)
-              )
-            },
-            {
-              text: formatPenceCurrency(
-                calculateSubsequentPaymentForAgreementLevelItem(
-                  subsequentPayment,
-                  key
-                )
-              )
-            },
-            { text: formatPenceCurrency(payment.annualPaymentPence) }
-          ]
-        }
-      )
-    ].sort((a, b) => a[0].text.localeCompare(b[0].text))
+    data: [...dataRows, totalsRow]
   }
 }
 
