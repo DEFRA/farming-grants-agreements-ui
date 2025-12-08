@@ -330,6 +330,38 @@ describe('getAgreementCalculations', () => {
             {
               text: '£272.00'
             }
+          ],
+          [
+            {
+              text: ''
+            },
+            {
+              text: ''
+            },
+            {
+              text: ''
+            },
+            {
+              text: ''
+            },
+            {
+              attributes: {
+                class: 'govuk-!-font-weight-bold'
+              },
+              text: '£3,050.94'
+            },
+            {
+              attributes: {
+                class: 'govuk-!-font-weight-bold'
+              },
+              text: '£3,050.94'
+            },
+            {
+              attributes: {
+                class: 'govuk-!-font-weight-bold'
+              },
+              text: '£12,203.75'
+            }
           ]
         ],
         headings: [
@@ -419,8 +451,8 @@ describe('getAgreementCalculations', () => {
       { text: '31/12/2024' }
     ])
 
-    // Summary of payments should now have data
-    expect(agreement.summaryOfPayments.data).toHaveLength(1)
+    // Summary of payments should now have data (+ totals row)
+    expect(agreement.summaryOfPayments.data).toHaveLength(2)
     expect(agreement.summaryOfPayments.data[0][0].text).toBe('ACT1')
 
     // Annual payment schedule should now have data
@@ -455,7 +487,8 @@ describe('getAgreementCalculations', () => {
 
     const agreement = getAgreementCalculations(agreementData)
 
-    expect(agreement.summaryOfPayments.data).toHaveLength(1)
+    // Includes totals row
+    expect(agreement.summaryOfPayments.data).toHaveLength(2)
     const [
       codeCell,
       actionCell,
@@ -618,7 +651,7 @@ describe('getAgreementCalculations', () => {
 
     // Check that data includes the payment amounts
     const data = agreement.summaryOfPayments.data
-    expect(data).toHaveLength(3) // 2 parcel items + 1 agreement level item
+    expect(data).toHaveLength(4) // 2 parcel items + 1 agreement level item + totals row
 
     // Find ACT1 row
     const act1Row = data.find((row) => row[0].text === 'ACT1')
@@ -665,7 +698,7 @@ describe('getAgreementCalculations', () => {
 
     // Check that first payment and subsequent payment columns show £0.00
     const data = agreement.summaryOfPayments.data
-    expect(data).toHaveLength(1)
+    expect(data).toHaveLength(2) // + totals row
 
     const act1Row = data[0]
     expect(act1Row[0].text).toBe('ACT1')
