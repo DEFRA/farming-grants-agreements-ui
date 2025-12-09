@@ -297,7 +297,7 @@
           The Agreement comprising this Agreement Document, the Terms and Conditions and the Actions has been accepted by
           {{ applicantName }} – {{ businessName }}
            {% if isDraftAgreement == false %}
-           on [Date of acceptance]
+           on {{ agreement.updatedAt | formatDate("d MMMM yyyy") }}
            {% endif %}
         </p>
 
