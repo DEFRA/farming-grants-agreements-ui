@@ -61,7 +61,20 @@ describe('#viewAgreementController', () => {
           'You, Example Ridge Farm Ltd, of 3 Example Lane, Example Village, Example Lane, Exampleton, ZZ99 3ZZ'
         )
         expect(result).toContain('1 September 2025')
-        expect(result).toContain('£960.18')
+
+        // parcel row
+        expect(result).toContain('£12.04')
+        expect(result).toContain('£12.01')
+
+        // agreement row
+        expect(result).toContain('£68.03')
+        expect(result).toContain('£68.00')
+        expect(result).toContain('£272.00')
+
+        // Total row
+        expect(result).toContain('£80.07')
+        expect(result).toContain('£80.01')
+        expect(result).toContain('£320.06')
       })
   })
 })
