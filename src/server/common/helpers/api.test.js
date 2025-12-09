@@ -39,7 +39,7 @@ describe('apiRequest error handling', () => {
     globalThis.fetch = originalFetch
   })
 
-  test('appends truncated backend error message when errorMessage is provided', async () => {
+  test('appends truncated backend error message when errorMessage is provided (GET request)', async () => {
     const backendResponse = createErrorResponse({
       text: vi.fn().mockResolvedValue(
         JSON.stringify({
@@ -58,7 +58,30 @@ describe('apiRequest error handling', () => {
     expect(backendResponse.text).toHaveBeenCalled()
   })
 
-  test('falls back to HTTP status text when errorMessage is not a string', async () => {
+  test('appends truncated backend error message when errorMessage is provided (POST request)', async () => {
+    const backendResponse = createErrorResponse({
+      text: vi.fn().mockResolvedValue(
+        JSON.stringify({
+          errorMessage: 'Validation failed {Stack trace details}'
+        })
+      )
+    })
+
+    globalThis.fetch.mockResolvedValue(backendResponse)
+
+    const error = await apiRequest({
+      ...baseRequest,
+      method: 'POST',
+      body: {}
+    }).catch((err) => err)
+
+    expect(error).toBeInstanceOf(Error)
+    expect(error.message).toBe('Unable to update agreement. Validation failed')
+    expect(error.cause).toBe(backendResponse)
+    expect(backendResponse.text).toHaveBeenCalled()
+  })
+
+  test('falls back to HTTP status text when errorMessage is not a string (GET request)', async () => {
     const backendResponse = createErrorResponse({
       status: 400,
       statusText: 'Bad request from land grants',
@@ -78,7 +101,7 @@ describe('apiRequest error handling', () => {
     )
   })
 
-  test('falls back to HTTP status text when response is not valid JSON', async () => {
+  test('falls back to HTTP status text when response is not valid JSON (GET request)', async () => {
     const backendResponse = createErrorResponse({
       status: 502,
       statusText: 'Bad Gateway',
