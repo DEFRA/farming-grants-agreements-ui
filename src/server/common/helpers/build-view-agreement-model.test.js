@@ -122,7 +122,7 @@ describe('buildAgreementViewModel', () => {
       baseAgreementData
     )
     expect(model).toEqual({
-      agreementName: 'Example agreement',
+      agreementName: 'Farm Business FPTT',
       isDraftAgreement: false,
       isCMOR1ActionUsed: true,
       businessName: 'Farm Business',
@@ -152,7 +152,7 @@ describe('buildAgreementViewModel', () => {
 
     const model = buildAgreementViewModel(draftAgreement)
 
-    expect(model.agreementName).toBe('Sustainable Farming Incentive agreement')
+    expect(model.agreementName).toBe('Farm Business FPTT')
     expect(model.isDraftAgreement).toBe(true)
     expect(model.isCMOR1ActionUsed).toBe(false)
     expect(model.businessName).toBe('XXXXX')

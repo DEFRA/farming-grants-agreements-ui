@@ -56,7 +56,7 @@ describe('#viewAgreementController', () => {
         })
 
         expect(statusCode).toBe(200)
-        expect(result).toContain('Example agreement 2')
+        expect(result).toContain('J&amp;S Hartley FPTT')
         expect(result).toContain(
           'You, J&amp;S Hartley, of Mason House Farm Clitheroe Rd, Bashall Eaves, Bartindale Road, Clitheroe, BB7 3DD'
         )
