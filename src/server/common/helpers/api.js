@@ -47,7 +47,7 @@ export const apiRequest = async ({
 
     const responseText = await response.text().catch(() => '')
 
-    let message = 'Unable to load agreement.'
+    let message = `Unable to ${method === 'GET' ? 'load' : 'update'} agreement.`
 
     try {
       const responseBody = JSON.parse(responseText)
