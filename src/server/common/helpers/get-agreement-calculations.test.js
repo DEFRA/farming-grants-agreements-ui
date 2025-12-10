@@ -264,13 +264,10 @@ describe('getAgreementCalculations', () => {
         data: [
           [
             {
-              text: 'BND1'
-            },
-            {
               text: 'Maintain dry stone walls'
             },
             {
-              text: 95
+              text: 'BND1'
             },
             {
               text: '£25.65 per metre'
@@ -287,13 +284,10 @@ describe('getAgreementCalculations', () => {
           ],
           [
             {
-              text: 'CHRW1'
-            },
-            {
               text: 'CHRW1: Assess and record hedgerow condition'
             },
             {
-              text: 207
+              text: 'CHRW1'
             },
             {
               text: '£5.00 per metre'
@@ -310,13 +304,10 @@ describe('getAgreementCalculations', () => {
           ],
           [
             {
-              text: 'CSAM1'
-            },
-            {
               text: 'One-off payment per agreement per year for Assess soil, produce a soil management plan and test soil organic matter'
             },
             {
-              text: ''
+              text: 'CSAM1'
             },
             {
               text: ''
@@ -332,9 +323,6 @@ describe('getAgreementCalculations', () => {
             }
           ],
           [
-            {
-              text: ''
-            },
             {
               text: ''
             },
@@ -366,16 +354,13 @@ describe('getAgreementCalculations', () => {
         ],
         headings: [
           {
-            text: 'Code'
-          },
-          {
             text: 'Action'
           },
           {
-            text: 'Total area (ha)'
+            text: 'Code'
           },
           {
-            text: 'Payment rate'
+            text: 'Annual Payment rate'
           },
           {
             text: 'First Payment'
@@ -384,7 +369,7 @@ describe('getAgreementCalculations', () => {
             text: 'Subsequent payments'
           },
           {
-            text: 'Total yearly payment'
+            text: 'Annual payment value'
           }
         ]
       }
@@ -453,7 +438,7 @@ describe('getAgreementCalculations', () => {
 
     // Summary of payments should now have data (+ totals row)
     expect(agreement.summaryOfPayments.data).toHaveLength(2)
-    expect(agreement.summaryOfPayments.data[0][0].text).toBe('ACT1')
+    expect(agreement.summaryOfPayments.data[0][1].text).toBe('ACT1')
 
     // Annual payment schedule should now have data
     expect(agreement.annualPaymentSchedule.data).toHaveLength(2) // ACT1 + Total
@@ -640,13 +625,12 @@ describe('getAgreementCalculations', () => {
     // Check that headings include first payment and subsequent payment columns
     const headings = agreement.summaryOfPayments.headings.map((h) => h.text)
     expect(headings).toEqual([
-      'Code',
       'Action',
-      'Total area (ha)',
-      'Payment rate',
+      'Code',
+      'Annual Payment rate',
       'First Payment',
       'Subsequent payments',
-      'Total yearly payment'
+      'Annual payment value'
     ])
 
     // Check that data includes the payment amounts
