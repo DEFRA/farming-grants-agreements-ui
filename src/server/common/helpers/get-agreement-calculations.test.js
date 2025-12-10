@@ -701,8 +701,88 @@ describe('getAgreementCalculations', () => {
     expect(data).toHaveLength(2) // + totals row
 
     const act1Row = data[0]
-    expect(act1Row[0].text).toBe('ACT1')
-    expect(act1Row[4].text).toBe('£0.00') // First payment
-    expect(act1Row[5].text).toBe('£0.00') // Subsequent payment
+    expect(act1Row[0].text).toBe('ACT1: Test Action')
+    expect(act1Row[1].text).toBe('ACT1')
+    expect(act1Row[3].text).toBe('£0.00') // First payment
+    expect(act1Row[4].text).toBe('£0.00') // Subsequent payment
+  })
+
+  test('summary of payments sorts rows and calculates totals row correctly', () => {
+    const agreementData = {
+      status: 'offered',
+      agreementNumber: 'SFI-SUMMARY-TOTALS',
+      payment: {
+        parcelItems: {
+          2: {
+            code: 'B2',
+            description: 'B2: Parcel row two',
+            quantity: 2,
+            rateInPence: 500,
+            unit: 'metres',
+            annualPaymentPence: 4000
+          },
+          1: {
+            code: 'A1',
+            description: 'A1: Parcel row one',
+            quantity: 1,
+            rateInPence: 100,
+            unit: 'metres',
+            annualPaymentPence: 1000
+          }
+        },
+        agreementLevelItems: {
+          1: {
+            code: 'C3',
+            description: 'C3: Agreement level payment',
+            annualPaymentPence: 2500
+          }
+        },
+        payments: [
+          {
+            paymentDate: '2024-01-01',
+            lineItems: [
+              { parcelItemId: 1, paymentPence: 250 },
+              { parcelItemId: 2, paymentPence: 500 },
+              { agreementLevelItemId: 1, paymentPence: 1000 }
+            ]
+          },
+          {
+            paymentDate: '2024-04-01',
+            lineItems: [
+              { parcelItemId: 1, paymentPence: 250 },
+              { parcelItemId: 2, paymentPence: 500 },
+              { agreementLevelItemId: 1, paymentPence: 1000 }
+            ]
+          }
+        ],
+        agreementStartDate: '2024-01-01',
+        agreementEndDate: '2024-12-31'
+      }
+    }
+
+    const { summaryOfPayments } = getAgreementCalculations(agreementData)
+    const rows = summaryOfPayments.data
+
+    // Expect 3 data rows (2 parcel + 1 agreement level) + totals row
+    expect(rows).toHaveLength(4)
+
+    // Rows sorted alphabetically by code (A1, B2, C3)
+    expect(rows[0][1].text).toBe('A1')
+    expect(rows[1][1].text).toBe('B2')
+    expect(rows[2][1].text).toBe('C3')
+
+    const totalsRow = rows[3]
+    expect(totalsRow[4]).toEqual({
+      text: '£17.50',
+      attributes: { class: 'govuk-!-font-weight-bold' }
+    })
+    expect(totalsRow[5]).toEqual({
+      text: '£17.50',
+      attributes: { class: 'govuk-!-font-weight-bold' }
+    })
+    expect(totalsRow[6]).toEqual({
+      text: '£75.00',
+      attributes: { class: 'govuk-!-font-weight-bold' }
+    })
   })
 })
