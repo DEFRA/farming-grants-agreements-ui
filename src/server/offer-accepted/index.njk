@@ -15,16 +15,20 @@
         </div>
         <div class="govuk-panel__body">
           <p class="govuk-body">Your agreement number is {{ agreement.agreementNumber }}.</p>
-          <p class="govuk-body">
-            You can
-            <a href="{{ buildUrl(baseUrl, agreement.agreementNumber) }}" class="govuk-link">
-              view your agreement document
-            </a>
-            including the terms and conditions for the agreement.
-          </p>
-          <p class="govuk-body">
-            Read the <a href="https://www.gov.uk/find-funding-for-land-or-farms" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments information (opens in new tab)</a> to check what you must do to get paid for each of your selected actions.
-          </p>
+          <p class="govuk-body">You can view:</p>
+
+          <ul class="govuk-list govuk-list--bullet">
+            <li>your <a href="{{ buildUrl(baseUrl, agreement.agreementNumber) }}" class="govuk-link">agreement document</a></li>
+            <li>the <a href="{{ buildUrl(serviceUrl, 'farm-payments/terms-and-conditions') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test terms and conditions (opens in a new tab)</a></li>
+          </ul>
+
+          <p class="govuk-body">To check what you must do to get paid for your selected actions, read:</p>
+
+          <ul class="govuk-list govuk-list--bullet">
+            <li>the <a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-information') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test information (opens in a new tab)</a></li>
+            <li>the <a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-actions') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test actions (opens in a new tab)</a></li>
+          </ul>
+
           {% if nearestQuarterlyPaymentDate %}
             <p class="govuk-body">You will receive your first payment for these actions in {{ nearestQuarterlyPaymentDate }}.</p>
           {% endif %}

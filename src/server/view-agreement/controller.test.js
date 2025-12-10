@@ -56,7 +56,7 @@ describe('#viewAgreementController', () => {
         })
 
         expect(statusCode).toBe(200)
-        expect(result).toContain('Example agreement 2')
+        expect(result).toContain('Example Ridge Farm Ltd FPTT')
         expect(result).toContain(
           'You, Example Ridge Farm Ltd, of 3 Example Lane, Example Village, Example Lane, Exampleton, ZZ99 3ZZ'
         )
