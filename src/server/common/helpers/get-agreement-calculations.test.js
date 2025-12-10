@@ -772,15 +772,15 @@ describe('getAgreementCalculations', () => {
     expect(rows[2][1].text).toBe('C3')
 
     const totalsRow = rows[3]
+    expect(totalsRow[3]).toEqual({
+      text: '£17.50',
+      attributes: { class: 'govuk-!-font-weight-bold' }
+    })
     expect(totalsRow[4]).toEqual({
       text: '£17.50',
       attributes: { class: 'govuk-!-font-weight-bold' }
     })
     expect(totalsRow[5]).toEqual({
-      text: '£17.50',
-      attributes: { class: 'govuk-!-font-weight-bold' }
-    })
-    expect(totalsRow[6]).toEqual({
       text: '£75.00',
       attributes: { class: 'govuk-!-font-weight-bold' }
     })
