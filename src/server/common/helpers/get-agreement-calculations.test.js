@@ -638,22 +638,22 @@ describe('getAgreementCalculations', () => {
     expect(data).toHaveLength(4) // 2 parcel items + 1 agreement level item + totals row
 
     // Find ACT1 row
-    const act1Row = data.find((row) => row[0].text === 'ACT1')
+    const act1Row = data.find((row) => row[1].text === 'ACT1')
     expect(act1Row).toBeDefined()
-    expect(act1Row[4].text).toBe('£125.00') // First payment
-    expect(act1Row[5].text).toBe('£125.00') // Subsequent payment
+    expect(act1Row[3].text).toBe('£125.00') // First payment
+    expect(act1Row[4].text).toBe('£125.00') // Subsequent payment
 
     // Find ACT2 row
-    const act2Row = data.find((row) => row[0].text === 'ACT2')
+    const act2Row = data.find((row) => row[1].text === 'ACT2')
     expect(act2Row).toBeDefined()
-    expect(act2Row[4].text).toBe('£37.50') // First payment
-    expect(act2Row[5].text).toBe('£37.50') // Subsequent payment
+    expect(act2Row[3].text).toBe('£37.50') // First payment
+    expect(act2Row[4].text).toBe('£37.50') // Subsequent payment
 
     // Find MGMT1 row
-    const mgmt1Row = data.find((row) => row[0].text === 'MGMT1')
+    const mgmt1Row = data.find((row) => row[1].text === 'MGMT1')
     expect(mgmt1Row).toBeDefined()
-    expect(mgmt1Row[4].text).toBe('£50.00') // First payment
-    expect(mgmt1Row[5].text).toBe('£50.00') // Subsequent payment
+    expect(mgmt1Row[3].text).toBe('£50.00') // First payment
+    expect(mgmt1Row[4].text).toBe('£50.00') // Subsequent payment
   })
 
   test('should handle missing payment data gracefully', () => {
