@@ -5,6 +5,7 @@ export const viewAgreementController = {
     const { agreementData } = request.pre?.data || {}
 
     return h.view('view-agreement/index', {
+      pageTitle: 'Farm payments technical test agreement document',
       ...buildAgreementViewModel(agreementData)
     })
   }

@@ -41,8 +41,7 @@ export const buildAgreementViewModel = (agreementData) => {
 
   let businessName = agreementData.applicant.business.name
   let applicantName = formatApplicantName(agreementData.applicant.customer)
-  const agreementName =
-    agreementData.agreementName || 'Sustainable Farming Incentive agreement'
+  const agreementName = `${businessName} FPTT`
 
   if (isDraftAgreement) {
     businessName = 'XXXXX'
