@@ -1,7 +1,7 @@
 import { getAgreementCalculations } from './get-agreement-calculations.js'
 
 describe('getAgreementCalculations', () => {
-  test.skip('should return rendered HTML', () => {
+  test('should return rendered HTML', () => {
     const mockAgreement = {
       agreementNumber: 'SFI123456789',
       status: 'offered',
