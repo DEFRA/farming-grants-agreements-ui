@@ -82,9 +82,8 @@ const getSummaryOfActions = (agreementData) => {
 
 const buildParcelRows = (firstPayment, subsequentPayment, parcelItems = {}) =>
   Object.entries(parcelItems).map(([key, payment]) => [
-    { text: payment.code },
     { text: payment.description },
-    { text: round(payment.quantity, 4) },
+    { text: payment.code },
     {
       text: `${formatPenceCurrency(payment.rateInPence)} per ${payment.unit.replace(/s$/, '')}`
     },
@@ -109,9 +108,8 @@ const buildAgreementLevelRows = (
   Object.entries(agreementLevelItems).map(([key, payment]) => {
     const description = payment.description?.replace(`${payment.code}: `, '')
     return [
-      { text: payment.code },
       { text: `One-off payment per agreement per year for ${description}` },
-      { text: '' },
+      { text: payment.code },
       { text: '' },
       {
         text: formatPenceCurrency(
@@ -177,7 +175,6 @@ const buildTotalsRow = ({ firstTotal, subsequentTotal, annualTotal }) => [
   { text: '' },
   { text: '' },
   { text: '' },
-  { text: '' },
   {
     text: formatPenceCurrency(firstTotal),
     attributes: { class: GOV_UK_FONT_WEIGHT_BOLD }
@@ -193,12 +190,12 @@ const buildTotalsRow = ({ firstTotal, subsequentTotal, annualTotal }) => [
 ]
 
 const sortRowsByCode = (rows) =>
-  rows.sort((a, b) => a[0].text.localeCompare(b[0].text))
+  rows.sort((a, b) => a[1].text.localeCompare(b[1].text))
 
 /**
  * Creates a summary of payments for the agreement
  * @param {object} agreementData - The agreement data object
- * @returns Object containing headings and data for the summary of payments table
+ * @returns Object containing headings and data for the summary of payments tables
  */
 const getSummaryOfPayments = (agreementData) => {
   const firstPayment = agreementData.payment?.payments?.[0]
@@ -226,13 +223,12 @@ const getSummaryOfPayments = (agreementData) => {
 
   return {
     headings: [
-      { text: 'Code' },
       { text: 'Action' },
-      { text: 'Total area (ha)' },
-      { text: 'Payment rate' },
+      { text: 'Code' },
+      { text: 'Annual Payment rate' },
       { text: 'First Payment' },
       { text: 'Subsequent payments' },
-      { text: 'Total yearly payment' }
+      { text: 'Annual payment value' }
     ],
     data: [...dataRows, totalsRow]
   }
