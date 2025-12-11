@@ -27,7 +27,7 @@
   <div class="with-watermark">
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-two-thirds">
-        <h1 class="govuk-heading-xl">{{ agreementName }}</h1>
+        <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
         <dl class="govuk-body dataset-info">
           <dt>Agreement holder:</dt>
           <dd>{{ agreement.applicant.business.name }}</dd>
@@ -39,7 +39,7 @@
           <dd>{{ getAddress(agreement) }}</dd>
 
           <dt>Agreement name:</dt>
-          <dd>{{ agreement.applicant.business.name }} FPTT</dd>
+          <dd>{{ agreementName }}</dd>
 
           <dt>Agreement number:</dt>
           <dd>{{ agreement.agreementNumber }}</dd>
