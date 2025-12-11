@@ -167,7 +167,7 @@
         <h2 id="actions" class="govuk-heading-l">4. Summary of actions</h2>
 
         <p class="govuk-body">
-          The following table sets out a summary of the Parcel based SFI Actions you have chosen and agree to complete under the Agreement.
+          The following table sets out a summary of the SFI Actions you have chosen and agree to complete under the Agreement.
           The Terms and Conditions and the Actions set out the accompanying obligations for the chosen Actions.
         </p>
 
@@ -281,7 +281,7 @@
           subject to the provisions for early termination set out in the Terms and Conditions.
         </p>
 
-        {% if isDraftAgreement == false %}
+        {% if isAgreementAccepted %}
           <dl class="govuk-body dataset-info">
             <dt>Agreement start date:</dt>
             <dt>{{ agreement.payment.agreementStartDate | formatDate("d MMMM yyyy") }}</dt>
@@ -296,7 +296,7 @@
         <p class="govuk-body">
           The Agreement comprising this Agreement Document, the Terms and Conditions and the Actions has been accepted by
           {{ applicantName }} – {{ businessName }}
-           {% if isDraftAgreement == false %}
+           {% if isAgreementAccepted %}
            on {{ agreement.updatedAt | formatDate("d MMMM yyyy") }}
            {% endif %}
         </p>

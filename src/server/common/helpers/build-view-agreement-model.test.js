@@ -85,7 +85,7 @@ describe('buildAgreementViewModel', () => {
   })
 
   const baseAgreementData = {
-    status: 'approved',
+    status: 'accepted',
     agreementName: 'Example agreement',
     applicant: {
       business: { name: 'Farm Business' },
@@ -124,6 +124,7 @@ describe('buildAgreementViewModel', () => {
     expect(model).toEqual({
       agreementName: 'Farm Business FPTT',
       isDraftAgreement: false,
+      isAgreementAccepted: true,
       isCMOR1ActionUsed: true,
       businessName: 'Farm Business',
       applicantName: 'Mr. Edward Paul Jones',
@@ -154,6 +155,7 @@ describe('buildAgreementViewModel', () => {
 
     expect(model.agreementName).toBe('Farm Business FPTT')
     expect(model.isDraftAgreement).toBe(true)
+    expect(model.isAgreementAccepted).toBe(false)
     expect(model.isCMOR1ActionUsed).toBe(false)
     expect(model.businessName).toBe('XXXXX')
     expect(model.applicantName).toBe('XXXXX')
