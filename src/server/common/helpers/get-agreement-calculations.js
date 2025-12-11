@@ -190,7 +190,7 @@ const buildTotalsRow = ({ firstTotal, subsequentTotal, annualTotal }) => [
 ]
 
 const sortRowsByCode = (rows) =>
-  rows.sort((a, b) => a[0].text.localeCompare(b[0].text))
+  rows.sort((a, b) => a[1].text.localeCompare(b[1].text))
 
 /**
  * Creates a summary of payments for the agreement
