@@ -38,6 +38,7 @@ const formatApplicantName = (customer) => {
 
 export const buildAgreementViewModel = (agreementData) => {
   const isDraftAgreement = agreementData?.status === 'offered'
+  const isAgreementAccepted = agreementData?.status === 'accepted'
 
   let businessName = agreementData.applicant.business.name
   let applicantName = formatApplicantName(agreementData.applicant.customer)
@@ -51,6 +52,7 @@ export const buildAgreementViewModel = (agreementData) => {
   return {
     agreementName,
     isDraftAgreement,
+    isAgreementAccepted,
     isCMOR1ActionUsed: hasLeastOneGivenParcelCode(agreementData, 'CMOR1'),
     businessName,
     applicantName,

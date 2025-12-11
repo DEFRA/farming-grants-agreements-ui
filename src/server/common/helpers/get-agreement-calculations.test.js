@@ -264,13 +264,10 @@ describe('getAgreementCalculations', () => {
         data: [
           [
             {
-              text: 'BND1'
-            },
-            {
               text: 'Maintain dry stone walls'
             },
             {
-              text: 95
+              text: 'BND1'
             },
             {
               text: '£25.65 per metre'
@@ -287,13 +284,10 @@ describe('getAgreementCalculations', () => {
           ],
           [
             {
-              text: 'CHRW1'
-            },
-            {
               text: 'CHRW1: Assess and record hedgerow condition'
             },
             {
-              text: 207
+              text: 'CHRW1'
             },
             {
               text: '£5.00 per metre'
@@ -310,13 +304,10 @@ describe('getAgreementCalculations', () => {
           ],
           [
             {
-              text: 'CSAM1'
-            },
-            {
               text: 'One-off payment per agreement per year for Assess soil, produce a soil management plan and test soil organic matter'
             },
             {
-              text: ''
+              text: 'CSAM1'
             },
             {
               text: ''
@@ -332,9 +323,6 @@ describe('getAgreementCalculations', () => {
             }
           ],
           [
-            {
-              text: ''
-            },
             {
               text: ''
             },
@@ -366,16 +354,13 @@ describe('getAgreementCalculations', () => {
         ],
         headings: [
           {
-            text: 'Code'
-          },
-          {
             text: 'Action'
           },
           {
-            text: 'Total area (ha)'
+            text: 'Code'
           },
           {
-            text: 'Payment rate'
+            text: 'Annual Payment rate'
           },
           {
             text: 'First Payment'
@@ -384,7 +369,7 @@ describe('getAgreementCalculations', () => {
             text: 'Subsequent payments'
           },
           {
-            text: 'Total yearly payment'
+            text: 'Annual payment value'
           }
         ]
       }
@@ -453,7 +438,7 @@ describe('getAgreementCalculations', () => {
 
     // Summary of payments should now have data (+ totals row)
     expect(agreement.summaryOfPayments.data).toHaveLength(2)
-    expect(agreement.summaryOfPayments.data[0][0].text).toBe('ACT1')
+    expect(agreement.summaryOfPayments.data[0][1].text).toBe('ACT1')
 
     // Annual payment schedule should now have data
     expect(agreement.annualPaymentSchedule.data).toHaveLength(2) // ACT1 + Total
@@ -490,17 +475,16 @@ describe('getAgreementCalculations', () => {
     // Includes totals row
     expect(agreement.summaryOfPayments.data).toHaveLength(2)
     const [
-      codeCell,
       actionCell,
-      areaCell,
+      codeCell,
+      // areaCell,
       rateCell,
       firstPaymentCell,
       subsequentPaymentCell,
       totalCell
     ] = agreement.summaryOfPayments.data[0]
-    expect(codeCell.text).toBe('STR1')
     expect(actionCell.text).toBe('STR1: String rate formatting')
-    expect(areaCell.text).toBe(1)
+    expect(codeCell.text).toBe('STR1')
     // String branch strips non-numerics → "1234 per metre"
     expect(rateCell.text).toBe('1234 per metre')
     // Null branch returns empty string
@@ -640,13 +624,12 @@ describe('getAgreementCalculations', () => {
     // Check that headings include first payment and subsequent payment columns
     const headings = agreement.summaryOfPayments.headings.map((h) => h.text)
     expect(headings).toEqual([
-      'Code',
       'Action',
-      'Total area (ha)',
-      'Payment rate',
+      'Code',
+      'Annual Payment rate',
       'First Payment',
       'Subsequent payments',
-      'Total yearly payment'
+      'Annual payment value'
     ])
 
     // Check that data includes the payment amounts
@@ -654,22 +637,22 @@ describe('getAgreementCalculations', () => {
     expect(data).toHaveLength(4) // 2 parcel items + 1 agreement level item + totals row
 
     // Find ACT1 row
-    const act1Row = data.find((row) => row[0].text === 'ACT1')
+    const act1Row = data.find((row) => row[1].text === 'ACT1')
     expect(act1Row).toBeDefined()
-    expect(act1Row[4].text).toBe('£125.00') // First payment
-    expect(act1Row[5].text).toBe('£125.00') // Subsequent payment
+    expect(act1Row[3].text).toBe('£125.00') // First payment
+    expect(act1Row[4].text).toBe('£125.00') // Subsequent payment
 
     // Find ACT2 row
-    const act2Row = data.find((row) => row[0].text === 'ACT2')
+    const act2Row = data.find((row) => row[1].text === 'ACT2')
     expect(act2Row).toBeDefined()
-    expect(act2Row[4].text).toBe('£37.50') // First payment
-    expect(act2Row[5].text).toBe('£37.50') // Subsequent payment
+    expect(act2Row[3].text).toBe('£37.50') // First payment
+    expect(act2Row[4].text).toBe('£37.50') // Subsequent payment
 
     // Find MGMT1 row
-    const mgmt1Row = data.find((row) => row[0].text === 'MGMT1')
+    const mgmt1Row = data.find((row) => row[1].text === 'MGMT1')
     expect(mgmt1Row).toBeDefined()
-    expect(mgmt1Row[4].text).toBe('£50.00') // First payment
-    expect(mgmt1Row[5].text).toBe('£50.00') // Subsequent payment
+    expect(mgmt1Row[3].text).toBe('£50.00') // First payment
+    expect(mgmt1Row[4].text).toBe('£50.00') // Subsequent payment
   })
 
   test('should handle missing payment data gracefully', () => {
@@ -701,8 +684,88 @@ describe('getAgreementCalculations', () => {
     expect(data).toHaveLength(2) // + totals row
 
     const act1Row = data[0]
-    expect(act1Row[0].text).toBe('ACT1')
-    expect(act1Row[4].text).toBe('£0.00') // First payment
-    expect(act1Row[5].text).toBe('£0.00') // Subsequent payment
+    expect(act1Row[0].text).toBe('ACT1: Test Action')
+    expect(act1Row[1].text).toBe('ACT1')
+    expect(act1Row[3].text).toBe('£0.00') // First payment
+    expect(act1Row[4].text).toBe('£0.00') // Subsequent payment
+  })
+
+  test('summary of payments sorts rows and calculates totals row correctly', () => {
+    const agreementData = {
+      status: 'offered',
+      agreementNumber: 'SFI-SUMMARY-TOTALS',
+      payment: {
+        parcelItems: {
+          2: {
+            code: 'B2',
+            description: 'B2: Parcel row two',
+            quantity: 2,
+            rateInPence: 500,
+            unit: 'metres',
+            annualPaymentPence: 4000
+          },
+          1: {
+            code: 'A1',
+            description: 'A1: Parcel row one',
+            quantity: 1,
+            rateInPence: 100,
+            unit: 'metres',
+            annualPaymentPence: 1000
+          }
+        },
+        agreementLevelItems: {
+          1: {
+            code: 'C3',
+            description: 'C3: Agreement level payment',
+            annualPaymentPence: 2500
+          }
+        },
+        payments: [
+          {
+            paymentDate: '2024-01-01',
+            lineItems: [
+              { parcelItemId: 1, paymentPence: 250 },
+              { parcelItemId: 2, paymentPence: 500 },
+              { agreementLevelItemId: 1, paymentPence: 1000 }
+            ]
+          },
+          {
+            paymentDate: '2024-04-01',
+            lineItems: [
+              { parcelItemId: 1, paymentPence: 250 },
+              { parcelItemId: 2, paymentPence: 500 },
+              { agreementLevelItemId: 1, paymentPence: 1000 }
+            ]
+          }
+        ],
+        agreementStartDate: '2024-01-01',
+        agreementEndDate: '2024-12-31'
+      }
+    }
+
+    const { summaryOfPayments } = getAgreementCalculations(agreementData)
+    const rows = summaryOfPayments.data
+
+    // Expect 3 data rows (2 parcel + 1 agreement level) + totals row
+    expect(rows).toHaveLength(4)
+
+    // Rows sorted alphabetically by code (A1, B2, C3)
+    expect(rows[0][1].text).toBe('A1')
+    expect(rows[1][1].text).toBe('B2')
+    expect(rows[2][1].text).toBe('C3')
+
+    const totalsRow = rows[3]
+    expect(totalsRow[3]).toEqual({
+      text: '£17.50',
+      attributes: { class: 'govuk-!-font-weight-bold' }
+    })
+    expect(totalsRow[4]).toEqual({
+      text: '£17.50',
+      attributes: { class: 'govuk-!-font-weight-bold' }
+    })
+    expect(totalsRow[5]).toEqual({
+      text: '£75.00',
+      attributes: { class: 'govuk-!-font-weight-bold' }
+    })
   })
 })
