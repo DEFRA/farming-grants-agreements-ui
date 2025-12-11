@@ -79,8 +79,8 @@ describe('#viewAgreementController', () => {
   })
 })
 
-// Unit tests for isDraftAgreement logic colocated in this existing test file
-describe('viewAgreementController.isDraftAgreement (unit)', () => {
+// Unit tests for agreementStatus logic colocated in this existing test file
+describe('viewAgreementController.agreementStatus (unit)', () => {
   function createH() {
     return { view: vi.fn((template, context) => ({ template, context })) }
   }
@@ -127,9 +127,11 @@ describe('viewAgreementController.isDraftAgreement (unit)', () => {
       expect.any(Object)
     )
     expect(context.isDraftAgreement).toBe(true)
+    expect(context.isAgreementAccepted).toBe(false)
+    expect(context.isWithdrawnAgreement).toBe(false)
   })
 
-  test("sets isDraftAgreement false when agreement status is not 'offered'", async () => {
+  test("sets isAgreementAccepted false when agreement status is 'accepted'", async () => {
     vi.resetModules()
     vi.doMock('../common/helpers/get-agreement-calculations.js', () => ({
       getAgreementCalculations: vi.fn(() => ({
@@ -149,5 +151,31 @@ describe('viewAgreementController.isDraftAgreement (unit)', () => {
       expect.any(Object)
     )
     expect(context.isDraftAgreement).toBe(false)
+    expect(context.isAgreementAccepted).toBe(true)
+    expect(context.isWithdrawnAgreement).toBe(false)
+  })
+
+  test("sets isWithdrawnAgreement false when agreement status is 'withdrawn'", async () => {
+    vi.resetModules()
+    vi.doMock('../common/helpers/get-agreement-calculations.js', () => ({
+      getAgreementCalculations: vi.fn(() => ({
+        agreement: { applicant: { business: { name: 'Mock Biz' } } },
+        payment: {}
+      }))
+    }))
+    const { viewAgreementController } = await import('./controller.js')
+
+    const h = createH()
+    const request = buildRequest('withdrawn')
+
+    const { context } = await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/index',
+      expect.any(Object)
+    )
+    expect(context.isDraftAgreement).toBe(false)
+    expect(context.isAgreementAccepted).toBe(false)
+    expect(context.isWithdrawnAgreement).toBe(true)
   })
 })

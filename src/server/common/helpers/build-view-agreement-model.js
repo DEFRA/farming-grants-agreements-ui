@@ -39,12 +39,13 @@ const formatApplicantName = (customer) => {
 export const buildAgreementViewModel = (agreementData) => {
   const isDraftAgreement = agreementData?.status === 'offered'
   const isAgreementAccepted = agreementData?.status === 'accepted'
+  const isWithdrawnAgreement = agreementData?.status === 'withdrawn'
 
   let businessName = agreementData.applicant.business.name
   let applicantName = formatApplicantName(agreementData.applicant.customer)
   const agreementName = `${businessName} FPTT`
 
-  if (isDraftAgreement) {
+  if (isDraftAgreement || isWithdrawnAgreement) {
     businessName = 'XXXXX'
     applicantName = 'XXXXX'
   }
@@ -53,6 +54,7 @@ export const buildAgreementViewModel = (agreementData) => {
     agreementName,
     isDraftAgreement,
     isAgreementAccepted,
+    isWithdrawnAgreement,
     isCMOR1ActionUsed: hasLeastOneGivenParcelCode(agreementData, 'CMOR1'),
     businessName,
     applicantName,

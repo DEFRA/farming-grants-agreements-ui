@@ -1,4 +1,4 @@
-{% set bodyClasses = "view-offer-page" ~ (" view-agreement-has-watermark" if isDraftAgreement else "") %}
+{% set bodyClasses = "view-offer-page" ~ (" view-agreement-has-watermark" if isDraftAgreement or isWithdrawnAgreement else "") %}
 {% set mainClasses = "" %}
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
@@ -17,11 +17,19 @@
     {{ govukNotificationBanner({
       html: html
     }) }}
+  {% elif isWithdrawnAgreement %}
+    {% set html %}
+     <p class="govuk-notification-banner__heading">This agreement offer has been withdrawn.</p>
+    {% endset %}
+
+    {{ govukNotificationBanner({
+     html: html
+    }) }}
   {% endif %}
 
-  {% if isDraftAgreement %}
-    <div class="print-watermark" aria-hidden="true">DRAFT</div>
-    <div class="print-watermark-header" aria-hidden="true">Draft Agreement</div>
+  {% if isDraftAgreement or isWithdrawnAgreement %}
+    <div class="print-watermark" aria-hidden="true">{{ 'DRAFT' if isDraftAgreement else 'WITHDRAWN' }}</div>
+    <div class="print-watermark-header" aria-hidden="true">{{ 'Draft Agreement' if isDraftAgreement else 'Withdrawn Agreement' }}</div>
   {% endif %}
 
   <div class="with-watermark">
