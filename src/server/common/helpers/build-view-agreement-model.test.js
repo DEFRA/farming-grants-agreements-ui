@@ -107,7 +107,7 @@ describe('buildAgreementViewModel', () => {
     }
   }
 
-  test('includes agreement calculations and retains applicant data for non-draft agreements', () => {
+  test('includes agreement calculations and retains applicant data for accepted agreements', () => {
     const calculations = {
       summaryOfActions: { headings: [], data: [] },
       summaryOfPayments: { headings: [], data: [] },
@@ -125,6 +125,7 @@ describe('buildAgreementViewModel', () => {
       agreementName: 'Farm Business FPTT',
       isDraftAgreement: false,
       isAgreementAccepted: true,
+      isWithdrawnAgreement: false,
       isCMOR1ActionUsed: true,
       businessName: 'Farm Business',
       applicantName: 'Mr. Edward Paul Jones',
@@ -132,7 +133,7 @@ describe('buildAgreementViewModel', () => {
     })
   })
 
-  test('masks business and applicant names for draft agreements and defaults agreement name', () => {
+  test('masks business and applicant names for offered status and defaults agreement name', () => {
     const calculations = {
       summaryOfActions: { headings: [{ text: 'A' }], data: [{}] }
     }
@@ -156,9 +157,38 @@ describe('buildAgreementViewModel', () => {
     expect(model.agreementName).toBe('Farm Business FPTT')
     expect(model.isDraftAgreement).toBe(true)
     expect(model.isAgreementAccepted).toBe(false)
+    expect(model.isWithdrawnAgreement).toBe(false)
     expect(model.isCMOR1ActionUsed).toBe(false)
     expect(model.businessName).toBe('XXXXX')
     expect(model.applicantName).toBe('XXXXX')
     expect(model.summaryOfActions).toBe(calculations.summaryOfActions)
+  })
+
+  test('masks business and applicant names for withdrawn status', () => {
+    const calculations = {
+      summaryOfActions: { headings: [{ text: 'A' }], data: [{}] }
+    }
+    mockedGetAgreementCalculations.mockReturnValue(calculations)
+
+    const withdrawnAgreement = {
+      ...baseAgreementData,
+      status: 'withdrawn',
+      payment: {
+        parcelItems: {
+          1: {
+            code: 'CMOR1'
+          }
+        }
+      }
+    }
+
+    const model = buildAgreementViewModel(withdrawnAgreement)
+
+    expect(model.isDraftAgreement).toBe(false)
+    expect(model.isAgreementAccepted).toBe(false)
+    expect(model.isWithdrawnAgreement).toBe(true)
+    expect(model.businessName).toBe('XXXXX')
+    expect(model.applicantName).toBe('XXXXX')
+    expect(model.isCMOR1ActionUsed).toBe(true)
   })
 })
