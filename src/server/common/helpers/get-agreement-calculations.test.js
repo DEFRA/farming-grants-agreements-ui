@@ -485,7 +485,6 @@ describe('getAgreementCalculations', () => {
     ] = agreement.summaryOfPayments.data[0]
     expect(actionCell.text).toBe('STR1: String rate formatting')
     expect(codeCell.text).toBe('STR1')
-    // expect(areaCell.text).toBe(1)
     // String branch strips non-numerics → "1234 per metre"
     expect(rateCell.text).toBe('1234 per metre')
     // Null branch returns empty string
