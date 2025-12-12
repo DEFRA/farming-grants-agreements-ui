@@ -79,25 +79,32 @@ describe('#viewAgreementController', () => {
   })
 })
 
-// Unit tests for agreementStatus logic colocated in this existing test file
-describe('viewAgreementController.agreementStatus (unit)', () => {
-  function createH() {
-    return { view: vi.fn((template, context) => ({ template, context })) }
-  }
-
-  function buildRequest(status) {
-    return {
-      pre: {
-        data: {
-          agreementData: {
-            status,
-            applicant: {
-              business: {
-                address: {
-                  line1: 'Line 1',
-                  city: 'AnyTown',
-                  postalCode: 'AA1 1AA'
-                }
+// Shared test helper to build request objects for all test scenarios
+function buildRequest({
+  status = 'accepted',
+  authSource = null,
+  referer = undefined,
+  host = 'this-site.uk'
+} = {}) {
+  const baseUrl = `https://${host}`
+  return {
+    headers: {
+      ...(referer !== undefined && { referer }),
+      'x-base-url': baseUrl
+    },
+    pre: {
+      data: {
+        ...(authSource && {
+          auth: { source: authSource }
+        }),
+        agreementData: {
+          status,
+          applicant: {
+            business: {
+              address: {
+                line1: 'Line 1',
+                city: 'AnyTown',
+                postalCode: 'AA1 1AA'
               }
             }
           }
@@ -105,7 +112,18 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
       }
     }
   }
+}
 
+// Shared test helper to create Hapi response toolkit mock
+function createH() {
+  return {
+    view: vi.fn((template, context) => ({ template, context })),
+    redirect: vi.fn((url) => ({ redirectTo: url }))
+  }
+}
+
+// Unit tests for agreementStatus logic colocated in this existing test file
+describe('viewAgreementController.agreementStatus (unit)', () => {
   test("sets isDraftAgreement true when agreement status is 'offered'", async () => {
     // Reset module cache and mock calculations helper before importing controller
     vi.resetModules()
@@ -118,7 +136,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     const { viewAgreementController } = await import('./controller.js')
 
     const h = createH()
-    const request = buildRequest('offered')
+    const request = buildRequest({ status: 'offered' })
 
     const { context } = await viewAgreementController.handler(request, h)
 
@@ -142,7 +160,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     const { viewAgreementController } = await import('./controller.js')
 
     const h = createH()
-    const request = buildRequest('accepted')
+    const request = buildRequest({ status: 'accepted' })
 
     const { context } = await viewAgreementController.handler(request, h)
 
@@ -166,7 +184,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     const { viewAgreementController } = await import('./controller.js')
 
     const h = createH()
-    const request = buildRequest('withdrawn')
+    const request = buildRequest({ status: 'withdrawn' })
 
     const { context } = await viewAgreementController.handler(request, h)
 
@@ -177,5 +195,237 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     expect(context.isDraftAgreement).toBe(false)
     expect(context.isAgreementAccepted).toBe(false)
     expect(context.isWithdrawnAgreement).toBe(true)
+  })
+})
+
+// Unit tests for referer header redirect logic
+describe('viewAgreementController.refererRedirect', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    vi.doMock('../common/helpers/get-agreement-calculations.js', () => ({
+      getAgreementCalculations: vi.fn(() => ({
+        agreement: { applicant: { business: { name: 'Mock Biz' } } },
+        payment: {}
+      }))
+    }))
+  })
+
+  test('redirects to baseUrl when status is offered, auth source is defra and referer header is missing', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+
+    const h = createH()
+    const request = buildRequest({
+      status: 'offered',
+      authSource: 'defra',
+      referer: undefined
+    })
+
+    const result = await viewAgreementController.handler(request, h)
+
+    expect(h.redirect).toHaveBeenCalledWith('https://this-site.uk')
+    expect(result.redirectTo).toBe('https://this-site.uk')
+    expect(h.view).not.toHaveBeenCalled()
+  })
+
+  test('redirects to baseUrl when status is offered, auth source is defra and referer does not end with baseUrl', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+
+    const h = createH()
+    const request = buildRequest({
+      status: 'offered',
+      authSource: 'defra',
+      referer: 'https://a-different-site.uk'
+    })
+
+    const result = await viewAgreementController.handler(request, h)
+
+    expect(h.redirect).toHaveBeenCalledWith('https://this-site.uk')
+    expect(result.redirectTo).toBe('https://this-site.uk')
+    expect(h.view).not.toHaveBeenCalled()
+  })
+
+  test('redirects when status is offered, auth source is defra and referer has path after baseUrl', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+
+    const h = createH()
+    // 'https://this-site.uk/some/path' does NOT end with 'https://this-site.uk'
+    const request = buildRequest({
+      status: 'offered',
+      authSource: 'defra',
+      referer: 'https://this-site.uk/some/path'
+    })
+
+    const result = await viewAgreementController.handler(request, h)
+
+    expect(h.redirect).toHaveBeenCalledWith('https://this-site.uk')
+    expect(result.redirectTo).toBe('https://this-site.uk')
+    expect(h.view).not.toHaveBeenCalled()
+  })
+
+  test('displays view when status is offered, auth source is defra and referer exactly matches baseUrl', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+
+    const h = createH()
+    const request = buildRequest({
+      status: 'offered',
+      authSource: 'defra',
+      referer: 'https://this-site.uk'
+    })
+
+    const { context } = await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/index',
+      expect.any(Object)
+    )
+    expect(context.pageTitle).toBe(
+      'Farm payments technical test agreement document'
+    )
+    expect(h.redirect).not.toHaveBeenCalled()
+  })
+
+  test('displays view when auth source is not defra even without referer', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+
+    const h = createH()
+    const request = buildRequest({ authSource: 'entra', referer: undefined })
+
+    const { context } = await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/index',
+      expect.any(Object)
+    )
+    expect(context.pageTitle).toBe(
+      'Farm payments technical test agreement document'
+    )
+    expect(h.redirect).not.toHaveBeenCalled()
+  })
+
+  test('displays view when auth source is not defra even with invalid referer', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+
+    const h = createH()
+    const request = buildRequest({
+      authSource: 'entra',
+      referer: 'https://a-different-site.uk'
+    })
+
+    const { context } = await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/index',
+      expect.any(Object)
+    )
+    expect(context.pageTitle).toBe(
+      'Farm payments technical test agreement document'
+    )
+    expect(h.redirect).not.toHaveBeenCalled()
+  })
+
+  test('displays view when auth is undefined', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+
+    const h = createH()
+    const request = buildRequest({ authSource: null, referer: undefined })
+
+    const { context } = await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/index',
+      expect.any(Object)
+    )
+    expect(context.pageTitle).toBe(
+      'Farm payments technical test agreement document'
+    )
+    expect(h.redirect).not.toHaveBeenCalled()
+  })
+
+  test('displays view when status is accepted even with defra auth and missing referer', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+
+    const h = createH()
+    const request = buildRequest({
+      status: 'accepted',
+      authSource: 'defra',
+      referer: undefined
+    })
+
+    const { context } = await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/index',
+      expect.any(Object)
+    )
+    expect(context.pageTitle).toBe(
+      'Farm payments technical test agreement document'
+    )
+    expect(h.redirect).not.toHaveBeenCalled()
+  })
+
+  test('displays view when status is accepted even with defra auth and invalid referer', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+
+    const h = createH()
+    const request = buildRequest({
+      status: 'accepted',
+      authSource: 'defra',
+      referer: 'https://a-different-site.uk'
+    })
+
+    const { context } = await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/index',
+      expect.any(Object)
+    )
+    expect(context.pageTitle).toBe(
+      'Farm payments technical test agreement document'
+    )
+    expect(h.redirect).not.toHaveBeenCalled()
+  })
+
+  test('displays view when status is withdrawn even with defra auth and missing referer', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+
+    const h = createH()
+    const request = buildRequest({
+      status: 'withdrawn',
+      authSource: 'defra',
+      referer: undefined
+    })
+
+    const { context } = await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/index',
+      expect.any(Object)
+    )
+    expect(context.pageTitle).toBe(
+      'Farm payments technical test agreement document'
+    )
+    expect(h.redirect).not.toHaveBeenCalled()
+  })
+
+  test('displays view when status is withdrawn even with defra auth and invalid referer', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+
+    const h = createH()
+    const request = buildRequest({
+      status: 'withdrawn',
+      authSource: 'defra',
+      referer: 'https://a-different-site.uk'
+    })
+
+    const { context } = await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/index',
+      expect.any(Object)
+    )
+    expect(context.pageTitle).toBe(
+      'Farm payments technical test agreement document'
+    )
+    expect(h.redirect).not.toHaveBeenCalled()
   })
 })
