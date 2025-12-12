@@ -28,7 +28,7 @@
   {% endif %}
 
   {% if isDraftAgreement or isWithdrawnAgreement %}
-    <div class="print-watermark" aria-hidden="true">{{ 'DRAFT' if isDraftAgreement else 'WITHDRAWN' }}</div>
+    <div class="print-watermark{{ ' print-watermark--withdrawn' if isWithdrawnAgreement else '' }}" aria-hidden="true">{{ 'DRAFT' if isDraftAgreement else 'WITHDRAWN' }}</div>
     <div class="print-watermark-header" aria-hidden="true">{{ 'Draft Agreement' if isDraftAgreement else 'Withdrawn Agreement' }}</div>
   {% endif %}
 
