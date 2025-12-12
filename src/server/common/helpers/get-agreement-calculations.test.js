@@ -360,10 +360,10 @@ describe('getAgreementCalculations', () => {
             text: 'Code'
           },
           {
-            text: 'Annual Payment rate'
+            text: 'Annual payment rate'
           },
           {
-            text: 'First Payment'
+            text: 'First payment'
           },
           {
             text: 'Subsequent payments'
@@ -626,8 +626,8 @@ describe('getAgreementCalculations', () => {
     expect(headings).toEqual([
       'Action',
       'Code',
-      'Annual Payment rate',
-      'First Payment',
+      'Annual payment rate',
+      'First payment',
       'Subsequent payments',
       'Annual payment value'
     ])
