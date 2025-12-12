@@ -48,6 +48,12 @@
     print-color-adjust: exact;
   }
 
+  // Smaller, lighter watermark for withdrawn agreements
+  .view-agreement-has-watermark .print-watermark--withdrawn {
+    font-weight: 700;
+    font-size: 100pt;
+  }
+
   // Disable previous small header to avoid duplication; use .print-banner-watermark instead
   .view-agreement-has-watermark .print-watermark-header {
     display: none !important;
