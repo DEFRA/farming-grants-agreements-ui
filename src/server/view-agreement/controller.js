@@ -9,7 +9,7 @@ export const viewAgreementController = {
     if (
       agreementData?.status === 'offered' &&
       auth?.source === 'defra' &&
-      (!request.headers.referer || !request.headers.referer.endsWith(baseUrl))
+      !request.headers.referer?.endsWith(baseUrl)
     ) {
       return h.redirect(baseUrl)
     }
