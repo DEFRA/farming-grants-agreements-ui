@@ -225,8 +225,8 @@ const getSummaryOfPayments = (agreementData) => {
     headings: [
       { text: 'Action' },
       { text: 'Code' },
-      { text: 'Annual Payment rate' },
-      { text: 'First Payment' },
+      { text: 'Annual payment rate' },
+      { text: 'First payment' },
       { text: 'Subsequent payments' },
       { text: 'Annual payment value' }
     ],
