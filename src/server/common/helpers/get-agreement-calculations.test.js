@@ -584,10 +584,10 @@ describe('getAgreementCalculations', () => {
               text: 95
             },
             {
-              text: '01/01/2024'
+              text: ''
             },
             {
-              text: '31/12/2024'
+              text: ''
             }
           ],
           [
@@ -607,10 +607,10 @@ describe('getAgreementCalculations', () => {
               text: 207
             },
             {
-              text: ''
+              text: '01/01/2024'
             },
             {
-              text: ''
+              text: '31/12/2024'
             }
           ]
         ],
