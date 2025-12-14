@@ -1,7 +1,7 @@
 import { getAgreementCalculations } from './get-agreement-calculations.js'
 
 describe('getAgreementCalculations', () => {
-  test('should return rendered HTML', () => {
+  test('should return rendered HTML for accepted status', () => {
     const mockAgreement = {
       agreementNumber: 'SFI123456789',
       status: 'accepted',
@@ -376,9 +376,9 @@ describe('getAgreementCalculations', () => {
     })
   })
 
-  test('should compute tables from provided data with values', () => {
+  test('should compute tables from provided data with values for accepted status', () => {
     const agreementData = {
-      status: 'offered',
+      status: 'accepted',
       username: 'User Name',
       agreementNumber: 'SFI000000001',
       payment: {
