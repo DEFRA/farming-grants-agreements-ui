@@ -52,29 +52,39 @@ const getAgreementLand = (agreementData) => {
  * @returns Object containing headings and data for the summary of actions table
  */
 const getSummaryOfActions = (agreementData) => {
+  const headings = [
+    { text: 'Parcel' },
+    { text: 'Code' },
+    { text: 'Action' },
+    { text: 'Total parcel area (ha)' }
+  ]
+
+  let paymentStartDate = ''
+  let paymentEndDate = ''
+  if (agreementData.status === 'accepted') {
+    headings.push({ text: 'Start date' })
+    headings.push({ text: 'End date' })
+
+    paymentStartDate = new Date(
+      agreementData.payment.agreementStartDate
+    ).toLocaleDateString('en-GB', dateOptions)
+
+    paymentEndDate = new Date(
+      agreementData.payment.agreementEndDate
+    ).toLocaleDateString('en-GB', dateOptions)
+  }
   return {
-    headings: [
-      { text: 'Parcel' },
-      { text: 'Code' },
-      { text: 'Action' },
-      { text: 'Total parcel area (ha)' },
-      { text: 'Start date' },
-      { text: 'End date' }
-    ],
+    headings,
     data: Object.values(agreementData.payment.parcelItems).map((parcel) => [
       { text: `${parcel.sheetId} ${parcel.parcelId}`, ...noWrap },
       { text: parcel.code },
       { text: parcel.description?.replace(`${parcel.code}: `, '') },
       { text: parcel.quantity },
       {
-        text: new Date(
-          agreementData.payment.agreementStartDate
-        ).toLocaleDateString('en-GB', dateOptions)
+        text: paymentStartDate
       },
       {
-        text: new Date(
-          agreementData.payment.agreementEndDate
-        ).toLocaleDateString('en-GB', dateOptions)
+        text: paymentEndDate
       }
     ])
   }
