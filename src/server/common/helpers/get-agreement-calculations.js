@@ -62,8 +62,7 @@ const getSummaryOfActions = (agreementData) => {
   let paymentStartDate = ''
   let paymentEndDate = ''
   if (agreementData.status === 'accepted') {
-    headings.push({ text: 'Start date' })
-    headings.push({ text: 'End date' })
+    headings.push({ text: 'Start date' }, { text: 'End date' })
 
     paymentStartDate = new Date(
       agreementData.payment.agreementStartDate
