@@ -4,7 +4,7 @@ describe('getAgreementCalculations', () => {
   test('should return rendered HTML', () => {
     const mockAgreement = {
       agreementNumber: 'SFI123456789',
-      status: 'offered',
+      status: 'accepted',
       actionApplications: [
         {
           sheetId: 'SX635990',
