@@ -1,5 +1,6 @@
 import { createServer } from '../server.js'
 import { statusCodes } from '../common/constants/status-codes.js'
+import { config } from '../../config/config.js'
 
 describe('#healthController', () => {
   let server
@@ -19,7 +20,10 @@ describe('#healthController', () => {
       url: '/health'
     })
 
-    expect(result).toEqual({ message: 'success' })
+    expect(result).toEqual({
+      message: 'success',
+      version: config.get('serviceVersion')
+    })
     expect(statusCode).toBe(statusCodes.ok)
   })
 })

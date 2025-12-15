@@ -2,6 +2,7 @@ import { vi } from 'vitest'
 
 import hapi from '@hapi/hapi'
 import { statusCodes } from '../constants/status-codes.js'
+import { config } from '../../../config/config.js'
 
 describe('#startServer', () => {
   let createServerSpy
@@ -41,7 +42,10 @@ describe('#startServer', () => {
         url: '/health'
       })
 
-      expect(result).toEqual({ message: 'success' })
+      expect(result).toEqual({
+        message: 'success',
+        version: config.get('serviceVersion')
+      })
       expect(statusCode).toBe(statusCodes.ok)
     })
   })
