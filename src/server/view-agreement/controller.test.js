@@ -101,6 +101,10 @@ function buildRequest({
         }),
         agreementData: {
           status,
+          payment: {
+            agreementStartDate: '2026-01-01',
+            agreementEndDate: '2027-01-01'
+          },
           applicant: {
             business: {
               address: {
@@ -132,7 +136,15 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     vi.doMock('../common/helpers/get-agreement-calculations.js', () => ({
       getAgreementCalculations: vi.fn(() => ({
         agreement: { applicant: { business: { name: 'Mock Biz' } } },
-        payment: {}
+        payment: {
+          agreementStartDate: '2026-01-01',
+          agreementEndDate: '2027-01-01',
+          parcelItems: {
+            1: {
+              code: 'CMOR1'
+            }
+          }
+        }
       }))
     }))
     const { viewAgreementController } = await import('./controller.js')

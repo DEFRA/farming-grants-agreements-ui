@@ -55,15 +55,14 @@ const getSummaryOfActions = (agreementData) => {
   const isAccepted = agreementData.status === 'accepted'
 
   // Build headings – include dates only for accepted agreements
-  const baseHeadings = [
+  const headings = [
     { text: 'Parcel' },
     { text: 'Code' },
     { text: 'Action' },
-    { text: 'Total parcel area (ha)' }
+    { text: 'Total parcel area (ha)' },
+    { text: 'Start date' },
+    { text: 'End date' }
   ]
-  const headings = isAccepted
-    ? [...baseHeadings, { text: 'Start date' }, { text: 'End date' }]
-    : baseHeadings
 
   // Format dates (or default to empty strings for non-accepted)
   const startDateText = isAccepted
@@ -71,27 +70,25 @@ const getSummaryOfActions = (agreementData) => {
         'en-GB',
         dateOptions
       )
-    : ''
+    : 'XXXXX'
   const endDateText = isAccepted
     ? new Date(agreementData.payment.agreementEndDate).toLocaleDateString(
         'en-GB',
         dateOptions
       )
-    : ''
+    : 'XXXXX'
 
   // Build rows – include date cells only when accepted, mirroring headings
   const data = Object.values(agreementData.payment.parcelItems).map(
     (parcel) => {
-      const baseRow = [
+      return [
         { text: `${parcel.sheetId} ${parcel.parcelId}`, ...noWrap },
         { text: parcel.code },
         { text: parcel.description?.replace(`${parcel.code}: `, '') },
-        { text: parcel.quantity }
+        { text: parcel.quantity },
+        { text: startDateText },
+        { text: endDateText }
       ]
-
-      return isAccepted
-        ? [...baseRow, { text: startDateText }, { text: endDateText }]
-        : baseRow
     }
   )
 

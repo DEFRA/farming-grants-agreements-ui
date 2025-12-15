@@ -1,4 +1,5 @@
 import { getAgreementCalculations } from './get-agreement-calculations.js'
+import { formatDate } from 'date-fns'
 
 /**
  * Checks whether any parcel item attached to an agreement matches the given code.
@@ -44,14 +45,26 @@ export const buildAgreementViewModel = (agreementData) => {
   let businessName = agreementData.applicant.business.name
   let applicantName = formatApplicantName(agreementData.applicant.customer)
   const agreementName = `${businessName} FPTT`
+  let agreementStartDate = formatDate(
+    agreementData.payment.agreementStartDate,
+    'd MMMM yyyy'
+  )
+  let agreementEndDate = formatDate(
+    agreementData.payment.agreementEndDate,
+    'd MMMM yyyy'
+  )
 
   if (isDraftAgreement || isWithdrawnAgreement) {
     businessName = 'XXXXX'
     applicantName = 'XXXXX'
+    agreementStartDate = 'XXXXX'
+    agreementEndDate = 'XXXXX'
   }
 
   return {
     agreementName,
+    agreementStartDate,
+    agreementEndDate,
     isDraftAgreement,
     isAgreementAccepted,
     isWithdrawnAgreement,

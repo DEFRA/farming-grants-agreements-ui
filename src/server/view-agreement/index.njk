@@ -52,13 +52,11 @@
           <dt>Agreement number:</dt>
           <dd>{{ agreement.agreementNumber }}</dd>
 
-          {% if isAgreementAccepted %}
-            <dt>Agreement start date:</dt>
-            <dd>{{ agreement.payment.agreementStartDate | formatDate("d MMMM yyyy") }}</dd>
+          <dt>Agreement start date:</dt>
+          <dd>{{ agreementStartDate }}</dd>
 
-            <dt>Agreement end date:</dt>
-            <dd>{{ agreement.payment.agreementEndDate | formatDate("d MMMM yyyy") }}</dd>
-          {% endif %}
+          <dt>Agreement end date:</dt>
+          <dd>{{ agreementEndDate }}</dd>
         </dl>
       </div>
     </div>
@@ -288,15 +286,13 @@
           subject to the provisions for early termination set out in the Terms and Conditions.
         </p>
 
-        {% if isAgreementAccepted %}
-          <dl class="govuk-body dataset-info">
-            <dt>Agreement start date:</dt>
-            <dt>{{ agreement.payment.agreementStartDate | formatDate("d MMMM yyyy") }}</dt>
+        <dl class="govuk-body dataset-info">
+          <dt>Agreement start date:</dt>
+          <dt>{{ agreementStartDate }}</dt>
 
-            <dt>Agreement end date:</dt>
-            <dt>{{ agreement.payment.agreementEndDate | formatDate("d MMMM yyyy") }}</dt>
-          </dl>
-        {% endif %}
+          <dt>Agreement end date:</dt>
+          <dt>{{ agreementEndDate }}</dt>
+        </dl>
 
         <h2 id="signature" class="govuk-heading-l">7. Electronic signature</h2>
 
