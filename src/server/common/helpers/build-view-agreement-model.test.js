@@ -100,12 +100,7 @@ describe('buildAgreementViewModel', () => {
     },
     payment: {
       agreementStartDate: '2026-01-01',
-      agreementEndDate: '2027-01-01',
-      parcelItems: {
-        1: {
-          code: 'CMOR1'
-        }
-      }
+      agreementEndDate: '2027-01-01'
     }
   }
 
@@ -125,6 +120,8 @@ describe('buildAgreementViewModel', () => {
     )
     expect(model).toEqual({
       agreementName: 'Farm Business FPTT',
+      agreementStartDate: '1 January 2026',
+      agreementEndDate: '1 January 2027',
       isDraftAgreement: false,
       isAgreementAccepted: true,
       isWithdrawnAgreement: false,
