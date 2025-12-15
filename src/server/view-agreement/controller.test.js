@@ -99,6 +99,10 @@ function buildRequest({
         }),
         agreementData: {
           status,
+          payment: {
+            agreementStartDate: '2026-01-01',
+            agreementEndDate: '2027-01-01'
+          },
           applicant: {
             business: {
               address: {

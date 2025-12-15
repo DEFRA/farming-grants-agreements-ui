@@ -100,7 +100,12 @@ describe('buildAgreementViewModel', () => {
     },
     payment: {
       agreementStartDate: '2026-01-01',
-      agreementEndDate: '2027-01-01'
+      agreementEndDate: '2027-01-01',
+      parcelItems: {
+        1: {
+          code: 'CMOR1'
+        }
+      }
     }
   }
 
