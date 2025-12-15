@@ -35,7 +35,7 @@ export const agreement = {
         },
         {
           method: 'GET',
-          path: '/{agreementId}',
+          path: '/{agreementId}/{mode?}',
           options: {
             pre: [{ method: getAgreementData, assign: 'data' }]
           },

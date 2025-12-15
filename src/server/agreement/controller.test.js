@@ -63,6 +63,29 @@ describe('#agreementController', () => {
       })
     })
 
+    test('should call the backend API including SFI number and mode', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({})
+      })
+
+      await server.inject({
+        method: 'GET',
+        url: '/SFI123456789/print',
+        headers: {
+          'x-encrypted-auth': 'mock-auth'
+        }
+      })
+
+      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/SFI123456789', {
+        headers: {
+          'x-encrypted-auth': 'mock-auth'
+        },
+        method: 'GET',
+        signal: expect.any(AbortSignal)
+      })
+    })
+
     test('should call the backend API with POST data', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,

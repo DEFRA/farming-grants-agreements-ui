@@ -5,13 +5,12 @@ export const viewAgreementController = {
   async handler(request, h) {
     const { agreementData, auth } = request.pre?.data || {}
 
-    const baseUrl = getBaseUrl(request)
     if (
       agreementData?.status === 'offered' &&
       auth?.source === 'defra' &&
-      !request.headers.referer?.endsWith(baseUrl)
+      request.params.mode !== 'print'
     ) {
-      return h.redirect(baseUrl)
+      return h.redirect(getBaseUrl(request))
     }
 
     return h.view('view-agreement/index', {

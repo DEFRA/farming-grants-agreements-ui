@@ -83,14 +83,16 @@ describe('#viewAgreementController', () => {
 function buildRequest({
   status = 'accepted',
   authSource = null,
-  referer = undefined,
+  mode = undefined,
   host = 'this-site.uk'
 } = {}) {
   const baseUrl = `https://${host}`
   return {
     headers: {
-      ...(referer !== undefined && { referer }),
       'x-base-url': baseUrl
+    },
+    params: {
+      ...(mode !== undefined && { mode })
     },
     pre: {
       data: {
@@ -198,8 +200,8 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
   })
 })
 
-// Unit tests for referer header redirect logic
-describe('viewAgreementController.refererRedirect', () => {
+// Unit tests for redirect logic based on status, auth source, and mode
+describe('viewAgreementController.redirect', () => {
   beforeEach(() => {
     vi.resetModules()
     vi.doMock('../common/helpers/get-agreement-calculations.js', () => ({
@@ -210,14 +212,13 @@ describe('viewAgreementController.refererRedirect', () => {
     }))
   })
 
-  test('redirects to baseUrl when status is offered, auth source is defra and referer header is missing', async () => {
+  test('redirects to baseUrl when status is offered and auth source is defra', async () => {
     const { viewAgreementController } = await import('./controller.js')
 
     const h = createH()
     const request = buildRequest({
       status: 'offered',
-      authSource: 'defra',
-      referer: undefined
+      authSource: 'defra'
     })
 
     const result = await viewAgreementController.handler(request, h)
@@ -227,14 +228,14 @@ describe('viewAgreementController.refererRedirect', () => {
     expect(h.view).not.toHaveBeenCalled()
   })
 
-  test('redirects to baseUrl when status is offered, auth source is defra and referer does not end with baseUrl', async () => {
+  test('redirects to baseUrl when status is offered, auth source is defra, and mode is not print (e.g. "invalid")', async () => {
     const { viewAgreementController } = await import('./controller.js')
 
     const h = createH()
     const request = buildRequest({
       status: 'offered',
       authSource: 'defra',
-      referer: 'https://a-different-site.uk'
+      mode: 'invalid'
     })
 
     const result = await viewAgreementController.handler(request, h)
@@ -244,32 +245,14 @@ describe('viewAgreementController.refererRedirect', () => {
     expect(h.view).not.toHaveBeenCalled()
   })
 
-  test('redirects when status is offered, auth source is defra and referer has path after baseUrl', async () => {
-    const { viewAgreementController } = await import('./controller.js')
-
-    const h = createH()
-    // 'https://this-site.uk/some/path' does NOT end with 'https://this-site.uk'
-    const request = buildRequest({
-      status: 'offered',
-      authSource: 'defra',
-      referer: 'https://this-site.uk/some/path'
-    })
-
-    const result = await viewAgreementController.handler(request, h)
-
-    expect(h.redirect).toHaveBeenCalledWith('https://this-site.uk')
-    expect(result.redirectTo).toBe('https://this-site.uk')
-    expect(h.view).not.toHaveBeenCalled()
-  })
-
-  test('displays view when status is offered, auth source is defra and referer exactly matches baseUrl', async () => {
+  test('displays view when status is offered and auth source is defra but mode is print', async () => {
     const { viewAgreementController } = await import('./controller.js')
 
     const h = createH()
     const request = buildRequest({
       status: 'offered',
       authSource: 'defra',
-      referer: 'https://this-site.uk'
+      mode: 'print'
     })
 
     const { context } = await viewAgreementController.handler(request, h)
@@ -284,31 +267,13 @@ describe('viewAgreementController.refererRedirect', () => {
     expect(h.redirect).not.toHaveBeenCalled()
   })
 
-  test('displays view when auth source is not defra even without referer', async () => {
-    const { viewAgreementController } = await import('./controller.js')
-
-    const h = createH()
-    const request = buildRequest({ authSource: 'entra', referer: undefined })
-
-    const { context } = await viewAgreementController.handler(request, h)
-
-    expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
-      expect.any(Object)
-    )
-    expect(context.pageTitle).toBe(
-      'Farm payments technical test agreement document'
-    )
-    expect(h.redirect).not.toHaveBeenCalled()
-  })
-
-  test('displays view when auth source is not defra even with invalid referer', async () => {
+  test('displays view when status is offered but auth source is not defra', async () => {
     const { viewAgreementController } = await import('./controller.js')
 
     const h = createH()
     const request = buildRequest({
-      authSource: 'entra',
-      referer: 'https://a-different-site.uk'
+      status: 'offered',
+      authSource: 'entra'
     })
 
     const { context } = await viewAgreementController.handler(request, h)
@@ -323,11 +288,14 @@ describe('viewAgreementController.refererRedirect', () => {
     expect(h.redirect).not.toHaveBeenCalled()
   })
 
-  test('displays view when auth is undefined', async () => {
+  test('displays view when status is offered but auth is undefined', async () => {
     const { viewAgreementController } = await import('./controller.js')
 
     const h = createH()
-    const request = buildRequest({ authSource: null, referer: undefined })
+    const request = buildRequest({
+      status: 'offered',
+      authSource: null
+    })
 
     const { context } = await viewAgreementController.handler(request, h)
 
@@ -341,14 +309,13 @@ describe('viewAgreementController.refererRedirect', () => {
     expect(h.redirect).not.toHaveBeenCalled()
   })
 
-  test('displays view when status is accepted even with defra auth and missing referer', async () => {
+  test('displays view when status is accepted even with defra auth', async () => {
     const { viewAgreementController } = await import('./controller.js')
 
     const h = createH()
     const request = buildRequest({
       status: 'accepted',
-      authSource: 'defra',
-      referer: undefined
+      authSource: 'defra'
     })
 
     const { context } = await viewAgreementController.handler(request, h)
@@ -363,58 +330,13 @@ describe('viewAgreementController.refererRedirect', () => {
     expect(h.redirect).not.toHaveBeenCalled()
   })
 
-  test('displays view when status is accepted even with defra auth and invalid referer', async () => {
-    const { viewAgreementController } = await import('./controller.js')
-
-    const h = createH()
-    const request = buildRequest({
-      status: 'accepted',
-      authSource: 'defra',
-      referer: 'https://a-different-site.uk'
-    })
-
-    const { context } = await viewAgreementController.handler(request, h)
-
-    expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
-      expect.any(Object)
-    )
-    expect(context.pageTitle).toBe(
-      'Farm payments technical test agreement document'
-    )
-    expect(h.redirect).not.toHaveBeenCalled()
-  })
-
-  test('displays view when status is withdrawn even with defra auth and missing referer', async () => {
+  test('displays view when status is withdrawn even with defra auth', async () => {
     const { viewAgreementController } = await import('./controller.js')
 
     const h = createH()
     const request = buildRequest({
       status: 'withdrawn',
-      authSource: 'defra',
-      referer: undefined
-    })
-
-    const { context } = await viewAgreementController.handler(request, h)
-
-    expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
-      expect.any(Object)
-    )
-    expect(context.pageTitle).toBe(
-      'Farm payments technical test agreement document'
-    )
-    expect(h.redirect).not.toHaveBeenCalled()
-  })
-
-  test('displays view when status is withdrawn even with defra auth and invalid referer', async () => {
-    const { viewAgreementController } = await import('./controller.js')
-
-    const h = createH()
-    const request = buildRequest({
-      status: 'withdrawn',
-      authSource: 'defra',
-      referer: 'https://a-different-site.uk'
+      authSource: 'defra'
     })
 
     const { context } = await viewAgreementController.handler(request, h)
