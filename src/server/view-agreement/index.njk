@@ -11,7 +11,7 @@
     {% set html %}
       <p class="govuk-notification-banner__heading">This is a draft version of your agreement</p>
       <p>You will receive the final agreement once you accept your agreement offer.</p>
-      <p>Your agreement will start on the first day of the month after you accept your offer.</p>
+      <p>Your agreement will start on the first day of the month after you accept your offer. The start date shown here is an example, based on if you accepted your offer today.</p>
     {% endset %}
 
     {{ govukNotificationBanner({
@@ -52,13 +52,11 @@
           <dt>Agreement number:</dt>
           <dd>{{ agreement.agreementNumber }}</dd>
 
-          {% if isAgreementAccepted %}
-            <dt>Agreement start date:</dt>
-            <dd>{{ agreement.payment.agreementStartDate | formatDate("d MMMM yyyy") }}</dd>
+          <dt>Agreement Start date:</dt>
+          <dd>{{ agreement.payment.agreementStartDate | formatDate("d MMMM yyyy") }}</dd>
 
-            <dt>Agreement end date:</dt>
-            <dd>{{ agreement.payment.agreementEndDate | formatDate("d MMMM yyyy") }}</dd>
-          {% endif %}
+          <dt>Agreement End date:</dt>
+          <dd>{{ agreement.payment.agreementEndDate | formatDate("d MMMM yyyy") }}</dd>
         </dl>
       </div>
     </div>
@@ -113,7 +111,10 @@
         <ul class="govuk-list govuk-list--bullet">
           <li>this FPTT agreement document (“Agreement Document”)</li>
           <li>
-            the FPTT terms and conditions ("Terms and Conditions"), which are applicable to the payment of the Grant
+            the FPTT terms and conditions
+            <a href="{{ buildUrl(serviceUrl, 'farm-payments/terms-and-conditions') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">
+              ("Terms and Conditions")
+            </a>, which are applicable to the payment of the Grant
           </li>
           <li>the FPTT actions you have chosen (“Actions”)</li>
         </ul>
@@ -174,7 +175,7 @@
         <h2 id="actions" class="govuk-heading-l">4. Summary of actions</h2>
 
         <p class="govuk-body">
-          The following table sets out a summary of the Actions you have chosen and agree to complete under the Agreement.
+          The following table sets out a summary of the SFI Actions you have chosen and agree to complete under the Agreement.
           The Terms and Conditions and the Actions set out the accompanying obligations for the chosen Actions.
         </p>
 

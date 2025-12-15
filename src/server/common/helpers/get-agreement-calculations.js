@@ -52,50 +52,32 @@ const getAgreementLand = (agreementData) => {
  * @returns Object containing headings and data for the summary of actions table
  */
 const getSummaryOfActions = (agreementData) => {
-  const isAccepted = agreementData.status === 'accepted'
-
-  // Build headings – include dates only for accepted agreements
-  const baseHeadings = [
-    { text: 'Parcel' },
-    { text: 'Code' },
-    { text: 'Action' },
-    { text: 'Total parcel area (ha)' }
-  ]
-  const headings = isAccepted
-    ? [...baseHeadings, { text: 'Start date' }, { text: 'End date' }]
-    : baseHeadings
-
-  // Format dates (or default to empty strings for non-accepted)
-  const startDateText = isAccepted
-    ? new Date(agreementData.payment.agreementStartDate).toLocaleDateString(
-        'en-GB',
-        dateOptions
-      )
-    : ''
-  const endDateText = isAccepted
-    ? new Date(agreementData.payment.agreementEndDate).toLocaleDateString(
-        'en-GB',
-        dateOptions
-      )
-    : ''
-
-  // Build rows – include date cells only when accepted, mirroring headings
-  const data = Object.values(agreementData.payment.parcelItems).map(
-    (parcel) => {
-      const baseRow = [
-        { text: `${parcel.sheetId} ${parcel.parcelId}`, ...noWrap },
-        { text: parcel.code },
-        { text: parcel.description?.replace(`${parcel.code}: `, '') },
-        { text: parcel.quantity }
-      ]
-
-      return isAccepted
-        ? [...baseRow, { text: startDateText }, { text: endDateText }]
-        : baseRow
-    }
-  )
-
-  return { headings, data }
+  return {
+    headings: [
+      { text: 'Parcel' },
+      { text: 'Code' },
+      { text: 'Action' },
+      { text: 'Total parcel area (ha)' },
+      { text: 'Start date' },
+      { text: 'End date' }
+    ],
+    data: Object.values(agreementData.payment.parcelItems).map((parcel) => [
+      { text: `${parcel.sheetId} ${parcel.parcelId}`, ...noWrap },
+      { text: parcel.code },
+      { text: parcel.description?.replace(`${parcel.code}: `, '') },
+      { text: parcel.quantity },
+      {
+        text: new Date(
+          agreementData.payment.agreementStartDate
+        ).toLocaleDateString('en-GB', dateOptions)
+      },
+      {
+        text: new Date(
+          agreementData.payment.agreementEndDate
+        ).toLocaleDateString('en-GB', dateOptions)
+      }
+    ])
+  }
 }
 
 const buildParcelRows = (firstPayment, subsequentPayment, parcelItems = {}) =>
