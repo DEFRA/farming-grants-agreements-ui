@@ -99,6 +99,8 @@ describe('buildAgreementViewModel', () => {
       }
     },
     payment: {
+      agreementStartDate: '2026-01-01',
+      agreementEndDate: '2027-01-01',
       parcelItems: {
         1: {
           code: 'CMOR1'
@@ -144,6 +146,8 @@ describe('buildAgreementViewModel', () => {
       agreementName: undefined,
       status: 'offered',
       payment: {
+        agreementStartDate: '2026-01-01',
+        agreementEndDate: '2027-01-01',
         parcelItems: {
           1: {
             code: 'OTHER'
@@ -161,6 +165,8 @@ describe('buildAgreementViewModel', () => {
     expect(model.isCMOR1ActionUsed).toBe(false)
     expect(model.businessName).toBe('XXXXX')
     expect(model.applicantName).toBe('XXXXX')
+    expect(model.agreementStartDate).toBe('1 January 2026')
+    expect(model.agreementEndDate).toBe('1 January 2027')
     expect(model.summaryOfActions).toBe(calculations.summaryOfActions)
   })
 
@@ -174,6 +180,8 @@ describe('buildAgreementViewModel', () => {
       ...baseAgreementData,
       status: 'withdrawn',
       payment: {
+        agreementStartDate: '2026-01-01',
+        agreementEndDate: '2027-01-01',
         parcelItems: {
           1: {
             code: 'CMOR1'
@@ -189,6 +197,8 @@ describe('buildAgreementViewModel', () => {
     expect(model.isWithdrawnAgreement).toBe(true)
     expect(model.businessName).toBe('XXXXX')
     expect(model.applicantName).toBe('XXXXX')
+    expect(model.agreementStartDate).toBe('XXXXX')
+    expect(model.agreementEndDate).toBe('XXXXX')
     expect(model.isCMOR1ActionUsed).toBe(true)
   })
 })
