@@ -165,8 +165,8 @@ describe('buildAgreementViewModel', () => {
     expect(model.isCMOR1ActionUsed).toBe(false)
     expect(model.businessName).toBe('XXXXX')
     expect(model.applicantName).toBe('XXXXX')
-    expect(model.agreementStartDate).toBe('1 January 2026')
-    expect(model.agreementEndDate).toBe('1 January 2027')
+    expect(model.agreementStartDate).toBe('XXXXX')
+    expect(model.agreementEndDate).toBe('XXXXX')
     expect(model.summaryOfActions).toBe(calculations.summaryOfActions)
   })
 
