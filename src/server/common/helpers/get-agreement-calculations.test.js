@@ -872,7 +872,9 @@ describe('getAgreementCalculations', () => {
       },
       { text: 'ACT1' },
       { text: 'Action One' },
-      { text: 2.5 }
+      { text: 2.5 },
+      { text: 'XXXXX' },
+      { text: 'XXXXX' }
     ])
 
     // Summary of payments should now have data (+ totals row)
