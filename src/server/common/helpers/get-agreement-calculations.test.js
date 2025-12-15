@@ -582,6 +582,12 @@ describe('getAgreementCalculations', () => {
             },
             {
               text: 95
+            },
+            {
+              text: 'XXXXX'
+            },
+            {
+              text: 'XXXXX'
             }
           ],
           [
@@ -599,6 +605,12 @@ describe('getAgreementCalculations', () => {
             },
             {
               text: 207
+            },
+            {
+              text: 'XXXXX'
+            },
+            {
+              text: 'XXXXX'
             }
           ]
         ],
@@ -614,7 +626,9 @@ describe('getAgreementCalculations', () => {
           },
           {
             text: 'Total parcel area (ha)'
-          }
+          },
+          { text: 'Start date' },
+          { text: 'End date' }
         ]
       },
       summaryOfPayments: {
