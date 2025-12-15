@@ -582,6 +582,12 @@ describe('getAgreementCalculations', () => {
             },
             {
               text: 95
+            },
+            {
+              text: 'XXXXX'
+            },
+            {
+              text: 'XXXXX'
             }
           ],
           [
@@ -599,6 +605,12 @@ describe('getAgreementCalculations', () => {
             },
             {
               text: 207
+            },
+            {
+              text: 'XXXXX'
+            },
+            {
+              text: 'XXXXX'
             }
           ]
         ],
@@ -614,7 +626,9 @@ describe('getAgreementCalculations', () => {
           },
           {
             text: 'Total parcel area (ha)'
-          }
+          },
+          { text: 'Start date' },
+          { text: 'End date' }
         ]
       },
       summaryOfPayments: {
@@ -858,7 +872,9 @@ describe('getAgreementCalculations', () => {
       },
       { text: 'ACT1' },
       { text: 'Action One' },
-      { text: 2.5 }
+      { text: 2.5 },
+      { text: 'XXXXX' },
+      { text: 'XXXXX' }
     ])
 
     // Summary of payments should now have data (+ totals row)
