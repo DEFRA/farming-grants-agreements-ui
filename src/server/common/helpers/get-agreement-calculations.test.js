@@ -304,13 +304,13 @@ describe('getAgreementCalculations', () => {
           ],
           [
             {
-              text: 'One-off payment per agreement per year for Assess soil, produce a soil management plan and test soil organic matter'
+              text: 'Assess soil, produce a soil management plan and test soil organic matter'
             },
             {
               text: 'CSAM1'
             },
             {
-              text: ''
+              text: '£272.00 per agreement'
             },
             {
               text: '£68.00'
@@ -675,13 +675,13 @@ describe('getAgreementCalculations', () => {
           ],
           [
             {
-              text: 'One-off payment per agreement per year for Assess soil, produce a soil management plan and test soil organic matter'
+              text: 'Assess soil, produce a soil management plan and test soil organic matter'
             },
             {
               text: 'CSAM1'
             },
             {
-              text: ''
+              text: '£272.00 per agreement'
             },
             {
               text: '£68.00'
