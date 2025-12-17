@@ -26,12 +26,8 @@ const formatApplicantName = (customer) => {
     return ''
   }
 
-  if (typeof name === 'string') {
-    return name
-  }
-
   const parts = [name.title, name.first, name.middle, name.last]
-    .map((part) => (typeof part === 'string' ? part.trim() : part))
+    .map((part) => part.trim())
     .filter((part) => part?.length)
 
   return parts.join(' ')
