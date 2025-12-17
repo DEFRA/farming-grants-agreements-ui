@@ -95,5 +95,9 @@
     "webpack": "5.99.9",
     "webpack-assets-manifest": "6.2.1",
     "webpack-cli": "6.0.1"
+  },
+  "overrides": {
+    "tmp": "^0.2.5",
+    "useragent": "npm:useragent-ng@^2.4.5"
   }
 }
