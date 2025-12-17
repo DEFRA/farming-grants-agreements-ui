@@ -123,9 +123,11 @@ const buildAgreementLevelRows = (
   Object.entries(agreementLevelItems).map(([key, payment]) => {
     const description = payment.description?.replace(`${payment.code}: `, '')
     return [
-      { text: `One-off payment per agreement per year for ${description}` },
+      { text: description },
       { text: payment.code },
-      { text: '' },
+      {
+        text: `${formatPenceCurrency(payment.annualPaymentPence)} per agreement`
+      },
       {
         text: formatPenceCurrency(
           calculateFirstPaymentForAgreementLevelItem(firstPayment, key)
