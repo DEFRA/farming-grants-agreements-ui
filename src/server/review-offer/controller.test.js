@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import path from 'node:path'
 
 import { Pact, MatchersV2 } from '@pact-foundation/pact'
@@ -67,5 +68,83 @@ describe('#reviewOfferController', () => {
         expect(result).toContain('£12.01')
         expect(result).toContain('£48.06')
       })
+  })
+})
+
+describe('reviewOfferController handler fallbacks', () => {
+  let reviewOfferController
+  let mockedBuildReviewOfferModel
+
+  const createH = () => ({
+    view: vi.fn((template, context) => ({ template, context }))
+  })
+
+  beforeEach(async () => {
+    vi.resetModules()
+    vi.doMock('../common/helpers/build-review-offer-model.js', () => ({
+      buildReviewOfferModel: vi.fn()
+    }))
+    ;({ reviewOfferController } = await import('./controller.js'))
+    ;({ buildReviewOfferModel: mockedBuildReviewOfferModel } = await import(
+      '../common/helpers/build-review-offer-model.js'
+    ))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('falls back to empty agreement data when request.pre.data is missing', async () => {
+    mockedBuildReviewOfferModel.mockReturnValue({ any: 'thing' })
+    const h = createH()
+
+    await reviewOfferController.handler({}, h)
+
+    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({})
+    expect(h.view).toHaveBeenCalledWith(
+      'review-offer/index',
+      expect.objectContaining({
+        pageTitle: 'Review your agreement offer'
+      })
+    )
+  })
+
+  test('uses empty data when request.pre exists without data', async () => {
+    mockedBuildReviewOfferModel.mockReturnValue({})
+    const h = createH()
+
+    await reviewOfferController.handler({ pre: {} }, h)
+
+    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({})
+    expect(h.view).toHaveBeenCalledWith(
+      'review-offer/index',
+      expect.objectContaining({
+        pageTitle: 'Review your agreement offer'
+      })
+    )
+  })
+
+  test('defaults agreementData to empty object when not provided in pre data', async () => {
+    mockedBuildReviewOfferModel.mockReturnValue({})
+    const h = createH()
+
+    const request = {
+      pre: {
+        data: {
+          other: 'value'
+        }
+      }
+    }
+
+    await reviewOfferController.handler(request, h)
+
+    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({})
+    expect(h.view).toHaveBeenCalledWith(
+      'review-offer/index',
+      expect.objectContaining({
+        pageTitle: 'Review your agreement offer'
+      })
+    )
   })
 })
