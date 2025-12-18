@@ -104,9 +104,10 @@
         You will usually receive your first payment in the fourth month after your agreement's start date.
       </p>
 
-       <h3 class="govuk-heading-s">Additional yearly payments</h3>
+
       {% for payment in payments %}
-        {% if payment.description.startsWith('One-off') %}
+        {% if payment.hasOneOffPayment %}
+        <h3 class="govuk-heading-s">Additional yearly payments</h3>
           <p class="govuk-body govuk-!-font-size-19">
             There is a payment of {{ payment.rateInPence | formatPenceCurrency }} per agreement per year for action '{{ codeDescriptions[payment.code] }}: {{ payment.code }}'.
           </p>
@@ -134,7 +135,7 @@
         <tr class="govuk-table__row" id="paymentRow{{ loop.index }}">
           <td class="govuk-table__cell govuk-!-font-size-19" id="paymentsTableActionRow{{ loop.index }}">{{ payment.description }}</td>
           <td class="govuk-table__cell govuk-!-font-size-19" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;"  id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rateInPence | formatPenceCurrency }}
+          <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;"  id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rateInPence }}
             {% if payment.unit %}&nbsp;per&nbsp;{{ payment.unit }}
             {% endif %}
           </td>
