@@ -109,7 +109,7 @@
         {% if payment.hasOneOffPayment %}
         <h3 class="govuk-heading-s">Additional yearly payments</h3>
           <p class="govuk-body govuk-!-font-size-19">
-            There is a payment of {{ payment.rateInPence | formatPenceCurrency }} per agreement per year for action '{{ codeDescriptions[payment.code] }}: {{ payment.code }}'.
+            There is a payment of {{ payment.rateInPence }} per agreement per year for action '{{ codeDescriptions[payment.code] }}: {{ payment.code }}'.
           </p>
           <p class="govuk-body govuk-!-font-size-19">
             You will receive this payment if you are not already doing this action on another land parcel.

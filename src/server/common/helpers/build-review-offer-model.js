@@ -53,7 +53,7 @@ export const buildReviewOfferModel = (agreementData) => {
     ...(Object.entries(payment?.agreementLevelItems || {}).map(([key, i]) => ({
       ...i,
       description: codeDescriptions[i.code],
-      rateInPence: `${formatPenceCurrency(i.annualPaymentPence)} per agreement`,
+      rateInPence: `${formatPenceCurrency(i.annualPaymentPence)}`,
       hasOneOffPayment: true,
       duration: durationInYears,
       quarterlyPayment: quarterlyPayment?.lineItems.find(
