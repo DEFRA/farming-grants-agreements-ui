@@ -115,9 +115,15 @@ describe('getAgreementCalculations', () => {
               text: 'BND1'
             },
             {
+              attributes: {
+                style: 'text-align: right;'
+              },
               text: '£1,218.38'
             },
             {
+              attributes: {
+                style: 'text-align: right;'
+              },
               text: '£1,218.38'
             }
           ],
@@ -126,9 +132,15 @@ describe('getAgreementCalculations', () => {
               text: 'CHRW1'
             },
             {
+              attributes: {
+                style: 'text-align: right;'
+              },
               text: '£4,747.50'
             },
             {
+              attributes: {
+                style: 'text-align: right;'
+              },
               text: '£4,747.50'
             }
           ],
@@ -137,10 +149,16 @@ describe('getAgreementCalculations', () => {
               text: 'CSAM1'
             },
             {
-              text: '£136.00'
+              attributes: {
+                style: 'text-align: right;'
+              },
+              text: '£136'
             },
             {
-              text: '£136.00'
+              attributes: {
+                style: 'text-align: right;'
+              },
+              text: '£136'
             }
           ],
           [
@@ -148,9 +166,15 @@ describe('getAgreementCalculations', () => {
               text: 'Total'
             },
             {
+              attributes: {
+                style: 'text-align: right;'
+              },
               text: '£6,101.88'
             },
             {
+              attributes: {
+                style: 'text-align: right;'
+              },
               text: '£6,101.88'
             }
           ]
@@ -247,15 +271,27 @@ describe('getAgreementCalculations', () => {
               text: 'BND1'
             },
             {
+              attributes: {
+                style: 'text-align: right;'
+              },
               text: '£25.65 per metre'
             },
             {
+              attributes: {
+                style: 'text-align: right;'
+              },
               text: '£609.19'
             },
             {
+              attributes: {
+                style: 'text-align: right;'
+              },
               text: '£609.19'
             },
             {
+              attributes: {
+                style: 'text-align: right;'
+              },
               text: '£2,436.75'
             }
           ],
@@ -267,16 +303,28 @@ describe('getAgreementCalculations', () => {
               text: 'CHRW1'
             },
             {
-              text: '£5.00 per metre'
+              attributes: {
+                style: 'text-align: right;'
+              },
+              text: '£5 per metre'
             },
             {
+              attributes: {
+                style: 'text-align: right;'
+              },
               text: '£2,373.75'
             },
             {
+              attributes: {
+                style: 'text-align: right;'
+              },
               text: '£2,373.75'
             },
             {
-              text: '£9,495.00'
+              attributes: {
+                style: 'text-align: right;'
+              },
+              text: '£9,495'
             }
           ],
           [
@@ -290,13 +338,22 @@ describe('getAgreementCalculations', () => {
               text: '£272.00 per agreement'
             },
             {
-              text: '£68.00'
+              attributes: {
+                style: 'text-align: right;'
+              },
+              text: '£68'
             },
             {
-              text: '£68.00'
+              attributes: {
+                style: 'text-align: right;'
+              },
+              text: '£68'
             },
             {
-              text: '£272.00'
+              attributes: {
+                style: 'text-align: right;'
+              },
+              text: '£272'
             }
           ],
           [
@@ -311,19 +368,22 @@ describe('getAgreementCalculations', () => {
             },
             {
               attributes: {
-                class: 'govuk-!-font-weight-bold'
+                class: 'govuk-!-font-weight-bold',
+                style: 'text-align: right;'
               },
               text: '£3,050.94'
             },
             {
               attributes: {
-                class: 'govuk-!-font-weight-bold'
+                class: 'govuk-!-font-weight-bold',
+                style: 'text-align: right;'
               },
               text: '£3,050.94'
             },
             {
               attributes: {
-                class: 'govuk-!-font-weight-bold'
+                class: 'govuk-!-font-weight-bold',
+                style: 'text-align: right;'
               },
               text: '£12,203.75'
             }
@@ -869,8 +929,8 @@ describe('getAgreementCalculations', () => {
     // String branch strips non-numerics → "1234 per metre"
     expect(rateCell.text).toBe('1234 per metre')
     // Null branch returns empty string
-    expect(firstPaymentCell.text).toBe('£0.00')
-    expect(subsequentPaymentCell.text).toBe('£0.00')
+    expect(firstPaymentCell.text).toBe('£0')
+    expect(subsequentPaymentCell.text).toBe('£0')
     expect(totalCell.text).toBe('')
   })
 
@@ -931,20 +991,20 @@ describe('getAgreementCalculations', () => {
 
     // Values formatted as currency strings
     // A2 has value in 2023 only
-    expect(rows[0][1].text).toBe('£10.00') // 1000 pence
-    expect(rows[0][2].text).toBe('£0.00')
-    expect(rows[0][3].text).toBe('£10.00')
+    expect(rows[0][1].text).toBe('£10') // 1000 pence
+    expect(rows[0][2].text).toBe('£0')
+    expect(rows[0][3].text).toBe('£10')
 
     // A10 has value in 2024 only (from agreementLevelItemId)
-    expect(rows[1][1].text).toBe('£0.00')
-    expect(rows[1][2].text).toBe('£20.00') // 2000 pence
-    expect(rows[1][3].text).toBe('£20.00')
+    expect(rows[1][1].text).toBe('£0')
+    expect(rows[1][2].text).toBe('£20') // 2000 pence
+    expect(rows[1][3].text).toBe('£20')
 
     // Totals row
     expect(rows[2][0].text).toBe('Total')
-    expect(rows[2][1].text).toBe('£10.00')
-    expect(rows[2][2].text).toBe('£20.00')
-    expect(rows[2][3].text).toBe('£30.00')
+    expect(rows[2][1].text).toBe('£10')
+    expect(rows[2][2].text).toBe('£20')
+    expect(rows[2][3].text).toBe('£30')
   })
 
   test('should include first payment and subsequent payment columns in summary of payments', () => {
@@ -1020,8 +1080,8 @@ describe('getAgreementCalculations', () => {
     // Find ACT1 row
     const act1Row = data.find((row) => row[1].text === 'ACT1')
     expect(act1Row).toBeDefined()
-    expect(act1Row[3].text).toBe('£125.00') // First payment
-    expect(act1Row[4].text).toBe('£125.00') // Subsequent payment
+    expect(act1Row[3].text).toBe('£125') // First payment
+    expect(act1Row[4].text).toBe('£125') // Subsequent payment
 
     // Find ACT2 row
     const act2Row = data.find((row) => row[1].text === 'ACT2')
@@ -1032,8 +1092,8 @@ describe('getAgreementCalculations', () => {
     // Find MGMT1 row
     const mgmt1Row = data.find((row) => row[1].text === 'MGMT1')
     expect(mgmt1Row).toBeDefined()
-    expect(mgmt1Row[3].text).toBe('£50.00') // First payment
-    expect(mgmt1Row[4].text).toBe('£50.00') // Subsequent payment
+    expect(mgmt1Row[3].text).toBe('£50') // First payment
+    expect(mgmt1Row[4].text).toBe('£50') // Subsequent payment
   })
 
   test('should handle missing payment data gracefully', () => {
@@ -1067,8 +1127,8 @@ describe('getAgreementCalculations', () => {
     const act1Row = data[0]
     expect(act1Row[0].text).toBe('ACT1: Test Action')
     expect(act1Row[1].text).toBe('ACT1')
-    expect(act1Row[3].text).toBe('£0.00') // First payment
-    expect(act1Row[4].text).toBe('£0.00') // Subsequent payment
+    expect(act1Row[3].text).toBe('£0') // First payment
+    expect(act1Row[4].text).toBe('£0') // Subsequent payment
   })
 
   test('summary of payments sorts rows and calculates totals row correctly', () => {
