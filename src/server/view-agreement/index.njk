@@ -145,7 +145,7 @@
           <tbody class="govuk-table__body">
             {% for row in agreement.application.parcel %}
               <tr class="govuk-table__row" data-test-id="landTableRow{{ loop.index }}">
-                  <td class="govuk-table__cell"
+                  <td class="govuk-table__cell" style="white-space: nowrap"
                     data-test-id="landTableCell{{ loop.index }}_0">
                     {{ row.sheetId }} {{ row.parcelId }}
                   </td>
