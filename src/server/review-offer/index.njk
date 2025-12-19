@@ -3,6 +3,7 @@
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/details/macro.njk" import govukDetails %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
 
 {% block content %}
   <div class="govuk-grid-row">
@@ -36,6 +37,37 @@
   <br>
 
   <h2 class="govuk-heading-l">Actions</h2>
+   <table class="govuk-table govuk-table--small-text-until-tablet table-bordered" data-test-id="actionsTable">
+            <thead class="govuk-table__head">
+              <tr class="govuk-table__row">
+                {% for heading in summaryOfActions.headings %}
+                  <th scope="col" class="govuk-table__header"
+                    {% for key, value in heading.attributes %}
+                      {{ key }}="{{ value }}"
+                    {% endfor %}>
+                    {{ heading.text }}
+                  </th>
+                {% endfor %}
+              </tr>
+            </thead>
+
+            <tbody class="govuk-table__body">
+              {% for row in summaryOfActions.data %}
+                <tr class="govuk-table__row" data-test-id="actionsTableRow{{ loop.index }}">
+                  {% for cell in row %}
+                    <td class="govuk-table__cell"
+                      data-test-id="actionsTableCell{{ loop.index }}_{{ loop.index0 }}"
+                      {% for key, value in cell.attributes %}
+                        {{ key }}="{{ value }}"
+                      {% endfor %}>
+                      {{ cell.text }}
+                    </td>
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
   <table class="govuk-table">
     <thead class="govuk-table__head">
       <tr class="govuk-table__row">
