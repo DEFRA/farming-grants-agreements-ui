@@ -349,7 +349,6 @@ describe('buildReviewOfferModel', () => {
     expect(model.totalFirstPayment).toBe(0)
     expect(model.totalSubsequentPayment).toBe(0)
 
-    // expect(mockedFormatCurrency).not.toHaveBeenCalled()
     expect(mockedFirstParcel).not.toHaveBeenCalled()
     expect(mockedSubsequentParcel).not.toHaveBeenCalled()
     expect(mockedFirstAgreement).not.toHaveBeenCalled()
@@ -372,7 +371,6 @@ describe('buildReviewOfferModel', () => {
     })
 
     expect(model.payments).toEqual([])
-    // expect(mockedFormatCurrency).not.toHaveBeenCalled()
     expect(mockedFirstParcel).not.toHaveBeenCalled()
     expect(mockedSubsequentParcel).not.toHaveBeenCalled()
   })
