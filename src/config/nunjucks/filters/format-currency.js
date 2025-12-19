@@ -16,10 +16,18 @@ export const formatPenceCurrency = (
     return ''
   }
   if (typeof value === 'number') {
-    return (value / 100).toLocaleString(locales, {
+    const formatted = (value / 100).toLocaleString(locales, {
       style: 'currency',
-      currency
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     })
+    // GDS style: remove .00 decimals unless pence are included
+    // e.g., £75.50 but not £75.00 -> £75
+    if (formatted.endsWith('.00')) {
+      return formatted.replace(/\.00$/, '')
+    }
+    return formatted
   }
   return value.toString().replace(/[^0-9.-]+/g, '')
 }

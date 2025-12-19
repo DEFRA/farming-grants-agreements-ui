@@ -6,6 +6,12 @@
 @use 'components';
 @use 'partials';
 
+// Style Important banner heading in black text (the default white heading from GOV.UK component)
+.govuk-notification-banner__title {
+  color: #000000 !important;
+  font-weight: 700;
+}
+
 .print-watermark {
   display: none;
 }
@@ -26,26 +32,29 @@
     display: none !important;
   }
 
-  // Diagonal DRAFT watermark centered on page
+  // Improved DRAFT watermark - better visibility and accessibility
+  // No rotation for better readability, increased opacity for visibility
   .view-agreement-has-watermark .print-watermark {
     display: block;
     position: fixed;
     top: 50%;
     left: 50%;
     right: auto;
-    transform: translate(-50%, -50%) rotate(-35deg);
+    transform: translate(-50%, -50%);
     font-family: 'GDS Transport', arial, sans-serif;
     font-weight: 900;
     font-size: 120pt;
-    color: rgba(0, 0, 0, 0.18);
+    color: rgba(0, 0, 0, 0.5);
     letter-spacing: 2px;
     white-space: nowrap;
-    z-index: 1000;
+    z-index: 1;
     pointer-events: none;
     mix-blend-mode: multiply;
     -webkit-print-color-adjust: exact;
     page-break-inside: avoid;
     print-color-adjust: exact;
+    // Increased opacity for better visibility while maintaining readability
+    opacity: 0.5;
   }
 
   // Smaller, lighter watermark for withdrawn agreements
@@ -69,6 +78,6 @@
 
   .view-agreement-has-watermark.print-active .print-watermark {
     // Nudge transform to change composite layer and force repaint each time
-    transform: translateZ(0.001px);
+    transform: translate(-50%, -50%) translateZ(0.001px);
   }
 }
