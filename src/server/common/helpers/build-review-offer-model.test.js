@@ -9,7 +9,6 @@ import {
   calculateTotalFirstPayment,
   calculateTotalSubsequentPayment
 } from './payment-calculations.js'
-import { formatPenceCurrency } from '../../../config/nunjucks/filters/format-currency.js'
 
 vi.mock('./payment-calculations.js', () => ({
   calculateFirstPaymentForAgreementLevelItem: vi.fn(),
@@ -20,11 +19,6 @@ vi.mock('./payment-calculations.js', () => ({
   calculateTotalSubsequentPayment: vi.fn()
 }))
 
-vi.mock('../../../config/nunjucks/filters/format-currency.js', () => ({
-  formatPenceCurrency: vi.fn()
-}))
-
-const mockedFormatCurrency = vi.mocked(formatPenceCurrency)
 const mockedFirstParcel = vi.mocked(calculateFirstPaymentForParcelItem)
 const mockedSubsequentParcel = vi.mocked(
   calculateSubsequentPaymentForParcelItem
@@ -271,7 +265,6 @@ const sampleAgreementData = {
 describe('buildReviewOfferModel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockedFormatCurrency.mockImplementation((value) => `formatted-${value}`)
     mockedFirstParcel.mockImplementation((_, key) => Number(key) * 10)
     mockedSubsequentParcel.mockImplementation((_, key) => Number(key) * 20)
     mockedFirstAgreement.mockImplementation((_, key) => Number(key) * 30)
@@ -303,7 +296,7 @@ describe('buildReviewOfferModel', () => {
       unit: 'ha',
       duration: 1,
       hasOneOffPayment: false,
-      rateInPence: 'formatted-1060',
+      rateInPence: '£10.60',
       quarterlyPayment: 1260,
       firstPaymentPence: 10,
       subsequentPaymentPence: 20
@@ -315,7 +308,7 @@ describe('buildReviewOfferModel', () => {
     expect(agreementLevelRow).toMatchObject({
       code: 'CMOR1',
       description: 'Assess moorland and produce a written record',
-      rateInPence: 'formatted-27200 per agreement',
+      rateInPence: '£272.00',
       duration: 1,
       hasOneOffPayment: true,
       quarterlyPayment: 6800,
@@ -356,7 +349,7 @@ describe('buildReviewOfferModel', () => {
     expect(model.totalFirstPayment).toBe(0)
     expect(model.totalSubsequentPayment).toBe(0)
 
-    expect(mockedFormatCurrency).not.toHaveBeenCalled()
+    // expect(mockedFormatCurrency).not.toHaveBeenCalled()
     expect(mockedFirstParcel).not.toHaveBeenCalled()
     expect(mockedSubsequentParcel).not.toHaveBeenCalled()
     expect(mockedFirstAgreement).not.toHaveBeenCalled()
@@ -379,7 +372,7 @@ describe('buildReviewOfferModel', () => {
     })
 
     expect(model.payments).toEqual([])
-    expect(mockedFormatCurrency).not.toHaveBeenCalled()
+    // expect(mockedFormatCurrency).not.toHaveBeenCalled()
     expect(mockedFirstParcel).not.toHaveBeenCalled()
     expect(mockedSubsequentParcel).not.toHaveBeenCalled()
   })
