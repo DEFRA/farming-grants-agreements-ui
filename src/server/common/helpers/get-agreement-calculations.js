@@ -1,5 +1,3 @@
-import round from 'lodash/round.js'
-
 import {
   calculateFirstPaymentForAgreementLevelItem,
   calculateFirstPaymentForParcelItem,
@@ -17,34 +15,6 @@ const dateOptions = {
 const GOV_UK_FONT_WEIGHT_BOLD = 'govuk-!-font-weight-bold'
 
 const noWrap = { attributes: { style: 'white-space: nowrap' } }
-
-/**
- * Creates a table of land data for the agreement
- * @param {object} agreementData - The agreement data object
- * @returns Object containing headings and data for the land table
- */
-const getAgreementLand = (agreementData) => {
-  const parcels = new Map()
-  Object.values(agreementData.payment.parcelItems).forEach(
-    ({ sheetId, parcelId, quantity: area }) => {
-      const currentArea = parcels.has(parcelId) ? parcels.get(parcelId) : 0
-      parcels.set(`${sheetId} ${parcelId}`, Number(currentArea) + Number(area))
-    }
-  )
-
-  const data = []
-  for (const [key, value] of parcels) {
-    data.push([{ text: key }, { text: round(value, 4) }])
-  }
-
-  return {
-    headings: [
-      { text: 'Parcel', ...noWrap },
-      { text: 'Total parcel area (ha)' }
-    ],
-    data
-  }
-}
 
 /**
  * Creates a summary of actions for the agreement
@@ -359,7 +329,6 @@ const getAnnualPaymentSchedule = (agreementData) => {
  * @param {object} agreement - The agreement data object
  */
 export const getAgreementCalculations = (agreement) => ({
-  agreementLand: getAgreementLand(agreement),
   summaryOfActions: getSummaryOfActions(agreement),
   summaryOfPayments: getSummaryOfPayments(agreement),
   annualPaymentSchedule: getAnnualPaymentSchedule(agreement)

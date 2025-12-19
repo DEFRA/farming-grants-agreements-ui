@@ -108,29 +108,6 @@ describe('getAgreementCalculations', () => {
     const agreement = getAgreementCalculations(mockAgreement)
 
     expect(agreement).toEqual({
-      agreementLand: {
-        data: [
-          [
-            {
-              text: 'SX635990 44'
-            },
-            {
-              text: 207
-            }
-          ]
-        ],
-        headings: [
-          {
-            attributes: {
-              style: 'white-space: nowrap'
-            },
-            text: 'Parcel'
-          },
-          {
-            text: 'Total parcel area (ha)'
-          }
-        ]
-      },
       annualPaymentSchedule: {
         data: [
           [
@@ -483,29 +460,6 @@ describe('getAgreementCalculations', () => {
     const agreement = getAgreementCalculations(mockAgreement)
 
     expect(agreement).toEqual({
-      agreementLand: {
-        data: [
-          [
-            {
-              text: 'SX635990 44'
-            },
-            {
-              text: 207
-            }
-          ]
-        ],
-        headings: [
-          {
-            attributes: {
-              style: 'white-space: nowrap'
-            },
-            text: 'Parcel'
-          },
-          {
-            text: 'Total parcel area (ha)'
-          }
-        ]
-      },
       annualPaymentSchedule: {
         data: [
           [
@@ -784,13 +738,6 @@ describe('getAgreementCalculations', () => {
 
     const agreement = getAgreementCalculations(agreementData)
 
-    // Agreement land table should now have data
-    expect(agreement.agreementLand.data).toHaveLength(1)
-    expect(agreement.agreementLand.data[0]).toEqual([
-      { text: 'SX635990 ABC123' },
-      { text: 2.5 }
-    ])
-
     // Summary of actions should now have data
     expect(agreement.summaryOfActions.data).toHaveLength(1)
     expect(agreement.summaryOfActions.data[0]).toEqual([
@@ -853,13 +800,6 @@ describe('getAgreementCalculations', () => {
     }
 
     const agreement = getAgreementCalculations(agreementData)
-
-    // Agreement land table should now have data
-    expect(agreement.agreementLand.data).toHaveLength(1)
-    expect(agreement.agreementLand.data[0]).toEqual([
-      { text: 'SX635990 ABC123' },
-      { text: 2.5 }
-    ])
 
     // Summary of actions should now have data
     expect(agreement.summaryOfActions.data).toHaveLength(1)
