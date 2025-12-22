@@ -135,13 +135,13 @@
         <tr class="govuk-table__row" id="paymentRow{{ loop.index }}">
           <td class="govuk-table__cell govuk-!-font-size-19" id="paymentsTableActionRow{{ loop.index }}">{{ payment.description }}</td>
           <td class="govuk-table__cell govuk-!-font-size-19" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;"  id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rateInPence }}
+          <td class="govuk-table__cell govuk-!-font-size-19" id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rateInPence }}
             {% if payment.unit %}&nbsp;per&nbsp;{{ payment.unit }}
             {% endif %}
           </td>
-          <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap; text-align: right;" id="paymentsTableFirstPaymentRow{{ loop.index }}">{{ payment.firstPaymentPence | formatPenceCurrency }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap; text-align: right;" id="paymentsTableSubsequentPaymentRow{{ loop.index }}">{{ payment.subsequentPaymentPence | formatPenceCurrency }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap; text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.annualPaymentPence | formatPenceCurrency }}</td>
+          <td class="govuk-table__cell govuk-!-font-size-19" style="text-align: right;" id="paymentsTableFirstPaymentRow{{ loop.index }}">{{ payment.firstPaymentPence | formatPenceCurrency }}</td>
+          <td class="govuk-table__cell govuk-!-font-size-19" style="text-align: right;" id="paymentsTableSubsequentPaymentRow{{ loop.index }}">{{ payment.subsequentPaymentPence | formatPenceCurrency }}</td>
+          <td class="govuk-table__cell govuk-!-font-size-19" style="text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.annualPaymentPence | formatPenceCurrency }}</td>
         </tr>
       {% endfor %}
     </tbody>
