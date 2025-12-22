@@ -26,11 +26,10 @@ const formatApplicantName = (customer) => {
     return ''
   }
 
-  const parts = [name.title, name.first, name.middle, name.last]
-    .map((part) => part.trim())
+  return [name.title, name.first, name.middle, name.last]
     .filter((part) => part?.length)
-
-  return parts.join(' ')
+    .map((part) => part.trim())
+    .join(' ')
 }
 
 export const buildAgreementViewModel = (agreementData) => {

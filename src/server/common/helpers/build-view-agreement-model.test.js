@@ -93,7 +93,7 @@ describe('buildAgreementViewModel', () => {
         name: {
           title: 'Mr.',
           first: 'Edward',
-          middle: 'Paul',
+          middle: null,
           last: 'Jones'
         }
       }
@@ -131,7 +131,7 @@ describe('buildAgreementViewModel', () => {
       isWithdrawnAgreement: false,
       isCMOR1ActionUsed: true,
       businessName: 'Farm Business',
-      applicantName: 'Mr. Edward Paul Jones',
+      applicantName: 'Mr. Edward Jones',
       ...calculations
     })
   })
