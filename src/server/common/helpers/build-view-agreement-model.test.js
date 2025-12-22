@@ -113,7 +113,6 @@ describe('buildAgreementViewModel', () => {
     const calculations = {
       summaryOfActions: { headings: [], data: [] },
       summaryOfPayments: { headings: [], data: [] },
-      agreementLand: { headings: [], data: [] },
       annualPaymentSchedule: { headings: [], data: [] }
     }
     mockedGetAgreementCalculations.mockReturnValue(calculations)
