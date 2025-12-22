@@ -137,29 +137,22 @@
         <table class="govuk-table govuk-table--small-text-until-tablet" data-test-id="landTable">
           <thead class="govuk-table__head">
             <tr class="govuk-table__row">
-              {% for heading in agreementLand.headings %}
-                <th scope="col" class="govuk-table__header"
-                  {% for key, value in heading.attributes %}
-                    {{ key }}="{{ value }}"
-                  {% endfor %}>
-                  {{ heading.text }}
-                </th>
-              {% endfor %}
+              <th scope="col" class="govuk-table__header">Parcel</th>
+              <th scope="col" class="govuk-table__header">Total parcel area (ha)</th>
             </tr>
           </thead>
 
           <tbody class="govuk-table__body">
-            {% for row in agreementLand.data %}
+            {% for row in agreement.application.parcel %}
               <tr class="govuk-table__row" data-test-id="landTableRow{{ loop.index }}">
-                {% for cell in row %}
-                  <td class="govuk-table__cell"
-                    data-test-id="landTableCell{{ loop.index }}_{{ loop.index0 }}"
-                    {% for key, value in cell.attributes %}
-                      {{ key }}="{{ value }}"
-                    {% endfor %}>
-                    {{ cell.text }}
+                  <td class="govuk-table__cell" style="white-space: nowrap"
+                    data-test-id="landTableCell{{ loop.index }}_0">
+                    {{ row.sheetId }} {{ row.parcelId }}
                   </td>
-                {% endfor %}
+                  <td class="govuk-table__cell"
+                    data-test-id="landTableCell{{ loop.index }}_1">
+                    {{ row.area.quantity | round(4) }}
+                  </td>
               </tr>
             {% endfor %}
           </tbody>
