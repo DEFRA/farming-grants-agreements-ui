@@ -70,24 +70,20 @@ const buildParcelRows = (firstPayment, subsequentPayment, parcelItems = {}) =>
     { text: payment.description },
     { text: payment.code },
     {
-      text: `${formatPenceCurrency(payment.rateInPence)} per ${payment.unit.replace(/s$/, '')}`,
-      attributes: { style: 'text-align: right;' }
+      text: `${formatPenceCurrency(payment.rateInPence)} per ${payment.unit.replace(/s$/, '')}`
     },
     {
       text: formatPenceCurrency(
         calculateFirstPaymentForParcelItem(firstPayment, key)
-      ),
-      attributes: { style: 'text-align: right;' }
+      )
     },
     {
       text: formatPenceCurrency(
         calculateSubsequentPaymentForParcelItem(subsequentPayment, key)
-      ),
-      attributes: { style: 'text-align: right;' }
+      )
     },
     {
-      text: formatPenceCurrency(payment.annualPaymentPence),
-      attributes: { style: 'text-align: right;' }
+      text: formatPenceCurrency(payment.annualPaymentPence)
     }
   ])
 
@@ -107,8 +103,7 @@ const buildAgreementLevelRows = (
       {
         text: formatPenceCurrency(
           calculateFirstPaymentForAgreementLevelItem(firstPayment, key)
-        ),
-        attributes: { style: 'text-align: right;' }
+        )
       },
       {
         text: formatPenceCurrency(
@@ -116,12 +111,10 @@ const buildAgreementLevelRows = (
             subsequentPayment,
             key
           )
-        ),
-        attributes: { style: 'text-align: right;' }
+        )
       },
       {
-        text: formatPenceCurrency(payment.annualPaymentPence),
-        attributes: { style: 'text-align: right;' }
+        text: formatPenceCurrency(payment.annualPaymentPence)
       }
     ]
   })
@@ -175,15 +168,15 @@ const buildTotalsRow = ({ firstTotal, subsequentTotal, annualTotal }) => [
   { text: '' },
   {
     text: formatPenceCurrency(firstTotal),
-    attributes: { class: GOV_UK_FONT_WEIGHT_BOLD, style: 'text-align: right;' }
+    attributes: { class: GOV_UK_FONT_WEIGHT_BOLD }
   },
   {
     text: formatPenceCurrency(subsequentTotal),
-    attributes: { class: GOV_UK_FONT_WEIGHT_BOLD, style: 'text-align: right;' }
+    attributes: { class: GOV_UK_FONT_WEIGHT_BOLD }
   },
   {
     text: formatPenceCurrency(annualTotal),
-    attributes: { class: GOV_UK_FONT_WEIGHT_BOLD, style: 'text-align: right;' }
+    attributes: { class: GOV_UK_FONT_WEIGHT_BOLD }
   }
 ]
 
@@ -303,8 +296,7 @@ const getAnnualPaymentSchedule = (agreementData) => {
     sortedYears.forEach((year) => {
       const yearValue = years.has(year) ? years.get(year) : 0
       row.push({
-        text: formatPenceCurrency(yearValue),
-        attributes: { style: 'text-align: right;' }
+        text: formatPenceCurrency(yearValue)
       })
       yearTotals[year] += yearValue
     })
@@ -312,8 +304,7 @@ const getAnnualPaymentSchedule = (agreementData) => {
     // Add total for this code
     const codeTotal = years.has('total') ? years.get('total') : 0
     row.push({
-      text: formatPenceCurrency(codeTotal),
-      attributes: { style: 'text-align: right;' }
+      text: formatPenceCurrency(codeTotal)
     })
     grandTotal += codeTotal
 
@@ -324,13 +315,11 @@ const getAnnualPaymentSchedule = (agreementData) => {
   const totalsRow = [{ text: 'Total' }]
   sortedYears.forEach((year) => {
     totalsRow.push({
-      text: formatPenceCurrency(yearTotals[year]),
-      attributes: { style: 'text-align: right;' }
+      text: formatPenceCurrency(yearTotals[year])
     })
   })
   totalsRow.push({
-    text: formatPenceCurrency(grandTotal),
-    attributes: { style: 'text-align: right;' }
+    text: formatPenceCurrency(grandTotal)
   })
   tableData.push(totalsRow)
 

@@ -115,15 +115,9 @@ describe('getAgreementCalculations', () => {
               text: 'BND1'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£1,218.38'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£1,218.38'
             }
           ],
@@ -132,15 +126,9 @@ describe('getAgreementCalculations', () => {
               text: 'CHRW1'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£4,747.50'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£4,747.50'
             }
           ],
@@ -149,15 +137,9 @@ describe('getAgreementCalculations', () => {
               text: 'CSAM1'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£136'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£136'
             }
           ],
@@ -166,15 +148,9 @@ describe('getAgreementCalculations', () => {
               text: 'Total'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£6,101.88'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£6,101.88'
             }
           ]
@@ -271,27 +247,15 @@ describe('getAgreementCalculations', () => {
               text: 'BND1'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£25.65 per metre'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£609.19'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£609.19'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£2,436.75'
             }
           ],
@@ -303,27 +267,15 @@ describe('getAgreementCalculations', () => {
               text: 'CHRW1'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£5 per metre'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£2,373.75'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£2,373.75'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£9,495'
             }
           ],
@@ -335,24 +287,15 @@ describe('getAgreementCalculations', () => {
               text: 'CSAM1'
             },
             {
-              text: '£272.00 per agreement'
+              text: '£272 per agreement'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£68'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£68'
             },
             {
-              attributes: {
-                style: 'text-align: right;'
-              },
               text: '£272'
             }
           ],
@@ -368,22 +311,19 @@ describe('getAgreementCalculations', () => {
             },
             {
               attributes: {
-                class: 'govuk-!-font-weight-bold',
-                style: 'text-align: right;'
+                class: 'govuk-!-font-weight-bold'
               },
               text: '£3,050.94'
             },
             {
               attributes: {
-                class: 'govuk-!-font-weight-bold',
-                style: 'text-align: right;'
+                class: 'govuk-!-font-weight-bold'
               },
               text: '£3,050.94'
             },
             {
               attributes: {
-                class: 'govuk-!-font-weight-bold',
-                style: 'text-align: right;'
+                class: 'govuk-!-font-weight-bold'
               },
               text: '£12,203.75'
             }
@@ -549,10 +489,10 @@ describe('getAgreementCalculations', () => {
               text: 'CSAM1'
             },
             {
-              text: '£136.00'
+              text: '£136'
             },
             {
-              text: '£136.00'
+              text: '£136'
             }
           ],
           [
@@ -675,7 +615,7 @@ describe('getAgreementCalculations', () => {
               text: 'CHRW1'
             },
             {
-              text: '£5.00 per metre'
+              text: '£5 per metre'
             },
             {
               text: '£2,373.75'
@@ -684,7 +624,7 @@ describe('getAgreementCalculations', () => {
               text: '£2,373.75'
             },
             {
-              text: '£9,495.00'
+              text: '£9,495'
             }
           ],
           [
@@ -695,16 +635,16 @@ describe('getAgreementCalculations', () => {
               text: 'CSAM1'
             },
             {
-              text: '£272.00 per agreement'
+              text: '£272 per agreement'
             },
             {
-              text: '£68.00'
+              text: '£68'
             },
             {
-              text: '£68.00'
+              text: '£68'
             },
             {
-              text: '£272.00'
+              text: '£272'
             }
           ],
           [
@@ -1205,7 +1145,7 @@ describe('getAgreementCalculations', () => {
       attributes: { class: 'govuk-!-font-weight-bold' }
     })
     expect(totalsRow[5]).toEqual({
-      text: '£75.00',
+      text: '£75',
       attributes: { class: 'govuk-!-font-weight-bold' }
     })
   })

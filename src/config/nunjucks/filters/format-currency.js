@@ -24,7 +24,9 @@ export const formatPenceCurrency = (
     })
     // GDS style: remove .00 decimals unless pence are included
     // e.g., £75.50 but not £75.00 -> £75
-    if (formatted.endsWith('.00')) {
+    // Check if the value is a whole number (no pence)
+    const isWholeNumber = value % 100 === 0
+    if (isWholeNumber && formatted.includes('.00')) {
       return formatted.replace(/\.00$/, '')
     }
     return formatted
