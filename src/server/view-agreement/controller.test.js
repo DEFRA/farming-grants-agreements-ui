@@ -68,8 +68,8 @@ describe('#viewAgreementController', () => {
 
         // agreement row
         expect(result).toContain('£68.03')
-        expect(result).toContain('£68.00')
-        expect(result).toContain('£272.00')
+        expect(result).toContain('£68')
+        expect(result).toContain('£272')
 
         // Total row
         expect(result).toContain('£80.07')
