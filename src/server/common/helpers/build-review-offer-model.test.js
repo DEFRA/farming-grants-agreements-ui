@@ -307,8 +307,8 @@ describe('buildReviewOfferModel', () => {
     )
     expect(agreementLevelRow).toMatchObject({
       code: 'CMOR1',
-      description: 'Assess moorland and produce a written record',
-      rateInPence: '£272',
+      description: 'Assess moorland and produce a written record', 
+      rateInPence: '£272 per agreement',
       duration: 1,
       hasOneOffPayment: true,
       quarterlyPayment: 6800,
