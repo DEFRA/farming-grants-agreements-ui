@@ -223,17 +223,14 @@
           These figures are correct at the Agreement start date and may vary as a result of the processes set out in the Terms and Conditions.
         </p>
 
-        {% if isCMOR1ActionUsed %}
-
-        <p class="govuk-body">
-          There is a payment of £272 per agreement for action 'Assess moorland and produce a written record: CMOR1’.
-        </p>
-
-        <p class="govuk-body">
-          You’ll receive this payment if you are not already doing this action on another land parcel.
-        </p>
-
-        {% endif %}
+        {% for annualPayment in annualPayments %}
+            <p class="govuk-body govuk-!-font-size-19">
+              There is a payment of {{ annualPayment.payment }} per year for action '{{ annualPayment.description }}: {{ annualPayment.code }}'.
+            </p>
+            <p class="govuk-body govuk-!-font-size-19">
+              You will receive this payment if you are not already doing this action on another land parcel.
+            </p>
+        {% endfor %}
 
         <table class="govuk-table govuk-table--small-text-until-tablet table-bordered" data-test-id="paymentsTable">
           <thead class="govuk-table__head">

@@ -1,5 +1,5 @@
-import { getAgreementCalculations } from './get-agreement-calculations.js'
 import { formatDate } from 'date-fns'
+import * as agreementCalcs from './get-agreement-calculations.js'
 
 /**
  * Checks whether any parcel item attached to an agreement matches the given code.
@@ -66,6 +66,6 @@ export const buildAgreementViewModel = (agreementData) => {
     isCMOR1ActionUsed: hasLeastOneGivenParcelCode(agreementData, 'CMOR1'),
     businessName,
     applicantName,
-    ...getAgreementCalculations(agreementData)
+    ...agreementCalcs.getAgreementCalculations(agreementData)
   }
 }
