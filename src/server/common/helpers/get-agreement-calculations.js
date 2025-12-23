@@ -226,25 +226,34 @@ const getSummaryOfPayments = (agreementData) => {
 }
 
 /**
- * Creates a table of annual payment schedule for the agreement
+ * Gets the code for a line item from either parcel or agreement level items
+ * @param {object} line - The line item
  * @param {object} agreementData - The agreement data object
- * @returns Object containing headings and data for the annual payment schedule table
+ * @returns {string|undefined} The code for the line item
  */
-const getAnnualPaymentSchedule = (agreementData) => {
+const getCodeForLineItem = (line, agreementData) => {
+  if (line.parcelItemId) {
+    return agreementData.payment.parcelItems[line.parcelItemId]?.code
+  }
+  if (line.agreementLevelItemId) {
+    return agreementData.payment.agreementLevelItems[line.agreementLevelItemId]
+      ?.code
+  }
+  return undefined
+}
+
+/**
+ * Builds a map of payment data organized by code
+ * @param {object} agreementData - The agreement data object
+ * @returns {Map} Map of code to years map
+ */
+const buildPaymentDataByCode = (agreementData) => {
   const dataByCode = new Map()
   agreementData.payment.payments.forEach((payment) => {
     const year = new Date(payment.paymentDate).getFullYear()
 
     payment.lineItems.forEach((line) => {
-      let code
-      if (line.parcelItemId) {
-        code = agreementData.payment.parcelItems[line.parcelItemId]?.code
-      }
-      if (line.agreementLevelItemId) {
-        code =
-          agreementData.payment.agreementLevelItems[line.agreementLevelItemId]
-            ?.code
-      }
+      const code = getCodeForLineItem(line, agreementData)
 
       if (code) {
         const years = dataByCode.has(code) ? dataByCode.get(code) : new Map()
@@ -259,8 +268,15 @@ const getAnnualPaymentSchedule = (agreementData) => {
       }
     })
   })
+  return dataByCode
+}
 
-  // Get all unique years from the data
+/**
+ * Gets all unique years from the payment data and sorts them
+ * @param {Map} dataByCode - Map of code to years map
+ * @returns {Array<number>} Sorted array of years
+ */
+const getSortedYears = (dataByCode) => {
   const allYears = new Set()
   dataByCode.forEach((years) => {
     years.forEach((_value, year) => {
@@ -269,15 +285,28 @@ const getAnnualPaymentSchedule = (agreementData) => {
       }
     })
   })
+  return Array.from(allYears).sort((a, b) => a - b)
+}
 
-  const sortedYears = Array.from(allYears).sort((a, b) => a - b)
-
-  // Sort dataByCode by code keys
-  const sortedCodes = Array.from(dataByCode.keys()).sort((a, b) =>
+/**
+ * Gets sorted codes from the payment data
+ * @param {Map} dataByCode - Map of code to years map
+ * @returns {Array<string>} Sorted array of codes
+ */
+const getSortedCodes = (dataByCode) => {
+  return Array.from(dataByCode.keys()).sort((a, b) =>
     a.localeCompare(b, 'en-GB', { numeric: true, sensitivity: 'base' })
   )
+}
 
-  // Build table data
+/**
+ * Builds the data rows for the annual payment schedule table
+ * @param {Map} dataByCode - Map of code to years map
+ * @param {Array<string>} sortedCodes - Sorted array of codes
+ * @param {Array<number>} sortedYears - Sorted array of years
+ * @returns {Array} Array containing table data rows and year totals
+ */
+const buildScheduleRows = (dataByCode, sortedCodes, sortedYears) => {
   const tableData = []
   const yearTotals = {}
   let grandTotal = 0
@@ -311,7 +340,17 @@ const getAnnualPaymentSchedule = (agreementData) => {
     tableData.push(row)
   })
 
-  // Add totals row
+  return { tableData, yearTotals, grandTotal }
+}
+
+/**
+ * Builds the totals row for the annual payment schedule table
+ * @param {Array<number>} sortedYears - Sorted array of years
+ * @param {object} yearTotals - Object mapping years to totals
+ * @param {number} grandTotal - Grand total across all codes
+ * @returns {Array} Totals row array
+ */
+const buildScheduleTotalsRow = (sortedYears, yearTotals, grandTotal) => {
   const totalsRow = [{ text: 'Total' }]
   sortedYears.forEach((year) => {
     totalsRow.push({
@@ -321,18 +360,43 @@ const getAnnualPaymentSchedule = (agreementData) => {
   totalsRow.push({
     text: formatPenceCurrency(grandTotal)
   })
-  tableData.push(totalsRow)
+  return totalsRow
+}
 
-  // Build headings
+/**
+ * Builds the headings for the annual payment schedule table
+ * @param {Array<number>} sortedYears - Sorted array of years
+ * @returns {Array} Headings array
+ */
+const buildScheduleHeadings = (sortedYears) => {
   const headings = [{ text: 'Code' }]
   sortedYears.forEach((year) => {
     headings.push({ text: year })
   })
   headings.push({ text: 'Total payment' })
+  return headings
+}
+
+/**
+ * Creates a table of annual payment schedule for the agreement
+ * @param {object} agreementData - The agreement data object
+ * @returns Object containing headings and data for the annual payment schedule table
+ */
+const getAnnualPaymentSchedule = (agreementData) => {
+  const dataByCode = buildPaymentDataByCode(agreementData)
+  const sortedYears = getSortedYears(dataByCode)
+  const sortedCodes = getSortedCodes(dataByCode)
+  const { tableData, yearTotals, grandTotal } = buildScheduleRows(
+    dataByCode,
+    sortedCodes,
+    sortedYears
+  )
+  const totalsRow = buildScheduleTotalsRow(sortedYears, yearTotals, grandTotal)
+  const headings = buildScheduleHeadings(sortedYears)
 
   return {
     headings,
-    data: tableData
+    data: [...tableData, totalsRow]
   }
 }
 
