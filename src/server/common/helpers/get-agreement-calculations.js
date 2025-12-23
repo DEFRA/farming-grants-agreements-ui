@@ -225,6 +225,21 @@ const getSummaryOfPayments = (agreementData) => {
   }
 }
 
+export const getAdditionalAnnualPayments = (agreementData) => {
+  const items = agreementData?.payment?.agreementLevelItems || {}
+
+  return Object.entries(items)
+    .map(([_key, item]) => {
+      const description = item.description?.replace(`${item.code}: `, '')
+      return {
+        code: item.code,
+        description,
+        payment: `${formatPenceCurrency(item.annualPaymentPence)} per agreement`
+      }
+    })
+    .sort((a, b) => a.code.localeCompare(b.code))
+}
+
 /**
  * Gets the code for a line item from either parcel or agreement level items
  * @param {object} line - The line item
@@ -407,5 +422,6 @@ const getAnnualPaymentSchedule = (agreementData) => {
 export const getAgreementCalculations = (agreement) => ({
   summaryOfActions: getSummaryOfActions(agreement),
   summaryOfPayments: getSummaryOfPayments(agreement),
-  annualPaymentSchedule: getAnnualPaymentSchedule(agreement)
+  annualPaymentSchedule: getAnnualPaymentSchedule(agreement),
+  annualPayments: getAdditionalAnnualPayments(agreement)
 })
