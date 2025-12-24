@@ -1,81 +1,11 @@
 import { vi } from 'vitest'
 
 import { getAgreementCalculations } from './get-agreement-calculations.js'
-import {
-  buildAgreementViewModel,
-  hasLeastOneGivenParcelCode
-} from './build-view-agreement-model.js'
+import { buildAgreementViewModel } from './build-view-agreement-model.js'
 
 vi.mock('./get-agreement-calculations.js', () => ({
   getAgreementCalculations: vi.fn()
 }))
-
-describe('hasLeastOneGivenParcelCode', () => {
-  const agreementData = {
-    payment: {
-      parcelItems: {
-        1: {
-          code: 'CMOR1',
-          description: 'Assess moorland and produce a written record',
-          durationYears: 1,
-          version: 1,
-          unit: 'ha',
-          quantity: 4.7575,
-          rateInPence: 1060,
-          annualPaymentPence: 5043,
-          sheetId: 'SD6743',
-          parcelId: '8083'
-        },
-        2: {
-          code: 'UPL3',
-          description: 'Limited livestock grazing on moorland',
-          durationYears: 3,
-          version: 1,
-          unit: 'ha',
-          quantity: 4.7575,
-          rateInPence: 6600,
-          annualPaymentPence: 31400,
-          sheetId: 'SD6743',
-          parcelId: '8083'
-        },
-        3: {
-          code: 'CMOR1',
-          description: 'Assess moorland and produce a written record',
-          durationYears: 1,
-          version: 1,
-          unit: 'ha',
-          quantity: 2.1705,
-          rateInPence: 1060,
-          annualPaymentPence: 2301,
-          sheetId: 'SD4842',
-          parcelId: '4495'
-        },
-        4: {
-          code: 'UPL1',
-          description: 'Moderate livestock grazing on moorland',
-          durationYears: 3,
-          version: 1,
-          unit: 'ha',
-          quantity: 2.1705,
-          rateInPence: 2000,
-          annualPaymentPence: 4341,
-          sheetId: 'SD4842',
-          parcelId: '4495'
-        }
-      }
-    }
-  }
-
-  test('returns true when parcel code exists', () => {
-    expect(hasLeastOneGivenParcelCode(agreementData, 'CMOR1')).toBe(true)
-  })
-
-  test('returns false when parcel code is absent', () => {
-    expect(hasLeastOneGivenParcelCode(agreementData, 'NON_EXISTENT')).toBe(
-      false
-    )
-  })
-})
 
 describe('buildAgreementViewModel', () => {
   const mockedGetAgreementCalculations = vi.mocked(getAgreementCalculations)
@@ -113,7 +43,7 @@ describe('buildAgreementViewModel', () => {
     const calculations = {
       summaryOfActions: { headings: [], data: [] },
       summaryOfPayments: { headings: [], data: [] },
-      annualPaymentSchedule: { headings: [], data: [] }
+      annualPaymentSchedule: { headings: [], data: [], annualPayments: [] }
     }
     mockedGetAgreementCalculations.mockReturnValue(calculations)
 
@@ -129,7 +59,6 @@ describe('buildAgreementViewModel', () => {
       isDraftAgreement: false,
       isAgreementAccepted: true,
       isWithdrawnAgreement: false,
-      isCMOR1ActionUsed: true,
       businessName: 'Farm Business',
       applicantName: 'Mr. Edward Jones',
       ...calculations
@@ -163,7 +92,6 @@ describe('buildAgreementViewModel', () => {
     expect(model.isDraftAgreement).toBe(true)
     expect(model.isAgreementAccepted).toBe(false)
     expect(model.isWithdrawnAgreement).toBe(false)
-    expect(model.isCMOR1ActionUsed).toBe(false)
     expect(model.businessName).toBe('XXXXX')
     expect(model.applicantName).toBe('XXXXX')
     expect(model.agreementStartDate).toBe('XXXXX')
@@ -200,6 +128,5 @@ describe('buildAgreementViewModel', () => {
     expect(model.applicantName).toBe('XXXXX')
     expect(model.agreementStartDate).toBe('XXXXX')
     expect(model.agreementEndDate).toBe('XXXXX')
-    expect(model.isCMOR1ActionUsed).toBe(true)
   })
 })

@@ -1,4 +1,7 @@
-import { getAgreementCalculations } from './get-agreement-calculations.js'
+import {
+  getAgreementCalculations,
+  getAdditionalAnnualPayments
+} from './get-agreement-calculations.js'
 
 describe('getAgreementCalculations', () => {
   test('should return rendered HTML for accepted status', () => {
@@ -349,7 +352,15 @@ describe('getAgreementCalculations', () => {
             text: 'Annual payment value'
           }
         ]
-      }
+      },
+      annualPayments: [
+        {
+          code: 'CSAM1',
+          description:
+            "'Assess soil, produce a soil management plan and test soil organic matter:CSAM1'",
+          payment: '£272 per agreement'
+        }
+      ]
     })
   })
 
@@ -697,7 +708,15 @@ describe('getAgreementCalculations', () => {
             text: 'Annual payment value'
           }
         ]
-      }
+      },
+      annualPayments: [
+        {
+          code: 'CSAM1',
+          description:
+            "'Assess soil, produce a soil management plan and test soil organic matter:CSAM1'",
+          payment: '£272 per agreement'
+        }
+      ]
     })
   })
 
@@ -1060,7 +1079,7 @@ describe('getAgreementCalculations', () => {
 
     const agreement = getAgreementCalculations(agreementData)
 
-    // Check that first payment and subsequent payment columns show £0.00
+    // Check that first payment and subsequent payment columns show £0
     const data = agreement.summaryOfPayments.data
     expect(data).toHaveLength(2) // + totals row
 
@@ -1148,5 +1167,88 @@ describe('getAgreementCalculations', () => {
       text: '£75',
       attributes: { class: 'govuk-!-font-weight-bold' }
     })
+  })
+})
+
+// New tests for getAdditionalAnnualPayments
+describe('getAdditionalAnnualPayments', () => {
+  const withAgreementLevelItems = (agreementLevelItems) => ({
+    payment: { agreementLevelItems }
+  })
+
+  test('returns formatted additional annual payments for a single item', () => {
+    const agreementData = withAgreementLevelItems({
+      1: {
+        code: 'CMOR1',
+        description: 'Assess moorland and produce a written record',
+        annualPaymentPence: 27200
+      },
+      2: {
+        code: 'UPL03',
+        description: 'Assess moorland and produce a written record',
+        annualPaymentPence: 37200
+      }
+    })
+
+    const result = getAdditionalAnnualPayments(agreementData)
+
+    expect(result).toEqual([
+      {
+        code: 'CMOR1',
+        description: "'Assess moorland and produce a written record:CMOR1'",
+        payment: '£272 per agreement'
+      },
+      {
+        code: 'UPL03',
+        description: "'Assess moorland and produce a written record:UPL03'",
+        payment: '£372 per agreement'
+      }
+    ])
+  })
+
+  test('sorts additional annual payments by code ascending', () => {
+    const agreementData = withAgreementLevelItems({
+      2: { code: 'ZACT9', description: 'Zed action', annualPaymentPence: 100 },
+      1: {
+        code: 'AACT1',
+        description: 'Alpha action',
+        annualPaymentPence: 200
+      },
+      3: { code: 'MACT5', description: 'Mid action', annualPaymentPence: 300 }
+    })
+
+    const result = getAdditionalAnnualPayments(agreementData)
+
+    expect(result.map((x) => x.code)).toEqual(['AACT1', 'MACT5', 'ZACT9'])
+
+    expect(result).toEqual([
+      {
+        code: 'AACT1',
+        description: "'Alpha action:AACT1'",
+        payment: '£2 per agreement'
+      },
+      {
+        code: 'MACT5',
+        description: "'Mid action:MACT5'",
+        payment: '£3 per agreement'
+      },
+      {
+        code: 'ZACT9',
+        description: "'Zed action:ZACT9'",
+        payment: '£1 per agreement'
+      }
+    ])
+  })
+
+  test('returns empty list when agreementLevelItems is missing', () => {
+    const agreementData = { payment: {} }
+    const result = getAdditionalAnnualPayments(agreementData)
+    expect(result).toHaveLength(0)
+  })
+
+  test('returns empty list when agreementLevelItems is an empty object', () => {
+    const agreementData = withAgreementLevelItems({})
+    const result = getAdditionalAnnualPayments(agreementData)
+    expect(result).toHaveLength(0)
   })
 })

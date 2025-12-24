@@ -143,7 +143,14 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
             1: {
               code: 'CMOR1'
             }
-          }
+          },
+          annualPayments: [
+            {
+              code: 'CMOR1',
+              description: 'Assess moorland and produce a written record',
+              payment: '£272.00 per agreement '
+            }
+          ]
         }
       }))
     }))
@@ -169,7 +176,9 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
       getAgreementCalculations: vi.fn(() => ({
         agreement: { applicant: { business: { name: 'Mock Biz' } } },
         payment: {}
-      }))
+      })),
+
+      getAdditionalAnnualPayments: vi.fn(() => ({ annualPayments: [] }))
     }))
     const { viewAgreementController } = await import('./controller.js')
 
@@ -193,7 +202,8 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
       getAgreementCalculations: vi.fn(() => ({
         agreement: { applicant: { business: { name: 'Mock Biz' } } },
         payment: {}
-      }))
+      })),
+      getAdditionalAnnualPayments: vi.fn(() => ({ annualPayments: [] }))
     }))
     const { viewAgreementController } = await import('./controller.js')
 
@@ -220,7 +230,8 @@ describe('viewAgreementController.redirect', () => {
       getAgreementCalculations: vi.fn(() => ({
         agreement: { applicant: { business: { name: 'Mock Biz' } } },
         payment: {}
-      }))
+      })),
+      getAdditionalAnnualPayments: vi.fn(() => ({ annualPayments: [] }))
     }))
   })
 
