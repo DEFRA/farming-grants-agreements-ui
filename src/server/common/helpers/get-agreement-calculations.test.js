@@ -357,7 +357,7 @@ describe('getAgreementCalculations', () => {
         {
           code: 'CSAM1',
           description:
-            'Assess soil, produce a soil management plan and test soil organic matter',
+            "'Assess soil, produce a soil management plan and test soil organic matter:CSAM1'",
           payment: '£272 per agreement'
         }
       ]
@@ -713,7 +713,7 @@ describe('getAgreementCalculations', () => {
         {
           code: 'CSAM1',
           description:
-            'Assess soil, produce a soil management plan and test soil organic matter',
+            "'Assess soil, produce a soil management plan and test soil organic matter:CSAM1'",
           payment: '£272 per agreement'
         }
       ]
@@ -1195,12 +1195,12 @@ describe('getAdditionalAnnualPayments', () => {
     expect(result).toEqual([
       {
         code: 'CMOR1',
-        description: 'Assess moorland and produce a written record',
+        description: "'Assess moorland and produce a written record:CMOR1'",
         payment: '£272 per agreement'
       },
       {
         code: 'UPL03',
-        description: 'Assess moorland and produce a written record',
+        description: "'Assess moorland and produce a written record:UPL03'",
         payment: '£372 per agreement'
       }
     ])
@@ -1224,17 +1224,17 @@ describe('getAdditionalAnnualPayments', () => {
     expect(result).toEqual([
       {
         code: 'AACT1',
-        description: 'Alpha action',
+        description: "'Alpha action:AACT1'",
         payment: '£2 per agreement'
       },
       {
         code: 'MACT5',
-        description: 'Mid action',
+        description: "'Mid action:MACT5'",
         payment: '£3 per agreement'
       },
       {
         code: 'ZACT9',
-        description: 'Zed action',
+        description: "'Zed action:ZACT9'",
         payment: '£1 per agreement'
       }
     ])

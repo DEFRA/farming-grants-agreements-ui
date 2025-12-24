@@ -224,11 +224,11 @@
         </p>
 
         {% for annualPayment in annualPayments %}
-            <p class="govuk-body govuk-!-font-size-19">
-              There is a payment of {{ annualPayment.payment }} per year for action '{{ annualPayment.description }}: {{ annualPayment.code }}'.
+            <p class="govuk-body">
+              There is a payment of {{ annualPayment.payment }} for action {{ annualPayment.description }}.
             </p>
-            <p class="govuk-body govuk-!-font-size-19">
-              You will receive this payment if you are not already doing this action on another land parcel.
+            <p class="govuk-body">
+              You'll receive this payment if you are not already doing this action on another land parcel.
             </p>
         {% endfor %}
 
