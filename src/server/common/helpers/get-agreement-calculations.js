@@ -231,9 +231,10 @@ export const getAdditionalAnnualPayments = (agreementData) => {
   return Object.entries(items)
     .map(([_key, item]) => {
       const description = item.description?.replace(`${item.code}: `, '')
+      const formattedDescription = `'${description}:${item.code}'`
       return {
         code: item.code,
-        description,
+        description: formattedDescription,
         payment: `${formatPenceCurrency(item.annualPaymentPence)} per agreement`
       }
     })
