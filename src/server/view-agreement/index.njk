@@ -227,10 +227,13 @@
             <p class="govuk-body">
               There is a payment of {{ annualPayment.payment }} for action {{ annualPayment.description }}.
             </p>
-            <p class="govuk-body">
-              You'll receive this payment if you are not already doing this action on another land parcel.
-            </p>
         {% endfor %}
+
+        {% if annualPayments.length > 0 %}
+          <p class="govuk-body">
+             You'll receive this payment if you are not already doing this action on another land parcel.
+          </p>
+        {% endif %}
 
         <table class="govuk-table govuk-table--small-text-until-tablet table-bordered" data-test-id="paymentsTable">
           <thead class="govuk-table__head">
