@@ -9,8 +9,6 @@ import {
 } from './payment-calculations.js'
 import { formatPenceCurrency } from '../../../config/nunjucks/filters/format-currency.js'
 
-// const noWrap = { attributes: { style: 'white-space: nowrap' } }
-
 /**
  * Creates a summary of actions for the agreement
  * @param {object} agreementData - The agreement data object (or wrapped under agreementData)
@@ -69,48 +67,47 @@ const getSummaryOfActions = (agreementData) => {
   return { summaryOfActions: { headings, data } }
 }
 
-export const buildReviewOfferModel = (agreementData) => {
-  // The incoming payload may be either the raw agreement object or
-  // wrapped under an `agreementData` property. Support both shapes.
-  const root = agreementData?.agreementData ?? agreementData
-  const payment = root?.payment || {}
-  const application = root?.application || {}
+// Build a map of code -> description using both parcel and agreement-level items
+const buildCodeDescriptions = (payment) => ({
+  ...Object.values(payment?.parcelItems || {}).reduce((prev, i) => {
+    const desc = (i?.description || '').replace(`${i?.code}: `, '')
+    return i?.code ? { ...prev, [i.code]: desc || i?.description || '' } : prev
+  }, {}),
+  ...Object.values(payment?.agreementLevelItems || {}).reduce((prev, i) => {
+    const desc = (i?.description || '').replace(`${i?.code}: `, '')
+    return i?.code ? { ...prev, [i.code]: desc || i?.description || '' } : prev
+  }, {})
+})
 
-  // Build a map of code -> description using both parcel and agreement-level items
-  // Safely handle cases where items are undefined and when descriptions may include the code prefix.
-  const codeDescriptions = {
-    ...Object.values(payment?.parcelItems || {}).reduce((prev, i) => {
-      const desc = (i?.description || '').replace(`${i?.code}: `, '')
-      return i?.code
-        ? { ...prev, [i.code]: desc || i?.description || '' }
-        : prev
-    }, {}),
-    ...Object.values(payment?.agreementLevelItems || {}).reduce((prev, i) => {
-      const desc = (i?.description || '').replace(`${i?.code}: `, '')
-      return i?.code
-        ? { ...prev, [i.code]: desc || i?.description || '' }
-        : prev
-    }, {})
-  }
-
-  // Calculate duration in years using date-fns (fallback to 1 if dates are missing/invalid)
+// Calculate duration in years using date-fns (fallback to 1 if dates are missing/invalid)
+const calculateDurationInYears = (payment) => {
   let durationInYears = 1
   try {
     if (payment?.agreementEndDate && payment?.agreementStartDate) {
       const end = parseISO(payment.agreementEndDate)
       const start = parseISO(payment.agreementStartDate)
       const diff = differenceInYears(end, start)
-      // Ensure at least 1 year duration for display purposes
       durationInYears = Number.isFinite(diff) && diff > 0 ? diff : 1
     }
   } catch {
     durationInYears = 1
   }
+  return durationInYears
+}
 
-  const quarterlyPayment = payment?.payments?.[payment?.payments?.length - 1]
+// Safely pick the last quarterly payment (undefined if none)
+const getQuarterlyPayment = (payment) =>
+  payment?.payments?.[payment?.payments?.length - 1]
 
-  const payments = [
-    ...(Object.entries(payment?.parcelItems || {}).map(([key, i]) => ({
+// Build the flattened payments rows for parcel and agreement level items
+const buildPayments = (
+  payment,
+  codeDescriptions,
+  durationInYears,
+  quarterlyPayment
+) => {
+  const parcelRows = Object.entries(payment?.parcelItems || {}).map(
+    ([key, i]) => ({
       ...i,
       description: codeDescriptions[i?.code] || i?.description || '',
       rateInPence: formatPenceCurrency(i?.rateInPence || 0),
@@ -128,8 +125,11 @@ export const buildReviewOfferModel = (agreementData) => {
         payment?.payments?.[1], // subsequent payments
         key
       )
-    })) || []),
-    ...(Object.entries(payment?.agreementLevelItems || {}).map(([key, i]) => ({
+    })
+  )
+
+  const agreementRows = Object.entries(payment?.agreementLevelItems || {}).map(
+    ([key, i]) => ({
       ...i,
       description: codeDescriptions[i?.code] || i?.description || '',
       rateInPence: `${formatPenceCurrency(i?.annualPaymentPence || 0)} per agreement`,
@@ -146,8 +146,30 @@ export const buildReviewOfferModel = (agreementData) => {
         payment?.payments?.[1], // subsequent payments
         key
       )
-    })) || [])
-  ].sort((a, b) => (a?.code || '').localeCompare(b?.code || ''))
+    })
+  )
+
+  return [...parcelRows, ...agreementRows].sort((a, b) =>
+    (a?.code || '').localeCompare(b?.code || '')
+  )
+}
+
+export const buildReviewOfferModel = (agreementData) => {
+  // The incoming payload may be either the raw agreement object or
+  // wrapped under an `agreementData` property. Support both shapes.
+  const root = agreementData?.agreementData ?? agreementData
+  const payment = root?.payment || {}
+  const application = root?.application || {}
+
+  const codeDescriptions = buildCodeDescriptions(payment)
+  const durationInYears = calculateDurationInYears(payment)
+  const quarterlyPayment = getQuarterlyPayment(payment)
+  const payments = buildPayments(
+    payment,
+    codeDescriptions,
+    durationInYears,
+    quarterlyPayment
+  )
 
   return {
     pageTitle: 'Review your agreement offer',
