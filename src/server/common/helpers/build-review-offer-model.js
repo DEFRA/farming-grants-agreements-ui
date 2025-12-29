@@ -11,6 +11,7 @@ import { formatPenceCurrency } from '../../../config/nunjucks/filters/format-cur
 
 /**
  * Creates a summary of actions for the agreement
+ * Split into small helpers to keep cognitive complexity low while preserving behaviour
  * @param {object} agreementData - The agreement data object (or wrapped under agreementData)
  * @returns Object containing headings and data for the summary of actions table
  */
@@ -20,52 +21,51 @@ const getSummaryOfActions = (agreementData) => {
   const payment = root?.payment || {}
   const application = root?.application || {}
 
-  // Map codes to human-readable descriptions from both parcel and agreement level items
-  const codeDescriptions = {
-    ...Object.values(payment?.parcelItems || {}).reduce((prev, i) => {
-      const desc = (i?.description || '').replace(`${i?.code}: `, '')
-      return i?.code
-        ? { ...prev, [i.code]: desc || i?.description || '' }
-        : prev
-    }, {}),
-    ...Object.values(payment?.agreementLevelItems || {}).reduce((prev, i) => {
-      const desc = (i?.description || '').replace(`${i?.code}: `, '')
-      return i?.code
-        ? { ...prev, [i.code]: desc || i?.description || '' }
-        : prev
-    }, {})
-  }
+  const headings = buildSummaryHeadings()
+  const codeDescriptions = buildCodeDescriptions(payment)
 
-  // Table headings
-  const headings = [
-    { text: 'Action' },
-    { text: 'Code' },
-    { text: 'Land parcel' },
-    { text: 'Quantity (ha)' },
-    { text: 'Duration' }
-  ]
-
-  // Build table rows safely
-  const data = []
-  const parcels = Array.isArray(application?.parcel) ? application.parcel : []
-  for (const parcel of parcels) {
-    const actions = Array.isArray(parcel?.actions) ? parcel.actions : []
-    for (const action of actions) {
-      const years = Number(action?.durationYears) || 0
-      const actionDuration = `${years} ${years === 1 ? 'year' : 'years'}`
-
-      data.push([
-        { text: codeDescriptions[action?.code] || '' },
-        { text: action?.code || '' },
-        { text: `${parcel?.sheetId ?? ''} ${parcel?.parcelId ?? ''}` },
-        { text: Number((action?.appliedFor?.quantity ?? 0).toFixed(4)) },
-        { text: actionDuration.trim() }
-      ])
-    }
-  }
+  const data = buildSummaryRows(normalizeParcels(application), codeDescriptions)
 
   return { summaryOfActions: { headings, data } }
 }
+
+// Static headings for the summary table
+const buildSummaryHeadings = () => [
+  { text: 'Action' },
+  { text: 'Code' },
+  { text: 'Land parcel' },
+  { text: 'Quantity (ha)' },
+  { text: 'Duration' }
+]
+
+// Ensure we always work with an array of parcels
+const normalizeParcels = (application) =>
+  Array.isArray(application?.parcel) ? application.parcel : []
+
+// Human readable years label
+const formatDuration = (yearsRaw) => {
+  const years = Number(yearsRaw) || 0
+  const label = years === 1 ? 'year' : 'years'
+  return `${years} ${label}`.trim()
+}
+
+// Build a single row for a parcel action
+const buildActionRow = (parcel, action, codeDescriptions) => [
+  { text: codeDescriptions[action?.code] || '' },
+  { text: action?.code || '' },
+  { text: `${parcel?.sheetId ?? ''} ${parcel?.parcelId ?? ''}` },
+  { text: Number((action?.appliedFor?.quantity ?? 0).toFixed(4)) },
+  { text: formatDuration(action?.durationYears) }
+]
+
+// Build all rows using a single pass and small helpers
+const buildSummaryRows = (parcels, codeDescriptions) =>
+  parcels.flatMap((parcel) => {
+    const actions = Array.isArray(parcel?.actions) ? parcel.actions : []
+    return actions.map((action) =>
+      buildActionRow(parcel, action, codeDescriptions)
+    )
+  })
 
 // Build a map of code -> description using both parcel and agreement-level items
 const buildCodeDescriptions = (payment) => ({
