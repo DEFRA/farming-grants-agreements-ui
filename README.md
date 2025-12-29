@@ -102,6 +102,12 @@ To run the application in `development` mode run:
 npm run dev
 ```
 
+If you want to be able to run the app without dependencies on external service like the farming-grants-agreements-api you can generate the mock data by running `npm run test:contracts` and then set the environment variable `BACKEND_URL="http://mock-server:8080"` (or `BACKEND_URL="http://localhost:8080"` if you are running the farming-grants-agreements-ui outside of Docker) and start Docker compose with the mock profile:
+
+```bash
+docker compose --profile mock up
+```
+
 ### Production
 
 To mimic the application running in `production` mode locally run:

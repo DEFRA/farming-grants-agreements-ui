@@ -118,6 +118,19 @@ services:
     networks:
       - cdp-tenant
 
+  mock-server:
+    image: pactfoundation/pact-stub-server:0.7.0
+    profiles:
+      - mock
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./src/contracts/consumer/pacts:/app/pacts
+    command: ["-p", "8080", "-d", "pacts"]
+    networks:
+      - cdp-tenant
+
 volumes:
   mongodb-data:
 
