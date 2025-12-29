@@ -59,7 +59,7 @@ const getSummaryOfActions = (agreementData) => {
       data.push([
         { text: codeDescriptions[action?.code] || '' },
         { text: action?.code || '' },
-        { text: `${parcel?.sheetId ?? ''}${parcel?.parcelId ?? ''}` },
+        { text: `${parcel?.sheetId ?? ''} ${parcel?.parcelId ?? ''}` },
         { text: Number((action?.appliedFor?.quantity ?? 0).toFixed(4)) },
         { text: actionDuration.trim() }
       ])
@@ -100,13 +100,8 @@ export const buildReviewOfferModel = (agreementData) => {
       const end = parseISO(payment.agreementEndDate)
       const start = parseISO(payment.agreementStartDate)
       const diff = differenceInYears(end, start)
-      console.log('***************** THE difference in years is ', diff)
       // Ensure at least 1 year duration for display purposes
       durationInYears = Number.isFinite(diff) && diff > 0 ? diff : 1
-      console.log(
-        '***************** THE durationInYears in years is ',
-        durationInYears
-      )
     }
   } catch {
     durationInYears = 1
@@ -159,8 +154,8 @@ export const buildReviewOfferModel = (agreementData) => {
     parcels: application?.parcel || [],
     codeDescriptions,
     payments,
-    totalQuarterly: quarterlyPayment?.totalPaymentPence || 0,
-    totalYearly: payment?.annualTotalPence || 0,
+    totalQuarterly: quarterlyPayment?.totalPaymentPence,
+    totalYearly: payment?.annualTotalPence,
     totalFirstPayment: calculateTotalFirstPayment(payments),
     totalSubsequentPayment: calculateTotalSubsequentPayment(payments),
     ...getSummaryOfActions(agreementData)
