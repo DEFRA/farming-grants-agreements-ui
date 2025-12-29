@@ -1,24 +1,5 @@
-import { getAgreementCalculations } from './get-agreement-calculations.js'
 import { formatDate } from 'date-fns'
-
-/**
- * Checks whether any parcel item attached to an agreement matches the given code.
- * Safely handles agreements that lack payment data by returning false.
- *
- * @param {object} agreementData - Agreement data payload that may include parcel items
- * @param {string} parcelCode - Code to look for within the parcel items
- * @returns {boolean} True when at least one parcel item has the provided code
- */
-export const hasLeastOneGivenParcelCode = (agreementData, parcelCode) => {
-  const parcelItems = agreementData?.payment?.parcelItems
-  if (!parcelItems) {
-    return false
-  }
-
-  return Object.values(parcelItems).some(
-    (parcelItem) => parcelItem?.code === parcelCode
-  )
-}
+import * as agreementCalcs from './get-agreement-calculations.js'
 
 const formatApplicantName = (customer) => {
   const name = customer?.name
@@ -63,9 +44,8 @@ export const buildAgreementViewModel = (agreementData) => {
     isDraftAgreement,
     isAgreementAccepted,
     isWithdrawnAgreement,
-    isCMOR1ActionUsed: hasLeastOneGivenParcelCode(agreementData, 'CMOR1'),
     businessName,
     applicantName,
-    ...getAgreementCalculations(agreementData)
+    ...agreementCalcs.getAgreementCalculations(agreementData)
   }
 }
