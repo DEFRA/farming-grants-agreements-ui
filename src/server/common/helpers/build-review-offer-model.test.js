@@ -431,4 +431,63 @@ describe('buildReviewOfferModel', () => {
     ])
     expect(data).toEqual([])
   })
+
+  test('codeDescriptions strips code prefix from descriptions and merges sources', () => {
+    const model = buildReviewOfferModel({
+      payment: {
+        parcelItems: {
+          1: {
+            code: 'UPL1',
+            description: 'UPL1: Moderate livestock grazing on moorland'
+          },
+          2: {
+            // no prefix to strip
+            code: 'ABC1',
+            description: 'Plain description'
+          },
+          3: {
+            // missing code should be ignored
+            description: 'Should be ignored'
+          }
+        },
+        agreementLevelItems: {
+          1: {
+            // same code as parcel item; agreement-level should override
+            code: 'UPL1',
+            description: 'UPL1: Overriding description from agreement level'
+          },
+          2: {
+            code: 'DEF2',
+            description: 'DEF2: Agreement level item'
+          }
+        }
+      }
+    })
+
+    expect(model.codeDescriptions).toEqual({
+      // UPL1 comes from agreementLevelItems and has its prefix removed
+      UPL1: 'Overriding description from agreement level',
+      // ABC1 remains as-is (no prefix present)
+      ABC1: 'Plain description',
+      // DEF2 has its prefix removed
+      DEF2: 'Agreement level item'
+    })
+  })
+
+  test('codeDescriptions handles empty or undefined descriptions safely', () => {
+    const model = buildReviewOfferModel({
+      payment: {
+        parcelItems: {
+          1: { code: 'NO_DESC', description: '' },
+          2: { code: 'UNDEF_DESC' } // description undefined
+        },
+        agreementLevelItems: {}
+      }
+    })
+
+    expect(model.codeDescriptions).toEqual({
+      NO_DESC: '',
+      UNDEF_DESC: ''
+    })
+  })
 })
