@@ -374,4 +374,61 @@ describe('buildReviewOfferModel', () => {
     expect(mockedFirstParcel).not.toHaveBeenCalled()
     expect(mockedSubsequentParcel).not.toHaveBeenCalled()
   })
+
+  test('builds summaryOfActions with correct headings and rows using existing sampleAgreementData', () => {
+    const agreementData = buildAgreementData()
+
+    const model = buildReviewOfferModel(agreementData)
+    const { headings, data } = model.summaryOfActions
+
+    // Headings should match expected static labels
+    expect(headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Land parcel' },
+      { text: 'Quantity (ha)' },
+      { text: 'Duration' }
+    ])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(data).toHaveLength(2)
+
+    // First row corresponds to parcel SD6743 8083, CMOR1 action
+    expect(data[0]).toEqual([
+      { text: 'Assess moorland and produce a written record' },
+      { text: 'CMOR1' },
+      { text: 'SD6743 8083' },
+      { text: 4.7575 },
+      { text: '3 years' }
+    ])
+
+    // Second row corresponds to parcel SD6743 8333, CMOR1 action
+    expect(data[1]).toEqual([
+      { text: 'Assess moorland and produce a written record' },
+      { text: 'CMOR1' },
+      { text: 'SD6743 8333' },
+      { text: 2.1705 },
+      { text: '3 years' }
+    ])
+  })
+
+  test('summaryOfActions returns empty data when application parcels are missing', () => {
+    const model = buildReviewOfferModel({
+      agreementData: {
+        payment: { parcelItems: {}, agreementLevelItems: {} },
+        application: {}
+      }
+    })
+
+    const { headings, data } = model.summaryOfActions
+
+    expect(headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Land parcel' },
+      { text: 'Quantity (ha)' },
+      { text: 'Duration' }
+    ])
+    expect(data).toEqual([])
+  })
 })
