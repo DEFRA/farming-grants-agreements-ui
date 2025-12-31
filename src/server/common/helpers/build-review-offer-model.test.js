@@ -282,7 +282,6 @@ describe('buildReviewOfferModel', () => {
     const model = buildReviewOfferModel(agreementData)
 
     expect(model.pageTitle).toBe('Review your agreement offer')
-    expect(model.parcels).toBe(agreementData.application.parcel)
     expect(model.codeDescriptions).toEqual({
       CMOR1: 'Assess moorland and produce a written record'
     })
@@ -341,7 +340,7 @@ describe('buildReviewOfferModel', () => {
       }
     })
 
-    expect(model.parcels).toEqual([])
+    // parcels are no longer exposed on the model; ensure other fields are sane
     expect(model.codeDescriptions).toEqual({})
     expect(model.payments).toEqual([])
     expect(model.totalQuarterly).toBeUndefined()
@@ -430,6 +429,53 @@ describe('buildReviewOfferModel', () => {
       { text: 'Duration' }
     ])
     expect(data).toEqual([])
+  })
+
+  test('formats Duration column correctly (singular/plural/undefined)', () => {
+    const agreementData = {
+      agreementData: {
+        payment: { parcelItems: {}, agreementLevelItems: {} },
+        application: {
+          parcel: [
+            {
+              sheetId: 'AA1111',
+              parcelId: '0001',
+              actions: [
+                {
+                  code: 'X1',
+                  durationYears: 1,
+                  appliedFor: { unit: 'ha', quantity: 1 }
+                },
+                {
+                  code: 'X2',
+                  durationYears: '2',
+                  appliedFor: { unit: 'ha', quantity: 1 }
+                },
+                {
+                  code: 'X3',
+                  /* undefined duration */ appliedFor: {
+                    unit: 'ha',
+                    quantity: 1
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+
+    const model = buildReviewOfferModel(agreementData)
+
+    const rows = model.summaryOfActions.data
+    expect(rows).toHaveLength(3)
+
+    // 1 -> "1 year"
+    expect(rows[0][4]).toEqual({ text: '1 year' })
+    // '2' (string) -> numeric coercion -> "2 years"
+    expect(rows[1][4]).toEqual({ text: '2 years' })
+    // undefined -> Number(undefined) || 0 -> 0 -> "0 years"
+    expect(rows[2][4]).toEqual({ text: '0 years' })
   })
 
   test('codeDescriptions strips code prefix from descriptions and merges sources', () => {

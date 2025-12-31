@@ -37,88 +37,43 @@
   <br>
 
   <h2 class="govuk-heading-l">Actions</h2>
-   <table class="govuk-table govuk-table--small-text-until-tablet table-bordered" data-test-id="actionsTable">
-            <thead class="govuk-table__head">
-              <tr class="govuk-table__row">
-                {% for heading in summaryOfActions.headings %}
-                  <th scope="col" class="govuk-table__header"
-                    {% for key, value in heading.attributes %}
-                      {{ key }}="{{ value }}"
-                    {% endfor %}>
-                    {{ heading.text }}
-                  </th>
-                {% endfor %}
-              </tr>
-            </thead>
-
-            <tbody class="govuk-table__body">
-              {% for row in summaryOfActions.data %}
-                <tr class="govuk-table__row" data-test-id="actionsTableRow{{ loop.index }}">
-                  {% for cell in row %}
-                    <td class="govuk-table__cell"
-                      data-test-id="actionsTableCell{{ loop.index }}_{{ loop.index0 }}"
-                      {% for key, value in cell.attributes %}
-                        {{ key }}="{{ value }}"
-                      {% endfor %}>
-                      {{ cell.text }}
-                    </td>
-                  {% endfor %}
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-
-  <table class="govuk-table">
+  <table
+    class="govuk-table govuk-table--small-text-until-tablet table-bordered"
+    data-test-id="actionsTable"
+  >
     <thead class="govuk-table__head">
       <tr class="govuk-table__row">
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Action</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Code</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Land parcel</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="white-space: nowrap;">Quantity (ha)</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Duration</th>
+        {% for heading in summaryOfActions.headings %}
+          <th
+            scope="col"
+            class="govuk-table__header"
+            {% for key, value in heading.attributes %}
+              {{ key }}="{{ value }}"
+            {% endfor %}
+          >
+            {{ heading.text }}
+          </th>
+        {% endfor %}
       </tr>
     </thead>
+
     <tbody class="govuk-table__body">
-      {# running index across all rows #}
-      {% set rowIndex = 0 %}
-
-      {% for parcel in parcels %}
-        {% for action in parcel.actions %}
-          {% set rowIndex = rowIndex + 1 %}
-
-          <tr class="govuk-table__row" id="actionRow{{ rowIndex }}">
-            <td class="govuk-table__cell govuk-!-font-size-19"
-                id="actionTableActionRow{{ rowIndex }}">
-              {{ codeDescriptions[action.code] }}
+      {% for row in summaryOfActions.data %}
+        <tr class="govuk-table__row" data-test-id="actionsTableRow{{ loop.index }}">
+          {% for cell in row %}
+            <td
+              class="govuk-table__cell"
+              data-test-id="actionsTableCell{{ loop.index }}_{{ loop.index0 }}"
+              {% for key, value in cell.attributes %}
+                {{ key }}="{{ value }}"
+              {% endfor %}
+            >
+              {{ cell.text }}
             </td>
-
-            <td class="govuk-table__cell govuk-!-font-size-19"
-                id="actionTableCodeRow{{ rowIndex }}">
-              {{ action.code }}
-            </td>
-
-            <td class="govuk-table__cell govuk-!-font-size-19"
-                style="white-space: nowrap;"
-                id="actionTableLandParcelRow{{ rowIndex }}">
-              {{ parcel.sheetId }} {{ parcel.parcelId }}
-            </td>
-
-            <td class="govuk-table__cell govuk-!-font-size-19"
-                style="white-space: nowrap;"
-                id="actionTableQuantityRow{{ rowIndex }}">
-              {{ action.appliedFor.quantity | round(4) }}
-            </td>
-
-            <td class="govuk-table__cell govuk-!-font-size-19"
-                id="actionTableDurationRow{{ rowIndex }}">
-              {{ action.durationYears }}
-              {{ 'year' if action.durationYears == 1 else 'years' }}
-            </td>
-          </tr>
-        {% endfor %}
+          {% endfor %}
+        </tr>
       {% endfor %}
     </tbody>
-
   </table>
 
   <br>

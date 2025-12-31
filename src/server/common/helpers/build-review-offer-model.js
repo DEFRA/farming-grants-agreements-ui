@@ -42,7 +42,6 @@ const buildSummaryHeadings = () => [
 const normalizeParcels = (application) =>
   Array.isArray(application?.parcel) ? application.parcel : []
 
-// Human readable years label
 const formatDuration = (yearsRaw) => {
   const years = Number(yearsRaw) || 0
   const label = years === 1 ? 'year' : 'years'
@@ -159,7 +158,6 @@ export const buildReviewOfferModel = (agreementData) => {
   // wrapped under an `agreementData` property. Support both shapes.
   const root = agreementData?.agreementData ?? agreementData
   const payment = root?.payment || {}
-  const application = root?.application || {}
 
   const codeDescriptions = buildCodeDescriptions(payment)
   const durationInYears = calculateDurationInYears(payment)
@@ -173,7 +171,6 @@ export const buildReviewOfferModel = (agreementData) => {
 
   return {
     pageTitle: 'Review your agreement offer',
-    parcels: application?.parcel || [],
     codeDescriptions,
     payments,
     totalQuarterly: quarterlyPayment?.totalPaymentPence,
