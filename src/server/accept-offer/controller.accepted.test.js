@@ -16,6 +16,7 @@ describe('#acceptOfferController', () => {
   const provider = new Pact({
     consumer: 'farming-grants-agreements-ui-rest',
     provider: 'farming-grants-agreements-api-rest',
+    port: 0,
     dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
     pactfileWriteMode: 'update'
   })

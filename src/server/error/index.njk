@@ -13,6 +13,9 @@
         <div class="govuk-inset-text">
             <p class="govuk-body">
                 <strong>Error details:</strong> {{ errorMessage }}
+                {% if cause %}
+                  <small>({{ cause }})</small>
+                {% endif %}
             </p>
         </div>
       {% endif %}

@@ -29,7 +29,8 @@ export const catchAll = (request, h) => {
   ](response)
 
   const templateData = {
-    errorMessage: response.message || statusCodeMessage(statusCode)
+    errorMessage: response.message || statusCodeMessage(statusCode),
+    cause: response.cause?.code
   }
 
   let template = 'error/index.njk'
