@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import convict from 'convict'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -14,7 +15,7 @@ const isTest = process.env.NODE_ENV === 'test'
 const isDevelopment = process.env.NODE_ENV === 'development'
 
 const defaultPort = 3000
-const defaultVitestPort = 3001
+const defaultVitestPort = 0
 
 convict.addFormats(convictFormatWithValidator)
 
