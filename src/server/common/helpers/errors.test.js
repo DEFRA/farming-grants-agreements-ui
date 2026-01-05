@@ -115,4 +115,18 @@ describe('#catchAll', () => {
       statusCodes.internalServerError
     )
   })
+
+  test('Should include "cause" code in templateData when present', () => {
+    const statusCode = statusCodes.internalServerError
+    const causeCode = 'ECONNREFUSED'
+    const request = mockRequest(statusCode)
+    request.response.cause = { code: causeCode }
+
+    catchAll(request, mockToolkit)
+
+    expect(mockToolkitView).toHaveBeenCalledWith(errorPage, {
+      errorMessage: 'Something went wrong',
+      cause: causeCode
+    })
+  })
 })

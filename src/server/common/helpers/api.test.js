@@ -114,4 +114,13 @@ describe('apiRequest error handling', () => {
 
     expect(error.message).toBe('Unable to load agreement. 502 Bad Gateway')
   })
+
+  test('re-throws error when fetch fails (e.g., network error)', async () => {
+    const networkError = new Error('Network failure')
+    globalThis.fetch.mockRejectedValue(networkError)
+
+    const error = await apiRequest(baseRequest).catch((err) => err)
+
+    expect(error).toBe(networkError)
+  })
 })
