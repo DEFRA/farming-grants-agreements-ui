@@ -5,9 +5,7 @@ import {
   calculateFirstPaymentForAgreementLevelItem,
   calculateFirstPaymentForParcelItem,
   calculateSubsequentPaymentForAgreementLevelItem,
-  calculateSubsequentPaymentForParcelItem,
-  calculateTotalFirstPayment,
-  calculateTotalSubsequentPayment
+  calculateSubsequentPaymentForParcelItem
 } from './payment-calculations.js'
 // Note: Use the real implementation of getSummaryOfPaymentsData via
 // buildReviewOfferModel to validate its output based on sample data
@@ -16,9 +14,7 @@ vi.mock('./payment-calculations.js', () => ({
   calculateFirstPaymentForAgreementLevelItem: vi.fn(),
   calculateFirstPaymentForParcelItem: vi.fn(),
   calculateSubsequentPaymentForAgreementLevelItem: vi.fn(),
-  calculateSubsequentPaymentForParcelItem: vi.fn(),
-  calculateTotalFirstPayment: vi.fn(),
-  calculateTotalSubsequentPayment: vi.fn()
+  calculateSubsequentPaymentForParcelItem: vi.fn()
 }))
 
 // Intentionally do not mock get-agreement-calculations so we can assert
@@ -34,8 +30,6 @@ const mockedFirstAgreement = vi.mocked(
 const mockedSubsequentAgreement = vi.mocked(
   calculateSubsequentPaymentForAgreementLevelItem
 )
-const mockedTotalFirst = vi.mocked(calculateTotalFirstPayment)
-const mockedTotalSubsequent = vi.mocked(calculateTotalSubsequentPayment)
 
 const sampleAgreementData = {
   _id: '6943d00c8405b48c784990cd',
@@ -274,8 +268,6 @@ describe('buildReviewOfferModel', () => {
     mockedSubsequentParcel.mockImplementation((_, key) => Number(key) * 20)
     mockedFirstAgreement.mockImplementation((_, key) => Number(key) * 30)
     mockedSubsequentAgreement.mockImplementation((_, key) => Number(key) * 40)
-    mockedTotalFirst.mockReturnValue(123456)
-    mockedTotalSubsequent.mockReturnValue(654321)
   })
 
   const buildAgreementData = () =>
@@ -419,9 +411,6 @@ describe('buildReviewOfferModel', () => {
   })
 
   test('returns sensible defaults when no payment rows exist', () => {
-    mockedTotalFirst.mockReturnValue(0)
-    mockedTotalSubsequent.mockReturnValue(0)
-
     const model = buildReviewOfferModel({
       application: { parcel: [] },
       payment: {
@@ -434,9 +423,61 @@ describe('buildReviewOfferModel', () => {
       }
     })
 
-    // parcels are no longer exposed on the model; ensure other fields are sane
-    // expect(model.codeDescriptions).toEqual({})
-    // expect(model.payments).toEqual([])
+    const { headings, data } = model.summaryOfActions
+
+    // Headings should match expected static labels
+    expect(headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Land parcel' },
+      { text: 'Quantity (ha)' },
+      { text: 'Duration' }
+    ])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(data).toHaveLength(0)
+
+    // Headings should match expected static labels
+    expect(model.summaryOfPayments.headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Annual payment rate' },
+      { text: 'First payment' },
+      { text: 'Subsequent payments' },
+      { text: 'Annual payment value' }
+    ])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(model.summaryOfPayments.data).toHaveLength(1)
+
+    const totalsRow =
+      model.summaryOfPayments.data[model.summaryOfPayments.data.length - 1]
+    expect(totalsRow).toEqual([
+      { text: '' },
+      { text: '' },
+      { text: '' },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } }
+    ])
+
+    expect(mockedFirstParcel).not.toHaveBeenCalled()
+    expect(mockedSubsequentParcel).not.toHaveBeenCalled()
+    expect(mockedFirstAgreement).not.toHaveBeenCalled()
+    expect(mockedSubsequentAgreement).not.toHaveBeenCalled()
+  })
+
+  test('returns sensible defaults when no application exist', () => {
+    const model = buildReviewOfferModel({
+      payment: {
+        agreementStartDate: '2024-01-01',
+        agreementEndDate: '2024-01-01',
+        parcelItems: {},
+        agreementLevelItems: {},
+        payments: undefined,
+        annualTotalPence: 0
+      }
+    })
 
     const { headings, data } = model.summaryOfActions
 
@@ -494,7 +535,6 @@ describe('buildReviewOfferModel', () => {
         annualTotalPence: 0
       }
     })
-    // expect(model.payments).toEqual([])
     expect(mockedFirstParcel).not.toHaveBeenCalled()
     expect(mockedSubsequentParcel).not.toHaveBeenCalled()
   })
@@ -678,90 +718,6 @@ describe('buildReviewOfferModel', () => {
     expect(rows[2][4]).toEqual({ text: '0 years' })
   })
 
-  // test('codeDescriptions strips code prefix from descriptions and merges sources', () => {
-  //   const model = buildReviewOfferModel({
-  //     payment: {
-  //       parcelItems: {
-  //         1: {
-  //           code: 'UPL1',
-  //           description: 'UPL1: Moderate livestock grazing on moorland',
-  //           rateInPence: 1234,
-  //           unit: 'ha',
-  //           annualPaymentPence: 12345
-  //         },
-  //         2: {
-  //           // no prefix to strip
-  //           code: 'ABC1',
-  //           description: 'Plain description',
-  //           rateInPence: 2000,
-  //           unit: 'ha',
-  //           annualPaymentPence: 20000
-  //         }
-  //         // Note: omit any item without a code to avoid payments summary sorting errors
-  //       },
-  //       agreementLevelItems: {
-  //         1: {
-  //           // same code as parcel item; agreement-level should override
-  //           code: 'UPL1',
-  //           description: 'UPL1: Overriding description from agreement level',
-  //           annualPaymentPence: 30000
-  //         },
-  //         2: {
-  //           code: 'DEF2',
-  //           description: 'DEF2: Agreement level item',
-  //           annualPaymentPence: 10000
-  //         }
-  //       },
-  //       payments: [
-  //         { totalPaymentPence: 0, paymentDate: '2026-01-01', lineItems: [] },
-  //         { totalPaymentPence: 0, paymentDate: '2026-04-01', lineItems: [] }
-  //       ]
-  //     }
-  //   })
-  //
-  //   expect(model.codeDescriptions).toEqual({
-  //     // UPL1 comes from agreementLevelItems and has its prefix removed
-  //     UPL1: 'Overriding description from agreement level',
-  //     // ABC1 remains as-is (no prefix present)
-  //     ABC1: 'Plain description',
-  //     // DEF2 has its prefix removed
-  //     DEF2: 'Agreement level item'
-  //   })
-  // })
-
-  // test('codeDescriptions handles empty or undefined descriptions safely', () => {
-  //   const model = buildReviewOfferModel({
-  //     payment: {
-  //       parcelItems: {
-  //         1: {
-  //           code: 'NO_DESC',
-  //           description: '',
-  //           rateInPence: 1000,
-  //           unit: 'ha',
-  //           annualPaymentPence: 10000
-  //         },
-  //         2: {
-  //           code: 'UNDEF_DESC',
-  //           // description undefined
-  //           rateInPence: 2000,
-  //           unit: 'ha',
-  //           annualPaymentPence: 20000
-  //         }
-  //       },
-  //       agreementLevelItems: {},
-  //       payments: [
-  //         { totalPaymentPence: 0, paymentDate: '2026-01-01', lineItems: [] },
-  //         { totalPaymentPence: 0, paymentDate: '2026-04-01', lineItems: [] }
-  //       ]
-  //     }
-  //   })
-  //
-  //   expect(model.codeDescriptions).toEqual({
-  //     NO_DESC: '',
-  //     UNDEF_DESC: ''
-  //   })
-  // })
-
   test('summaryOfActions covers fallback when payment is missing (uses empty object)', () => {
     const agreementData = {
       agreementData: {
@@ -807,18 +763,82 @@ describe('buildReviewOfferModel', () => {
     ])
   })
 
-  // test('calculateDurationInYears falls back to 1 when date parsing/diff fails', () => {
-  //   const agreementData = buildAgreementData()
-  //   // Supply invalid date strings so date-fns differenceInYears throws
-  //   agreementData.payment.agreementStartDate = 'not-a-date'
-  //   agreementData.payment.agreementEndDate = 'also-not-a-date'
-  //
-  //   const model = buildReviewOfferModel(agreementData)
-  //
-  //   // All payment rows should have duration 1 due to the catch fallback
-  //   expect(model.payments.length).toBeGreaterThan(0)
-  //   for (const row of model.payments) {
-  //     expect(row.duration).toBe(1)
-  //   }
-  // })
+  test('buildActionRow fallbacks: missing codes, parcel ids, and quantities', () => {
+    const agreementData = {
+      agreementData: {
+        // Ensure no codeDescriptions can be derived
+        payment: {},
+        application: {
+          parcel: [
+            // Case 1: both sheetId and parcelId missing, code missing, quantity missing
+            {
+              actions: [
+                {
+                  // code intentionally undefined
+                  durationYears: 0,
+                  appliedFor: {
+                    // quantity intentionally undefined
+                  }
+                }
+              ]
+            },
+            // Case 2: sheetId present, parcelId missing
+            {
+              sheetId: 'ONLYSHEET',
+              actions: [
+                {
+                  // code intentionally undefined to exercise second cell fallback
+                  durationYears: 1,
+                  appliedFor: {}
+                }
+              ]
+            },
+            // Case 3: parcelId present, sheetId missing, quantity with >4dp for rounding
+            {
+              parcelId: 'ONLYPARCEL',
+              actions: [
+                {
+                  // code intentionally undefined
+                  durationYears: 1,
+                  appliedFor: { quantity: 2.123456 }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+
+    const model = buildReviewOfferModel(agreementData)
+    const rows = model.summaryOfActions.data
+
+    expect(rows).toHaveLength(3)
+
+    // Case 1 assertions
+    expect(rows[0]).toEqual([
+      { text: '' },
+      { text: '' },
+      { text: ' ' },
+      { text: 0 },
+      { text: '0 years' }
+    ])
+
+    // Case 2 assertions
+    expect(rows[1]).toEqual([
+      { text: '' },
+      { text: '' },
+      { text: 'ONLYSHEET ' },
+      { text: 0 },
+      { text: '1 year' }
+    ])
+
+    // Case 3 assertions
+    expect(rows[2]).toEqual([
+      { text: '' },
+      { text: '' }, // code missing
+      { text: ' ONLYPARCEL' },
+      { text: 2.1235 },
+      { text: '1 year' }
+    ])
+  })
 })
