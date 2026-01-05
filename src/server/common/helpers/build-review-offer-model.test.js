@@ -270,6 +270,111 @@ describe('buildReviewOfferModel', () => {
     mockedSubsequentAgreement.mockImplementation((_, key) => Number(key) * 40)
   })
 
+  test('buildSummaryRows: ignores non-array actions and only maps valid arrays', () => {
+    const model = buildReviewOfferModel({
+      agreementData: {
+        payment: { parcelItems: {}, agreementLevelItems: {} },
+        application: {
+          parcel: [
+            // No actions property at all -> ignored
+            { sheetId: 'S1', parcelId: 'P1' },
+            {
+              sheetId: 'S2',
+              parcelId: 'P2',
+              actions: {
+                code: 'X1',
+                durationYears: 1,
+                appliedFor: { quantity: 1 }
+              }
+            },
+            // actions is null -> ignored
+            { sheetId: 'S3', parcelId: 'P3', actions: null },
+            // Proper array -> included (2 actions)
+            {
+              sheetId: 'S4',
+              parcelId: 'P4',
+              actions: [
+                {
+                  code: 'A1',
+                  durationYears: 1,
+                  appliedFor: { quantity: 1.11111 }
+                },
+                { code: 'A2', durationYears: 2, appliedFor: { quantity: 2 } }
+              ]
+            }
+          ]
+        }
+      }
+    })
+
+    const rows = model.summaryOfActions.data
+    // Only the two actions from the single valid array should produce rows
+    expect(rows).toHaveLength(2)
+    // Spot-check one of the rows has expected formatting
+    expect(rows[0][1]).toEqual({ text: 'A1' })
+    expect(rows[0][3]).toEqual({ text: 1.1111 })
+    expect(rows[0][4]).toEqual({ text: '1 year' })
+    expect(rows[1][1]).toEqual({ text: 'A2' })
+    expect(rows[1][4]).toEqual({ text: '2 years' })
+  })
+
+  test('buildCodeDescriptions: strips "CODE: " prefix, falls back correctly, and ignores items without code', () => {
+    const agreementData = {
+      agreementData: {
+        payment: {
+          parcelItems: {
+            a: { code: 'AA1', description: 'AA1: Parcel description' },
+            b: { code: 'BB2', description: 'BB2: ' }, // desc becomes '', fallback uses original 'BB2: '
+            c: { description: 'No code present should be ignored' } // no code -> ignored
+          },
+          agreementLevelItems: {
+            x: { code: 'CC3', description: 'CC3: Agreement level' },
+            y: { code: 'DD4', description: undefined } // desc '' and original '' -> maps to ''
+          }
+        },
+        application: {
+          parcel: [
+            {
+              sheetId: 'S9',
+              parcelId: 'P9',
+              actions: [
+                { code: 'AA1', durationYears: 1, appliedFor: { quantity: 1 } },
+                { code: 'BB2', durationYears: 1, appliedFor: { quantity: 1 } },
+                { code: 'CC3', durationYears: 1, appliedFor: { quantity: 1 } },
+                { code: 'DD4', durationYears: 1, appliedFor: { quantity: 1 } },
+                { code: 'ZZ9', durationYears: 1, appliedFor: { quantity: 1 } } // not present -> '' description
+              ]
+            }
+          ]
+        }
+      }
+    }
+
+    const model = buildReviewOfferModel(agreementData)
+    const rows = model.summaryOfActions.data
+
+    // We built 5 actions; all should be represented
+    expect(rows).toHaveLength(5)
+
+    // Helper to find row by code cell value (second column)
+    const getRowByCode = (code) => rows.find((r) => r[1].text === code)
+
+    // AA1: description has prefix removed
+    expect(getRowByCode('AA1')[0]).toEqual({ text: 'Parcel description' })
+
+    // BB2: desc stripped becomes '', fallback uses original description 'BB2: '
+    expect(getRowByCode('BB2')[0]).toEqual({ text: 'BB2: ' })
+
+    // CC3 from agreement-level items: prefix removed
+    expect(getRowByCode('CC3')[0]).toEqual({ text: 'Agreement level' })
+
+    // DD4: undefined description -> maps to ''
+    expect(getRowByCode('DD4')[0]).toEqual({ text: '' })
+
+    // ZZ9 not found in descriptions -> empty action cell
+    expect(getRowByCode('ZZ9')[0]).toEqual({ text: '' })
+  })
+
   const buildAgreementData = () =>
     JSON.parse(JSON.stringify(sampleAgreementData))
 
