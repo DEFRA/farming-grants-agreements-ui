@@ -384,9 +384,6 @@ describe('buildReviewOfferModel', () => {
     const model = buildReviewOfferModel(agreementData)
 
     expect(model.pageTitle).toBe('Review your agreement offer')
-    // expect(model.codeDescriptions).toEqual({
-    //   CMOR1: 'Assess moorland and produce a written record'
-    // })
 
     // payments should contain 3 rows (2 parcel rows + 1 agreement level row)
     // expect(model.payments).toHaveLength(3)
