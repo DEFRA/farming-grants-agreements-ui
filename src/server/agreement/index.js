@@ -10,7 +10,8 @@ const getAgreementData = async (request) => {
   return apiRequest({
     agreementId,
     method,
-    auth: request.headers['x-encrypted-auth'],
+    auth:
+      request.headers['x-encrypted-auth'] || request.query['x-encrypted-auth'],
     body: method === 'POST' ? request.payload : undefined
   })
 }

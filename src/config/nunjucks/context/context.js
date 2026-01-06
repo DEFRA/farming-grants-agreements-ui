@@ -40,6 +40,14 @@ export function context(request) {
     },
     agreement: request.pre?.data?.agreementData,
     cdpEnvironment: config.get('cdpEnvironment'),
-    cspNonce: getContentSecurityPolicyNonce(request)
+    cspNonce: getContentSecurityPolicyNonce(request),
+    buildUrl(...args) {
+      const urlPath = path.posix.join(...args.filter(Boolean))
+      const query = request.query
+      const searchParams = new URLSearchParams(query)
+      const queryString = searchParams.toString()
+
+      return queryString ? `${urlPath}?${queryString}` : urlPath
+    }
   }
 }
