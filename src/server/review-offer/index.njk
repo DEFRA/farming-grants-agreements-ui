@@ -161,7 +161,7 @@
     </tfoot>
   </table>
 
-  <form method="POST">
+  <form method="POST" action="{{ buildUrl(baseUrl) }}">
     {{ govukButton({
       text: "Continue",
       name: "action",
