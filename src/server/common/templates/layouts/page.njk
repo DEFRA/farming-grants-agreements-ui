@@ -79,7 +79,7 @@
 
   {% if cdpEnvironment !== 'prod' %}
     {% set footerLinks = footerLinks.concat([{
-        href: buildUrl('/clear-application-state'),
+        href: '/clear-application-state',
         text: 'Clear application state'
       }])
     %}
