@@ -384,8 +384,6 @@ describe('buildReviewOfferModel', () => {
     const model = buildReviewOfferModel(agreementData)
 
     expect(model.pageTitle).toBe('Review your agreement offer')
-
-    // payments should contain 3 rows (2 parcel rows + 1 agreement level row)
     // expect(model.payments).toHaveLength(3)
     // const parcelRow = model.payments.find((row) => row.parcelId === '8083')
     // expect(parcelRow).toMatchObject({
