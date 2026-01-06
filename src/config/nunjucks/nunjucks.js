@@ -54,8 +54,6 @@ Object.entries(filters).forEach(([name, filter]) => {
   nunjucksEnvironment.addFilter(name, filter)
 })
 
-nunjucksEnvironment.addGlobal('buildUrl', (...args) => path.join(...args))
-
 nunjucksEnvironment.addGlobal('getAddress', (agreementData) => {
   const {
     applicant: {

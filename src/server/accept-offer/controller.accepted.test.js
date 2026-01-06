@@ -211,5 +211,65 @@ describe('#acceptOfferController', () => {
           apiRequestSpy.mockRestore()
         })
     })
+
+    test('successfully validates checkbox and calls API when confirmed using x-encrypted-auth from query parameter', async () => {
+      // Spy on apiRequest to verify the POST call is made
+      const apiRequestSpy = vi.spyOn(apiModule, 'apiRequest')
+
+      return await provider
+        .addInteraction()
+        .given('A customer has an agreement offer')
+        .uponReceiving(
+          'a GET request to fetch data before validation using query param'
+        )
+        .withRequest('GET', '/', (builder) => {
+          builder.headers({ 'x-encrypted-auth': 'query-auth' })
+        })
+        .willRespondWith(200, (builder) => {
+          builder.headers({ 'Content-Type': 'application/json' })
+          builder.jsonBody({
+            agreementData: { ...expectedAgreement, status: like('offered') }
+          })
+        })
+        .executeTest(async (mockServer) => {
+          config.set('backend.url', mockServer.url)
+
+          // Mock POST apiRequest
+          apiRequestSpy.mockImplementation(async (options) => {
+            if (options.method === 'POST') {
+              return {
+                agreementData: {
+                  ...expectedAgreement,
+                  status: 'accepted'
+                }
+              }
+            }
+            // For GET requests, make the actual call
+            return await fetch(mockServer.url, {
+              method: options.method,
+              headers: { 'x-encrypted-auth': options.auth }
+            }).then((r) => r.json())
+          })
+
+          await server.inject({
+            method: 'POST',
+            url: '/?x-encrypted-auth=query-auth',
+            payload: {
+              action: 'validate-accept-offer',
+              confirm: 'confirmed'
+            }
+          })
+
+          // Verify validation passed and POST was called with query param auth
+          expect(apiRequestSpy).toHaveBeenCalledWith({
+            agreementId: '',
+            method: 'POST',
+            auth: 'query-auth',
+            body: { action: 'accept-offer' }
+          })
+
+          apiRequestSpy.mockRestore()
+        })
+    })
   })
 })
