@@ -21,7 +21,7 @@
     homepageUrl: "https://www.gov.uk/",
     classes: "app-header",
     containerClasses: "govuk-width-container",
-    serviceUrl: serviceUrl,
+    serviceUrl: buildUrl(serviceUrl),
     useTudorCrown: true
   }) }}
 
@@ -79,7 +79,7 @@
 
   {% if cdpEnvironment !== 'prod' %}
     {% set footerLinks = footerLinks.concat([{
-        href: '/clear-application-state',
+        href: buildUrl('/clear-application-state'),
         text: 'Clear application state'
       }])
     %}

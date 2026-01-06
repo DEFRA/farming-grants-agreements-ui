@@ -22,7 +22,9 @@ export const validateAcceptOfferController = {
     const { agreementData } = await apiRequest({
       agreementId,
       method: 'POST',
-      auth: request.headers['x-encrypted-auth'],
+      auth:
+        request.headers['x-encrypted-auth'] ||
+        request.query['x-encrypted-auth'],
       body: { action: 'accept-offer' }
     })
 
