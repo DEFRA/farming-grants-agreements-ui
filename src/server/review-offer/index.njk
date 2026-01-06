@@ -28,7 +28,7 @@
       </ul>
 
       <p class="govuk-body">
-        <a href="{{ buildUrl(baseUrl, agreement.agreementNumber) }}/print" class="govuk-link" target="_blank">View a printable version of your draft agreement (opens in new tab)</a>
+        <a href="{{ buildUrl(baseUrl, agreement.agreementNumber, 'print') }}" class="govuk-link" target="_blank">View a printable version of your draft agreement (opens in new tab)</a>
       </p>
     </div>
   </div>
@@ -161,7 +161,7 @@
     </tfoot>
   </table>
 
-  <form method="POST">
+  <form method="POST" action="{{ buildUrl(baseUrl) }}">
     {{ govukButton({
       text: "Continue",
       name: "action",
