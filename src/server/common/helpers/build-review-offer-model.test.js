@@ -384,33 +384,6 @@ describe('buildReviewOfferModel', () => {
     const model = buildReviewOfferModel(agreementData)
 
     expect(model.pageTitle).toBe('Review your agreement offer')
-    // expect(model.payments).toHaveLength(3)
-    // const parcelRow = model.payments.find((row) => row.parcelId === '8083')
-    // expect(parcelRow).toMatchObject({
-    //   code: 'CMOR1',
-    //   description: 'Assess moorland and produce a written record',
-    //   unit: 'ha',
-    //   duration: 1,
-    //   hasOneOffPayment: false,
-    //   rateInPence: '£10.60',
-    //   quarterlyPayment: 1260,
-    //   firstPaymentPence: 10,
-    //   subsequentPaymentPence: 20
-    // })
-    //
-    // const agreementLevelRow = model.payments.find(
-    //   (row) => row.hasOneOffPayment === true
-    // )
-    // expect(agreementLevelRow).toMatchObject({
-    //   code: 'CMOR1',
-    //   description: 'Assess moorland and produce a written record',
-    //   rateInPence: '£272 per agreement',
-    //   duration: 1,
-    //   hasOneOffPayment: true,
-    //   quarterlyPayment: 6800,
-    //   firstPaymentPence: 30,
-    //   subsequentPaymentPence: 40
-    // })
 
     const { headings, data } = model.summaryOfActions
 
