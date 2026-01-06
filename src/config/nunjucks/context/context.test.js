@@ -72,7 +72,31 @@ describe('context and cache', () => {
           serviceTitle: 'Farm payments',
           serviceUrl: '/',
           serviceVersion: 'TEST',
-          cdpEnvironment: 'local'
+          cdpEnvironment: 'local',
+          buildUrl: expect.any(Function)
+        })
+      })
+
+      describe('buildUrl', () => {
+        test('should join path segments', () => {
+          expect(contextResult.buildUrl('foo', 'bar')).toBe('foo/bar')
+        })
+
+        test('should join path segments and append query strings from request', () => {
+          const mockRequestWithQuery = {
+            ...mockRequest,
+            query: { foo: 'bar', baz: 'qux' }
+          }
+          const contextWithQuery = contextImport.context(mockRequestWithQuery)
+          expect(contextWithQuery.buildUrl('path', 'to', 'resource')).toBe(
+            'path/to/resource?foo=bar&baz=qux'
+          )
+        })
+
+        test('should handle empty/null segments', () => {
+          expect(
+            contextResult.buildUrl('foo', null, 'bar', undefined, 'baz')
+          ).toBe('foo/bar/baz')
         })
       })
 
@@ -168,7 +192,8 @@ describe('context and cache', () => {
           serviceTitle: 'Farm payments',
           serviceUrl: '/',
           serviceVersion: 'TEST',
-          cdpEnvironment: 'local'
+          cdpEnvironment: 'local',
+          buildUrl: expect.any(Function)
         })
       })
     })

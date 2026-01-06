@@ -2,11 +2,13 @@ import { agreementController } from './controller.js'
 import { createServer } from '../server.js'
 import * as getControllerByActionModule from '../common/helpers/get-controller-by-action.js'
 import { statusCodes } from '../common/constants/status-codes.js'
+import { config } from '../../config/config.js'
 
 describe('#agreementController', () => {
   let server
 
   beforeAll(async () => {
+    config.set('backend.url', 'http://localhost:3555')
     globalThis.fetch = vi.fn()
     server = await createServer()
     await server.initialize()
@@ -34,6 +36,49 @@ describe('#agreementController', () => {
       expect(fetch).toHaveBeenCalledWith('http://localhost:3555/', {
         headers: {
           'x-encrypted-auth': 'mock-auth'
+        },
+        method: 'GET',
+        signal: expect.any(AbortSignal)
+      })
+    })
+
+    test('should call the backend API using x-encrypted-auth from query if header is missing', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({})
+      })
+
+      await server.inject({
+        method: 'GET',
+        url: '/?x-encrypted-auth=query-auth'
+      })
+
+      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/', {
+        headers: {
+          'x-encrypted-auth': 'query-auth'
+        },
+        method: 'GET',
+        signal: expect.any(AbortSignal)
+      })
+    })
+
+    test('should prioritise x-encrypted-auth header over query parameter', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({})
+      })
+
+      await server.inject({
+        method: 'GET',
+        url: '/?x-encrypted-auth=query-auth',
+        headers: {
+          'x-encrypted-auth': 'header-auth'
+        }
+      })
+
+      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/', {
+        headers: {
+          'x-encrypted-auth': 'header-auth'
         },
         method: 'GET',
         signal: expect.any(AbortSignal)
