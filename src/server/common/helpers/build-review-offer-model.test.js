@@ -5,19 +5,20 @@ import {
   calculateFirstPaymentForAgreementLevelItem,
   calculateFirstPaymentForParcelItem,
   calculateSubsequentPaymentForAgreementLevelItem,
-  calculateSubsequentPaymentForParcelItem,
-  calculateTotalFirstPayment,
-  calculateTotalSubsequentPayment
+  calculateSubsequentPaymentForParcelItem
 } from './payment-calculations.js'
+// Note: Use the real implementation of getSummaryOfPaymentsData via
+// buildReviewOfferModel to validate its output based on sample data
 
 vi.mock('./payment-calculations.js', () => ({
   calculateFirstPaymentForAgreementLevelItem: vi.fn(),
   calculateFirstPaymentForParcelItem: vi.fn(),
   calculateSubsequentPaymentForAgreementLevelItem: vi.fn(),
-  calculateSubsequentPaymentForParcelItem: vi.fn(),
-  calculateTotalFirstPayment: vi.fn(),
-  calculateTotalSubsequentPayment: vi.fn()
+  calculateSubsequentPaymentForParcelItem: vi.fn()
 }))
+
+// Intentionally do not mock get-agreement-calculations so we can assert
+// the actual summaryOfPayments structure and values.
 
 const mockedFirstParcel = vi.mocked(calculateFirstPaymentForParcelItem)
 const mockedSubsequentParcel = vi.mocked(
@@ -29,8 +30,6 @@ const mockedFirstAgreement = vi.mocked(
 const mockedSubsequentAgreement = vi.mocked(
   calculateSubsequentPaymentForAgreementLevelItem
 )
-const mockedTotalFirst = vi.mocked(calculateTotalFirstPayment)
-const mockedTotalSubsequent = vi.mocked(calculateTotalSubsequentPayment)
 
 const sampleAgreementData = {
   _id: '6943d00c8405b48c784990cd',
@@ -269,8 +268,111 @@ describe('buildReviewOfferModel', () => {
     mockedSubsequentParcel.mockImplementation((_, key) => Number(key) * 20)
     mockedFirstAgreement.mockImplementation((_, key) => Number(key) * 30)
     mockedSubsequentAgreement.mockImplementation((_, key) => Number(key) * 40)
-    mockedTotalFirst.mockReturnValue(123456)
-    mockedTotalSubsequent.mockReturnValue(654321)
+  })
+
+  test('buildSummaryRows: ignores non-array actions and only maps valid arrays', () => {
+    const model = buildReviewOfferModel({
+      agreementData: {
+        payment: { parcelItems: {}, agreementLevelItems: {} },
+        application: {
+          parcel: [
+            // No actions property at all -> ignored
+            { sheetId: 'S1', parcelId: 'P1' },
+            {
+              sheetId: 'S2',
+              parcelId: 'P2',
+              actions: {
+                code: 'X1',
+                durationYears: 1,
+                appliedFor: { quantity: 1 }
+              }
+            },
+            // actions is null -> ignored
+            { sheetId: 'S3', parcelId: 'P3', actions: null },
+            // Proper array -> included (2 actions)
+            {
+              sheetId: 'S4',
+              parcelId: 'P4',
+              actions: [
+                {
+                  code: 'A1',
+                  durationYears: 1,
+                  appliedFor: { quantity: 1.11111 }
+                },
+                { code: 'A2', durationYears: 2, appliedFor: { quantity: 2 } }
+              ]
+            }
+          ]
+        }
+      }
+    })
+
+    const rows = model.summaryOfActions.data
+    // Only the two actions from the single valid array should produce rows
+    expect(rows).toHaveLength(2)
+    // Spot-check one of the rows has expected formatting
+    expect(rows[0][1]).toEqual({ text: 'A1' })
+    expect(rows[0][3]).toEqual({ text: 1.1111 })
+    expect(rows[0][4]).toEqual({ text: '1 year' })
+    expect(rows[1][1]).toEqual({ text: 'A2' })
+    expect(rows[1][4]).toEqual({ text: '2 years' })
+  })
+
+  test('buildCodeDescriptions: strips "CODE: " prefix, falls back correctly, and ignores items without code', () => {
+    const agreementData = {
+      agreementData: {
+        payment: {
+          parcelItems: {
+            a: { code: 'AA1', description: 'AA1: Parcel description' },
+            b: { code: 'BB2', description: 'BB2: ' }, // desc becomes '', fallback uses original 'BB2: '
+            c: { description: 'No code present should be ignored' } // no code -> ignored
+          },
+          agreementLevelItems: {
+            x: { code: 'CC3', description: 'CC3: Agreement level' },
+            y: { code: 'DD4', description: undefined } // desc '' and original '' -> maps to ''
+          }
+        },
+        application: {
+          parcel: [
+            {
+              sheetId: 'S9',
+              parcelId: 'P9',
+              actions: [
+                { code: 'AA1', durationYears: 1, appliedFor: { quantity: 1 } },
+                { code: 'BB2', durationYears: 1, appliedFor: { quantity: 1 } },
+                { code: 'CC3', durationYears: 1, appliedFor: { quantity: 1 } },
+                { code: 'DD4', durationYears: 1, appliedFor: { quantity: 1 } },
+                { code: 'ZZ9', durationYears: 1, appliedFor: { quantity: 1 } } // not present -> '' description
+              ]
+            }
+          ]
+        }
+      }
+    }
+
+    const model = buildReviewOfferModel(agreementData)
+    const rows = model.summaryOfActions.data
+
+    // We built 5 actions; all should be represented
+    expect(rows).toHaveLength(5)
+
+    // Helper to find row by code cell value (second column)
+    const getRowByCode = (code) => rows.find((r) => r[1].text === code)
+
+    // AA1: description has prefix removed
+    expect(getRowByCode('AA1')[0]).toEqual({ text: 'Parcel description' })
+
+    // BB2: desc stripped becomes '', fallback uses original description 'BB2: '
+    expect(getRowByCode('BB2')[0]).toEqual({ text: 'BB2: ' })
+
+    // CC3 from agreement-level items: prefix removed
+    expect(getRowByCode('CC3')[0]).toEqual({ text: 'Agreement level' })
+
+    // DD4: undefined description -> maps to ''
+    expect(getRowByCode('DD4')[0]).toEqual({ text: '' })
+
+    // ZZ9 not found in descriptions -> empty action cell
+    expect(getRowByCode('ZZ9')[0]).toEqual({ text: '' })
   })
 
   const buildAgreementData = () =>
@@ -282,53 +384,106 @@ describe('buildReviewOfferModel', () => {
     const model = buildReviewOfferModel(agreementData)
 
     expect(model.pageTitle).toBe('Review your agreement offer')
-    expect(model.parcels).toBe(agreementData.application.parcel)
-    expect(model.codeDescriptions).toEqual({
-      CMOR1: 'Assess moorland and produce a written record'
-    })
 
-    // payments should contain 3 rows (2 parcel rows + 1 agreement level row)
-    expect(model.payments).toHaveLength(3)
-    const parcelRow = model.payments.find((row) => row.parcelId === '8083')
-    expect(parcelRow).toMatchObject({
-      code: 'CMOR1',
-      description: 'Assess moorland and produce a written record',
-      unit: 'ha',
-      duration: 1,
-      hasOneOffPayment: false,
-      rateInPence: '£10.60',
-      quarterlyPayment: 1260,
-      firstPaymentPence: 10,
-      subsequentPaymentPence: 20
-    })
+    const { headings, data } = model.summaryOfActions
 
-    const agreementLevelRow = model.payments.find(
-      (row) => row.hasOneOffPayment === true
-    )
-    expect(agreementLevelRow).toMatchObject({
-      code: 'CMOR1',
-      description: 'Assess moorland and produce a written record',
-      rateInPence: '£272 per agreement',
-      duration: 1,
-      hasOneOffPayment: true,
-      quarterlyPayment: 6800,
-      firstPaymentPence: 30,
-      subsequentPaymentPence: 40
-    })
+    // Headings should match expected static labels
+    expect(headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Land parcel' },
+      { text: 'Quantity (ha)' },
+      { text: 'Duration' }
+    ])
 
-    expect(model.totalQuarterly).toBe(8635)
-    expect(model.totalYearly).toBe(34544)
-    expect(model.totalFirstPayment).toBe(123456)
-    expect(model.totalSubsequentPayment).toBe(654321)
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(data).toHaveLength(2)
 
-    expect(mockedTotalFirst).toHaveBeenCalledWith(model.payments)
-    expect(mockedTotalSubsequent).toHaveBeenCalledWith(model.payments)
+    expect(data[0]).toEqual([
+      { text: 'Assess moorland and produce a written record' },
+      { text: 'CMOR1' },
+      { text: 'SD6743 8083' },
+      { text: 4.7575 },
+      { text: '3 years' }
+    ])
+
+    expect(data[1]).toEqual([
+      { text: 'Assess moorland and produce a written record' },
+      { text: 'CMOR1' },
+      { text: 'SD6743 8333' },
+      { text: 2.1705 },
+      { text: '3 years' }
+    ])
+
+    // Headings should match expected static labels
+    expect(model.summaryOfPayments.headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Annual payment rate' },
+      { text: 'First payment' },
+      { text: 'Subsequent payments' },
+      { text: 'Annual payment value' }
+    ])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(model.summaryOfPayments.data).toHaveLength(4)
+
+    const totalsRow =
+      model.summaryOfPayments.data[model.summaryOfPayments.data.length - 1]
+    expect(totalsRow).toEqual([
+      { text: '' },
+      { text: '' },
+      { text: '' },
+      { text: '£0.60', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£1', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£345.44', attributes: { class: 'govuk-!-font-weight-bold' } }
+    ])
+
+    const rows = model.summaryOfPayments.data.slice(0, -1)
+
+    // Parcel row for parcel item 1 (annual 5043 pence -> £50.43, rate 1060 -> £10.60)
+    expect(
+      rows
+        .filter((r) => r[1].text === 'CMOR1')
+        .some(
+          (r) =>
+            r[0].text === 'Assess moorland and produce a written record' &&
+            r[2].text === '£10.60 per ha' &&
+            r[3].text === '£0.10' &&
+            r[4].text === '£0.20' &&
+            r[5].text === '£50.43'
+        )
+    ).toBe(true)
+
+    // Parcel row for parcel item 2 (annual 2301 -> £23.01)
+    expect(
+      rows
+        .filter((r) => r[1].text === 'CMOR1')
+        .some(
+          (r) =>
+            r[0].text === 'Assess moorland and produce a written record' &&
+            r[2].text === '£10.60 per ha' &&
+            r[3].text === '£0.20' &&
+            r[4].text === '£0.40' &&
+            r[5].text === '£23.01'
+        )
+    ).toBe(true)
+
+    // Agreement-level row (annual 27200 -> £272, rate text per agreement)
+    expect(
+      rows.some(
+        (r) =>
+          r[0].text === 'Assess moorland and produce a written record' &&
+          r[1].text === 'CMOR1' &&
+          r[2].text === '£272 per agreement' &&
+          r[3].text === '£0.30' &&
+          r[4].text === '£0.40' &&
+          r[5].text === '£272'
+      )
+    ).toBe(true)
   })
 
   test('returns sensible defaults when no payment rows exist', () => {
-    mockedTotalFirst.mockReturnValue(0)
-    mockedTotalSubsequent.mockReturnValue(0)
-
     const model = buildReviewOfferModel({
       application: { parcel: [] },
       payment: {
@@ -341,24 +496,108 @@ describe('buildReviewOfferModel', () => {
       }
     })
 
-    expect(model.parcels).toEqual([])
-    expect(model.codeDescriptions).toEqual({})
-    expect(model.payments).toEqual([])
-    expect(model.totalQuarterly).toBeUndefined()
-    expect(model.totalYearly).toBe(0)
-    expect(model.totalFirstPayment).toBe(0)
-    expect(model.totalSubsequentPayment).toBe(0)
+    const { headings, data } = model.summaryOfActions
+
+    // Headings should match expected static labels
+    expect(headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Land parcel' },
+      { text: 'Quantity (ha)' },
+      { text: 'Duration' }
+    ])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(data).toHaveLength(0)
+
+    // Headings should match expected static labels
+    expect(model.summaryOfPayments.headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Annual payment rate' },
+      { text: 'First payment' },
+      { text: 'Subsequent payments' },
+      { text: 'Annual payment value' }
+    ])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(model.summaryOfPayments.data).toHaveLength(1)
+
+    const totalsRow =
+      model.summaryOfPayments.data[model.summaryOfPayments.data.length - 1]
+    expect(totalsRow).toEqual([
+      { text: '' },
+      { text: '' },
+      { text: '' },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } }
+    ])
 
     expect(mockedFirstParcel).not.toHaveBeenCalled()
     expect(mockedSubsequentParcel).not.toHaveBeenCalled()
     expect(mockedFirstAgreement).not.toHaveBeenCalled()
     expect(mockedSubsequentAgreement).not.toHaveBeenCalled()
-    expect(mockedTotalFirst).toHaveBeenCalledWith([])
-    expect(mockedTotalSubsequent).toHaveBeenCalledWith([])
+  })
+
+  test('returns sensible defaults when no application exist', () => {
+    const model = buildReviewOfferModel({
+      payment: {
+        agreementStartDate: '2024-01-01',
+        agreementEndDate: '2024-01-01',
+        parcelItems: {},
+        agreementLevelItems: {},
+        payments: undefined,
+        annualTotalPence: 0
+      }
+    })
+
+    const { headings, data } = model.summaryOfActions
+
+    // Headings should match expected static labels
+    expect(headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Land parcel' },
+      { text: 'Quantity (ha)' },
+      { text: 'Duration' }
+    ])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(data).toHaveLength(0)
+
+    // Headings should match expected static labels
+    expect(model.summaryOfPayments.headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Annual payment rate' },
+      { text: 'First payment' },
+      { text: 'Subsequent payments' },
+      { text: 'Annual payment value' }
+    ])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(model.summaryOfPayments.data).toHaveLength(1)
+
+    const totalsRow =
+      model.summaryOfPayments.data[model.summaryOfPayments.data.length - 1]
+    expect(totalsRow).toEqual([
+      { text: '' },
+      { text: '' },
+      { text: '' },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } }
+    ])
+
+    expect(mockedFirstParcel).not.toHaveBeenCalled()
+    expect(mockedSubsequentParcel).not.toHaveBeenCalled()
+    expect(mockedFirstAgreement).not.toHaveBeenCalled()
+    expect(mockedSubsequentAgreement).not.toHaveBeenCalled()
   })
 
   test('handles missing parcelItems by falling back to an empty object', () => {
-    const model = buildReviewOfferModel({
+    buildReviewOfferModel({
       application: { parcel: [] },
       payment: {
         agreementStartDate: '2024-01-01',
@@ -369,9 +608,310 @@ describe('buildReviewOfferModel', () => {
         annualTotalPence: 0
       }
     })
-
-    expect(model.payments).toEqual([])
     expect(mockedFirstParcel).not.toHaveBeenCalled()
     expect(mockedSubsequentParcel).not.toHaveBeenCalled()
+  })
+
+  test('builds summaryOfActions with correct headings and rows using existing sampleAgreementData', () => {
+    const agreementData = buildAgreementData()
+
+    const model = buildReviewOfferModel(agreementData)
+    const { headings, data } = model.summaryOfActions
+
+    // Headings should match expected static labels
+    expect(headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Land parcel' },
+      { text: 'Quantity (ha)' },
+      { text: 'Duration' }
+    ])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(data).toHaveLength(2)
+
+    // First row corresponds to parcel SD6743 8083, CMOR1 action
+    expect(data[0]).toEqual([
+      { text: 'Assess moorland and produce a written record' },
+      { text: 'CMOR1' },
+      { text: 'SD6743 8083' },
+      { text: 4.7575 },
+      { text: '3 years' }
+    ])
+
+    // Second row corresponds to parcel SD6743 8333, CMOR1 action
+    expect(data[1]).toEqual([
+      { text: 'Assess moorland and produce a written record' },
+      { text: 'CMOR1' },
+      { text: 'SD6743 8333' },
+      { text: 2.1705 },
+      { text: '3 years' }
+    ])
+  })
+
+  test('builds summaryOfPayments with correct headings, rows and totals using sampleAgreementData', () => {
+    const agreementData = buildAgreementData()
+
+    const model = buildReviewOfferModel(agreementData)
+    const { headings, data } = model.summaryOfPayments
+
+    // Headings should match expected static labels
+    expect(headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Annual payment rate' },
+      { text: 'First payment' },
+      { text: 'Subsequent payments' },
+      { text: 'Annual payment value' }
+    ])
+
+    // There should be 4 rows: 2 parcel items + 1 agreement-level item + 1 totals row
+    expect(data).toHaveLength(4)
+
+    // Extract the totals row (last)
+    const totalsRow = data[data.length - 1]
+    expect(totalsRow).toEqual([
+      { text: '' },
+      { text: '' },
+      { text: '' },
+      { text: '£0.60', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£1', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£345.44', attributes: { class: 'govuk-!-font-weight-bold' } }
+    ])
+
+    // The three data rows all have code CMOR1; locate them by unique cells
+    const rows = data.slice(0, -1)
+
+    // Parcel row for parcel item 1 (annual 5043 pence -> £50.43, rate 1060 -> £10.60)
+    expect(
+      rows
+        .filter((r) => r[1].text === 'CMOR1')
+        .some(
+          (r) =>
+            r[0].text === 'Assess moorland and produce a written record' &&
+            r[2].text === '£10.60 per ha' &&
+            r[3].text === '£0.10' &&
+            r[4].text === '£0.20' &&
+            r[5].text === '£50.43'
+        )
+    ).toBe(true)
+
+    // Parcel row for parcel item 2 (annual 2301 -> £23.01)
+    expect(
+      rows
+        .filter((r) => r[1].text === 'CMOR1')
+        .some(
+          (r) =>
+            r[0].text === 'Assess moorland and produce a written record' &&
+            r[2].text === '£10.60 per ha' &&
+            r[3].text === '£0.20' &&
+            r[4].text === '£0.40' &&
+            r[5].text === '£23.01'
+        )
+    ).toBe(true)
+
+    // Agreement-level row (annual 27200 -> £272, rate text per agreement)
+    expect(
+      rows.some(
+        (r) =>
+          r[0].text === 'Assess moorland and produce a written record' &&
+          r[1].text === 'CMOR1' &&
+          r[2].text === '£272 per agreement' &&
+          r[3].text === '£0.30' &&
+          r[4].text === '£0.40' &&
+          r[5].text === '£272'
+      )
+    ).toBe(true)
+  })
+
+  test('summaryOfActions returns empty data when application parcels are missing', () => {
+    const model = buildReviewOfferModel({
+      agreementData: {
+        payment: { parcelItems: {}, agreementLevelItems: {} },
+        application: {}
+      }
+    })
+
+    const { headings, data } = model.summaryOfActions
+
+    expect(headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Land parcel' },
+      { text: 'Quantity (ha)' },
+      { text: 'Duration' }
+    ])
+    expect(data).toEqual([])
+  })
+
+  test('formats Duration column correctly (singular/plural/undefined)', () => {
+    const agreementData = {
+      agreementData: {
+        payment: { parcelItems: {}, agreementLevelItems: {} },
+        application: {
+          parcel: [
+            {
+              sheetId: 'AA1111',
+              parcelId: '0001',
+              actions: [
+                {
+                  code: 'X1',
+                  durationYears: 1,
+                  appliedFor: { unit: 'ha', quantity: 1 }
+                },
+                {
+                  code: 'X2',
+                  durationYears: '2',
+                  appliedFor: { unit: 'ha', quantity: 1 }
+                },
+                {
+                  code: 'X3',
+                  /* undefined duration */ appliedFor: {
+                    unit: 'ha',
+                    quantity: 1
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+
+    const model = buildReviewOfferModel(agreementData)
+
+    const rows = model.summaryOfActions.data
+    expect(rows).toHaveLength(3)
+
+    // 1 -> "1 year"
+    expect(rows[0][4]).toEqual({ text: '1 year' })
+    // '2' (string) -> numeric coercion -> "2 years"
+    expect(rows[1][4]).toEqual({ text: '2 years' })
+    // undefined -> Number(undefined) || 0 -> 0 -> "0 years"
+    expect(rows[2][4]).toEqual({ text: '0 years' })
+  })
+
+  test('summaryOfActions covers fallback when payment is missing (uses empty object)', () => {
+    const agreementData = {
+      agreementData: {
+        // payment intentionally omitted to exercise: const payment = root?.payment || {}
+        application: {
+          parcel: [
+            {
+              sheetId: 'SD4842',
+              parcelId: '0001',
+              actions: [
+                {
+                  code: 'CMOR1',
+                  durationYears: 2,
+                  appliedFor: { unit: 'ha', quantity: 1.23456 }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+
+    const model = buildReviewOfferModel(agreementData)
+    const { headings, data } = model.summaryOfActions
+
+    // Headings intact
+    expect(headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Land parcel' },
+      { text: 'Quantity (ha)' },
+      { text: 'Duration' }
+    ])
+
+    // One row built, with empty description because codeDescriptions is built from empty payment
+    expect(data).toHaveLength(1)
+    expect(data[0]).toEqual([
+      { text: '' },
+      { text: 'CMOR1' },
+      { text: 'SD4842 0001' },
+      { text: 1.2346 },
+      { text: '2 years' }
+    ])
+  })
+
+  test('buildActionRow fallbacks: missing codes, parcel ids, and quantities', () => {
+    const agreementData = {
+      agreementData: {
+        // Ensure no codeDescriptions can be derived
+        payment: {},
+        application: {
+          parcel: [
+            // Case 1: both sheetId and parcelId missing, code missing, quantity missing
+            {
+              actions: [
+                {
+                  // code intentionally undefined
+                  durationYears: 0,
+                  appliedFor: {
+                    // quantity intentionally undefined
+                  }
+                }
+              ]
+            },
+            // Case 2: sheetId present, parcelId missing
+            {
+              sheetId: 'ONLYSHEET',
+              actions: [
+                {
+                  // code intentionally undefined to exercise second cell fallback
+                  durationYears: 1,
+                  appliedFor: {}
+                }
+              ]
+            },
+            // Case 3: parcelId present, sheetId missing, quantity with >4dp for rounding
+            {
+              parcelId: 'ONLYPARCEL',
+              actions: [
+                {
+                  // code intentionally undefined
+                  durationYears: 1,
+                  appliedFor: { quantity: 2.123456 }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+
+    const model = buildReviewOfferModel(agreementData)
+    const rows = model.summaryOfActions.data
+
+    expect(rows).toHaveLength(3)
+
+    // Case 1 assertions
+    expect(rows[0]).toEqual([
+      { text: '' },
+      { text: '' },
+      { text: ' ' },
+      { text: 0 },
+      { text: '0 years' }
+    ])
+
+    // Case 2 assertions
+    expect(rows[1]).toEqual([
+      { text: '' },
+      { text: '' },
+      { text: 'ONLYSHEET ' },
+      { text: 0 },
+      { text: '1 year' }
+    ])
+
+    // Case 3 assertions
+    expect(rows[2]).toEqual([
+      { text: '' },
+      { text: '' }, // code missing
+      { text: ' ONLYPARCEL' },
+      { text: 2.1235 },
+      { text: '1 year' }
+    ])
   })
 })

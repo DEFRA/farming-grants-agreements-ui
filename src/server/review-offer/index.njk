@@ -1,15 +1,20 @@
 {% set bodyClasses = "review-offer-page" %}
 {% set mainClasses = "" %}
-{% extends 'layouts/page.njk' %}
+
+{% extends "layouts/page.njk" %}
+
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/details/macro.njk" import govukDetails %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
 
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
 
-      <p class="govuk-body">If you accept this agreement offer, the resulting agreement will be between Defra and:</p>
+      <p class="govuk-body">
+        If you accept this agreement offer, the resulting agreement will be between Defra and:
+      </p>
 
       <p class="govuk-body">
         {{ agreement.applicant.business.name }}<br>
@@ -17,14 +22,45 @@
         SBI: {{ agreement.identifiers.sbi }}
       </p>
 
-      <p class="govuk-body">Your agreement will start on the first day of the month after you accept this offer.</p>
+      <p class="govuk-body">
+        Your agreement will start on the first day of the month after you accept this offer.
+      </p>
 
-      <p class="govuk-body">The rules which apply to your agreement, which you must follow when you enter your agreement, are set out in:</p>
+      <p class="govuk-body">
+        The rules which apply to your agreement, which you must follow when you enter your agreement, are set out in:
+      </p>
 
       <ul class="govuk-list govuk-list--bullet">
-        <li>the <a href="{{ buildUrl(serviceUrl, 'farm-payments/terms-and-conditions') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test terms and conditions (opens in new tab)</a></li>
-        <li>the <a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-information') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test information (opens in new tab)</a></li>
-        <li>the <a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-actions') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test actions (opens in new tab)</a></li>
+        <li>
+          <a
+            href="{{ buildUrl(serviceUrl, 'farm-payments/terms-and-conditions') }}"
+            class="govuk-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Farm payments technical test terms and conditions (opens in new tab)
+          </a>
+        </li>
+        <li>
+          <a
+            href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-information') }}"
+            class="govuk-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Farm payments technical test information (opens in new tab)
+          </a>
+        </li>
+        <li>
+          <a
+            href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-actions') }}"
+            class="govuk-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Farm payments technical test actions (opens in new tab)
+          </a>
+        </li>
       </ul>
 
       <p class="govuk-body">
@@ -36,57 +72,47 @@
   <br>
 
   <h2 class="govuk-heading-l">Actions</h2>
-  <table class="govuk-table">
+
+  <table
+    class="govuk-table govuk-table--small-text-until-tablet table-bordered"
+    data-test-id="actionsTable"
+  >
     <thead class="govuk-table__head">
       <tr class="govuk-table__row">
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Action</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Code</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Land parcel</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="white-space: nowrap;">Quantity (ha)</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Duration</th>
+        {% for heading in summaryOfActions.headings %}
+          <th
+            scope="col"
+            class="govuk-table__header"
+            {% for key, value in heading.attributes %}
+              {{ key }}="{{ value }}"
+            {% endfor %}
+          >
+            {{ heading.text }}
+          </th>
+        {% endfor %}
       </tr>
     </thead>
+
     <tbody class="govuk-table__body">
-      {# running index across all rows #}
-      {% set rowIndex = 0 %}
-
-      {% for parcel in parcels %}
-        {% for action in parcel.actions %}
-          {% set rowIndex = rowIndex + 1 %}
-
-          <tr class="govuk-table__row" id="actionRow{{ rowIndex }}">
-            <td class="govuk-table__cell govuk-!-font-size-19"
-                id="actionTableActionRow{{ rowIndex }}">
-              {{ codeDescriptions[action.code] }}
+      {% for row in summaryOfActions.data %}
+        <tr
+          class="govuk-table__row"
+          data-test-id="actionsTableRow{{ loop.index }}"
+        >
+          {% for cell in row %}
+            <td
+              class="govuk-table__cell"
+              data-test-id="actionsTableCell{{ loop.index }}_{{ loop.index0 }}"
+              {% for key, value in cell.attributes %}
+                {{ key }}="{{ value }}"
+              {% endfor %}
+            >
+              {{ cell.text }}
             </td>
-
-            <td class="govuk-table__cell govuk-!-font-size-19"
-                id="actionTableCodeRow{{ rowIndex }}">
-              {{ action.code }}
-            </td>
-
-            <td class="govuk-table__cell govuk-!-font-size-19"
-                style="white-space: nowrap;"
-                id="actionTableLandParcelRow{{ rowIndex }}">
-              {{ parcel.sheetId }} {{ parcel.parcelId }}
-            </td>
-
-            <td class="govuk-table__cell govuk-!-font-size-19"
-                style="white-space: nowrap;"
-                id="actionTableQuantityRow{{ rowIndex }}">
-              {{ action.appliedFor.quantity | round(4) }}
-            </td>
-
-            <td class="govuk-table__cell govuk-!-font-size-19"
-                id="actionTableDurationRow{{ rowIndex }}">
-              {{ action.durationYears }}
-              {{ 'year' if action.durationYears == 1 else 'years' }}
-            </td>
-          </tr>
-        {% endfor %}
+          {% endfor %}
+        </tr>
       {% endfor %}
     </tbody>
-
   </table>
 
   <br>
@@ -94,71 +120,84 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h2 class="govuk-heading-l">Payments</h2>
+
       <p class="govuk-body govuk-!-font-size-19">
         If you accept this agreement offer, you will receive the following payments for each action.
       </p>
+
       <p class="govuk-body govuk-!-font-size-19">
-        You will receive your payments in 4 instalments. Your first payment may be a different amount due to the Rural Payments Agency rounding it up. Your other 3 payments are evenly split.
+        You will receive your payments in 4 instalments. Your first payment may be a different amount due to the
+        Rural Payments Agency rounding it up. Your other 3 payments are evenly split.
       </p>
+
       <p class="govuk-body govuk-!-font-size-19">
         You will usually receive your first payment in the fourth month after your agreement's start date.
       </p>
 
+      {% if annualPayments.length > 0 %}
+         <h3 class="govuk-heading-s">Additional yearly payments</h3>
+      {% endif %}
 
-      {% for payment in payments %}
-        {% if payment.hasOneOffPayment %}
-        <h3 class="govuk-heading-s">Additional yearly payments</h3>
-          <p class="govuk-body govuk-!-font-size-19">
-            There is a payment of {{ payment.rateInPence }} per agreement per year for action '{{ codeDescriptions[payment.code] }}: {{ payment.code }}'.
+      {% for annualPayment in annualPayments %}
+          <p class="govuk-body">
+            There is a payment of {{ annualPayment.payment }}  per year for action {{ annualPayment.description }}.
           </p>
-          <p class="govuk-body govuk-!-font-size-19">
-            You will receive this payment if you are not already doing this action on another land parcel.
-          </p>
-        {% endif %}
       {% endfor %}
+
+      {% if annualPayments.length > 0 %}
+        <p class="govuk-body">
+           You will receive this payment if you are not already doing this action on another land parcel.
+        </p>
+      {% endif %}
     </div>
   </div>
 
-  <table class="govuk-table">
+  <table
+    class="govuk-table govuk-table--small-text-until-tablet table-bordered"
+    data-test-id="paymentsTable"
+  >
     <thead class="govuk-table__head">
       <tr class="govuk-table__row">
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Action</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Code</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Annual payment rate</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align: right;">First payment</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align: right;">Subsequent payments</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align: right;">Annual payment value</th>
+        {% for heading in summaryOfPayments.headings %}
+          <th
+            scope="col"
+            class="govuk-table__header"
+            {% for key, value in heading.attributes %}
+              {{ key }}="{{ value }}"
+            {% endfor %}
+          >
+            {{ heading.text }}
+          </th>
+        {% endfor %}
       </tr>
     </thead>
+
     <tbody class="govuk-table__body">
-      {% for payment in payments %}
-        <tr class="govuk-table__row" id="paymentRow{{ loop.index }}">
-          <td class="govuk-table__cell govuk-!-font-size-19" id="paymentsTableActionRow{{ loop.index }}">{{ payment.description }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rateInPence }}
-            {% if payment.unit %}&nbsp;per&nbsp;{{ payment.unit }}
-            {% endif %}
-          </td>
-          <td class="govuk-table__cell govuk-!-font-size-19" style="text-align: right;" id="paymentsTableFirstPaymentRow{{ loop.index }}">{{ payment.firstPaymentPence | formatPenceCurrency }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" style="text-align: right;" id="paymentsTableSubsequentPaymentRow{{ loop.index }}">{{ payment.subsequentPaymentPence | formatPenceCurrency }}</td>
-          <td class="govuk-table__cell govuk-!-font-size-19" style="text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.annualPaymentPence | formatPenceCurrency }}</td>
+      {% for row in summaryOfPayments.data %}
+        <tr
+          class="govuk-table__row"
+          data-test-id="paymentsTableRow{{ loop.index }}"
+        >
+          {% for cell in row %}
+            <td
+              class="govuk-table__cell{% if cell.attributes.class %} {{ cell.attributes.class }}{% endif %}"
+              data-test-id="paymentsTableCell{{ loop.index }}_{{ loop.index0 }}"
+              {% for key, value in cell.attributes %}
+                {% if key != "class" %}
+                  {{ key }}="{{ value }}"
+                {% endif %}
+              {% endfor %}
+            >
+              {% if loop.parent.last %}
+                <strong>{{ cell.text }}</strong>
+              {% else %}
+                {{ cell.text }}
+              {% endif %}
+            </td>
+          {% endfor %}
         </tr>
       {% endfor %}
     </tbody>
-    <tfoot>
-      <tr>
-        <td class="govuk-table__cell" style="border-bottom: none;"></td>
-        <td class="govuk-table__cell" style="border-bottom: none;"></td>
-        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="border-bottom: none;"></td>
-        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align:right; border-bottom: none;" id="paymentsTableTotalFirstPayment">
-          {{ totalFirstPayment | formatPenceCurrency }}
-        </td>
-        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align:right; border-bottom: none;" id="paymentsTableTotalSubsequentPayment">
-          {{ totalSubsequentPayment | formatPenceCurrency }}
-        </td>
-        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align:right; border-bottom: none;" id="paymentsTableTotalYearlyPayment">{{ totalYearly | formatPenceCurrency }}</td>
-      </tr>
-    </tfoot>
   </table>
 
   <form method="POST" action="{{ buildUrl(baseUrl) }}">
@@ -169,6 +208,8 @@
     }) }}
   </form>
 
-  {% set section = { message: 'Contact the Rural Payments Agency (RPA) to update your offer.' } %}
+  {% set section = {
+    message: "Contact the Rural Payments Agency (RPA) to update your offer."
+  } %}
   {% include "partials/help/update.njk" %}
 {% endblock %}

@@ -183,6 +183,14 @@ const buildTotalsRow = ({ firstTotal, subsequentTotal, annualTotal }) => [
 const sortRowsByCode = (rows) =>
   rows.sort((a, b) => a[1].text.localeCompare(b[1].text))
 
+export const getSummaryOfPaymentsData = (agreement) => ({
+  summaryOfPayments: getSummaryOfPayments(agreement)
+})
+
+export const getAnnualPaymentsData = (agreement) => ({
+  annualPayments: getAdditionalAnnualPayments(agreement)
+})
+
 /**
  * Creates a summary of payments for the agreement
  * @param {object} agreementData - The agreement data object
