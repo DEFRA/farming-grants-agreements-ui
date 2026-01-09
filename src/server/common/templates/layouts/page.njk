@@ -65,7 +65,11 @@
   {% set footerLinks = [
     {
       href: "https://www.gov.uk/government/organisations/rural-payments-agency/about/personal-information-charter",
-      text: "Privacy (opens in new tab)"
+      text: "Privacy (opens in new tab)",
+      attributes: {
+        target: "_blank",
+        rel: "noopener noreferrer"
+      }
     },
     {
       href: "/cookies",
