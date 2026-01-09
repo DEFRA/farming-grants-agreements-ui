@@ -25,7 +25,7 @@
     "pretest": "npm run build:frontend",
     "test": "TZ=UTC vitest run --coverage",
     "test:watch": "TZ=UTC vitest",
-    "test:contracts": "npm test",
+    "test:contracts": "npm test -- --fileParallelism=false",
     "server:watch": "nodemon --inspect=0.0.0.0 --ext js,json --legacy-watch ./src",
     "server:debug": "nodemon --inspect-brk=0.0.0.0 --ext js,json --legacy-watch ./src",
     "prestart": "npm run build:frontend",
