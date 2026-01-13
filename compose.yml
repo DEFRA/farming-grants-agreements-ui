@@ -23,7 +23,7 @@ services:
       redis:
         condition: service_healthy
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     environment:
       PORT: 3000
       NODE_ENV: ${NODE_ENV:-development}
@@ -42,7 +42,7 @@ services:
       - '8080:8080'
     volumes:
       - ./src/contracts/consumer/pacts:/app/pacts
-    command: ["-p", "8080", "-d", "pacts"]
+    command: ['-p', '8080', '-d', 'pacts']
     networks:
       - cdp-tenant
 
