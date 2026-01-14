@@ -17,6 +17,7 @@
     "format:check": "prettier --check \"src/**/*.js\" \"**/*.{js,cjs,md,json,config.js,test.js}\"",
     "frontend:watch": "NODE_ENV=development webpack --watch",
     "git:pre-commit-hook": "npm run format:check && npm run lint && npm test",
+    "commitlint": "commitlint --edit",
     "postinstall": "npm run setup:husky",
     "lint": "run-s lint:js lint:scss",
     "lint:js": "eslint .",
@@ -69,6 +70,7 @@
   },
   "devDependencies": {
     "@babel/preset-env": "7.27.2",
+    "@commitlint/cli": "20.3.1",
     "@pact-foundation/pact": "16.0.2",
     "@vitest/coverage-v8": "4.0.10",
     "autoprefixer": "10.4.21",
