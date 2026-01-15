@@ -3,7 +3,7 @@ import path from 'node:path'
 import { MatchersV2, Pact } from '@pact-foundation/pact'
 
 import { createServer } from '../server.js'
-import { expectedAgreement } from '../common/helpers/sample-data/__test__/expected-agreement.mock.js'
+import { buildPactAgreement } from '../common/helpers/sample-data/__test__/pact-agreement.fixture.js'
 import { config } from '../../config/config.js'
 
 const { like } = MatchersV2
@@ -42,7 +42,7 @@ describe('#acceptOfferController', () => {
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: { ...expectedAgreement, status: like('offered') }
+            agreementData: buildPactAgreement({ status: like('offered') })
           })
         })
         .executeTest(async (mockServer) => {
