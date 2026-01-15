@@ -1,25 +1,18 @@
-import path from 'node:path'
-
-import { Pact, MatchersV2 } from '@pact-foundation/pact'
+import { MatchersV2 } from '@pact-foundation/pact'
 import { vi } from 'vitest'
 
 import { createServer } from '../server.js'
-import { expectedAgreement } from '../common/helpers/sample-data/__test__/expected-agreement.mock.js'
+import { buildPactAgreement } from '../common/helpers/sample-data/__test__/pact-agreement.fixture.js'
 import { config } from '../../config/config.js'
 import * as apiModule from '../common/helpers/api.js'
+import { createConsumerPact } from '../../contracts/consumer/pact-test-helpers.js'
 
 const { like } = MatchersV2
 
 describe('#acceptOfferController', () => {
   let server
 
-  const provider = new Pact({
-    consumer: 'farming-grants-agreements-ui',
-    provider: 'farming-grants-agreements-api',
-    port: 0,
-    dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
-    pactfileWriteMode: 'update'
-  })
+  const provider = createConsumerPact(import.meta.url)
 
   beforeAll(async () => {
     server = await createServer()
@@ -49,10 +42,10 @@ describe('#acceptOfferController', () => {
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: {
-              ...expectedAgreement,
-              status: like('accepted')
-            }
+            agreementData: buildPactAgreement(
+              { status: like('accepted') },
+              { useMatchers: true }
+            )
           })
         })
         .executeTest(async (mockServer) => {
@@ -90,7 +83,10 @@ describe('#acceptOfferController', () => {
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: { ...expectedAgreement, status: like('offered') }
+            agreementData: buildPactAgreement(
+              { status: like('offered') },
+              { useMatchers: true }
+            )
           })
         })
         .executeTest(async (mockServer) => {
@@ -127,7 +123,10 @@ describe('#acceptOfferController', () => {
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: { ...expectedAgreement, status: like('offered') }
+            agreementData: buildPactAgreement(
+              { status: like('offered') },
+              { useMatchers: true }
+            )
           })
         })
         .executeTest(async (mockServer) => {
@@ -165,7 +164,10 @@ describe('#acceptOfferController', () => {
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: { ...expectedAgreement, status: like('offered') }
+            agreementData: buildPactAgreement(
+              { status: like('offered') },
+              { useMatchers: true }
+            )
           })
         })
         .executeTest(async (mockServer) => {
@@ -175,10 +177,7 @@ describe('#acceptOfferController', () => {
           apiRequestSpy.mockImplementation(async (options) => {
             if (options.method === 'POST') {
               return {
-                agreementData: {
-                  ...expectedAgreement,
-                  status: 'accepted'
-                }
+                agreementData: buildPactAgreement({ status: 'accepted' })
               }
             }
             // For GET requests, make the actual call
@@ -228,7 +227,10 @@ describe('#acceptOfferController', () => {
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: { ...expectedAgreement, status: like('offered') }
+            agreementData: buildPactAgreement(
+              { status: like('offered') },
+              { useMatchers: true }
+            )
           })
         })
         .executeTest(async (mockServer) => {
@@ -238,10 +240,7 @@ describe('#acceptOfferController', () => {
           apiRequestSpy.mockImplementation(async (options) => {
             if (options.method === 'POST') {
               return {
-                agreementData: {
-                  ...expectedAgreement,
-                  status: 'accepted'
-                }
+                agreementData: buildPactAgreement({ status: 'accepted' })
               }
             }
             // For GET requests, make the actual call
