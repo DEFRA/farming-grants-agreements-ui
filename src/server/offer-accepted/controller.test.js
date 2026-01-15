@@ -34,7 +34,10 @@ describe('#offerAcceptedController', () => {
       .willRespondWith(200, (builder) => {
         builder.headers({ 'Content-Type': 'application/json' })
         builder.jsonBody({
-          agreementData: buildPactAgreement({ status: like('accepted') })
+          agreementData: buildPactAgreement(
+            { status: like('accepted') },
+            { useMatchers: true }
+          )
         })
       })
       .executeTest(async (mockServer) => {

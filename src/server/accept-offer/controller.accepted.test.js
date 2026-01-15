@@ -42,7 +42,10 @@ describe('#acceptOfferController', () => {
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: buildPactAgreement({ status: like('accepted') })
+            agreementData: buildPactAgreement(
+              { status: like('accepted') },
+              { useMatchers: true }
+            )
           })
         })
         .executeTest(async (mockServer) => {
@@ -80,7 +83,10 @@ describe('#acceptOfferController', () => {
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: buildPactAgreement({ status: like('offered') })
+            agreementData: buildPactAgreement(
+              { status: like('offered') },
+              { useMatchers: true }
+            )
           })
         })
         .executeTest(async (mockServer) => {
@@ -117,7 +123,10 @@ describe('#acceptOfferController', () => {
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: buildPactAgreement({ status: like('offered') })
+            agreementData: buildPactAgreement(
+              { status: like('offered') },
+              { useMatchers: true }
+            )
           })
         })
         .executeTest(async (mockServer) => {
@@ -155,7 +164,10 @@ describe('#acceptOfferController', () => {
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: buildPactAgreement({ status: like('offered') })
+            agreementData: buildPactAgreement(
+              { status: like('offered') },
+              { useMatchers: true }
+            )
           })
         })
         .executeTest(async (mockServer) => {
@@ -215,7 +227,10 @@ describe('#acceptOfferController', () => {
         .willRespondWith(200, (builder) => {
           builder.headers({ 'Content-Type': 'application/json' })
           builder.jsonBody({
-            agreementData: buildPactAgreement({ status: like('offered') })
+            agreementData: buildPactAgreement(
+              { status: like('offered') },
+              { useMatchers: true }
+            )
           })
         })
         .executeTest(async (mockServer) => {

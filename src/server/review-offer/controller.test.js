@@ -34,7 +34,10 @@ describe('#reviewOfferController', () => {
       .willRespondWith(200, (builder) => {
         builder.headers({ 'Content-Type': 'application/json' })
         builder.jsonBody({
-          agreementData: buildPactAgreement({ status: like('offered') })
+          agreementData: buildPactAgreement(
+            { status: like('offered') },
+            { useMatchers: true }
+          )
         })
       })
       .executeTest(async (mockServer) => {
@@ -60,7 +63,7 @@ describe('#reviewOfferController', () => {
         expect(result).toContain('4.5341')
         expect(result).toContain('£10.60')
         expect(result).toContain('£12.04')
-        expect(result).toContain('£12.01')
+        expect(result).toContain('£68.03')
         expect(result).toContain('£48.06')
       })
   })

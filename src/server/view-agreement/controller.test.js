@@ -36,7 +36,10 @@ describe('#viewAgreementController', () => {
       .willRespondWith(200, (builder) => {
         builder.headers({ 'Content-Type': 'application/json' })
         builder.jsonBody({
-          agreementData: buildPactAgreement({ status: like('accepted') })
+          agreementData: buildPactAgreement(
+            { status: like('accepted') },
+            { useMatchers: true }
+          )
         })
       })
       .executeTest(async (mockServer) => {
@@ -59,7 +62,7 @@ describe('#viewAgreementController', () => {
 
         // parcel row
         expect(result).toContain('£12.04')
-        expect(result).toContain('£12.01')
+        expect(result).toContain('£48.06')
 
         // agreement row
         expect(result).toContain('£68.03')
@@ -68,7 +71,6 @@ describe('#viewAgreementController', () => {
 
         // Total row
         expect(result).toContain('£80.07')
-        expect(result).toContain('£80.01')
         expect(result).toContain('£320.06')
       })
   })

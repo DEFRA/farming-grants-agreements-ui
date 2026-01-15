@@ -1,3 +1,7 @@
+import { MatchersV2 } from '@pact-foundation/pact'
+
+const { eachLike, iso8601DateTimeWithMillis, like } = MatchersV2
+
 const baseAgreement = {
   agreementNumber: 'SFI987654321',
   status: 'offered',
@@ -101,7 +105,118 @@ const baseAgreement = {
   updatedAt: '2025-10-23T16:03:28.548Z'
 }
 
-export const buildPactAgreement = ({ status = 'offered' } = {}) => ({
-  ...baseAgreement,
-  status
+const buildLineItemMatcher = (lineItem) => ({
+  ...(lineItem?.parcelItemId && {
+    parcelItemId: like(lineItem.parcelItemId)
+  }),
+  ...(lineItem?.agreementLevelItemId && {
+    agreementLevelItemId: like(lineItem.agreementLevelItemId)
+  }),
+  paymentPence: like(lineItem?.paymentPence ?? 0)
 })
+
+const buildPaymentMatcher = (payment) => ({
+  paymentDate: like(payment?.paymentDate ?? ''),
+  totalPaymentPence: like(payment?.totalPaymentPence ?? 0),
+  lineItems: payment?.lineItems?.length
+    ? payment.lineItems.map(buildLineItemMatcher)
+    : like([])
+})
+
+const buildParcelMatcher = (parcel) => ({
+  sheetId: like(parcel?.sheetId ?? ''),
+  parcelId: like(parcel?.parcelId ?? ''),
+  area: {
+    unit: like(parcel?.area?.unit ?? ''),
+    quantity: like(parcel?.area?.quantity ?? 0)
+  },
+  actions: parcel?.actions?.length
+    ? eachLike(
+        {
+          code: like(parcel.actions[0].code),
+          durationYears: like(parcel.actions[0].durationYears),
+          appliedFor: {
+            unit: like(parcel.actions[0].appliedFor.unit),
+            quantity: like(parcel.actions[0].appliedFor.quantity)
+          }
+        },
+        { min: parcel.actions.length }
+      )
+    : like([])
+})
+
+const buildApplicantMatcher = (applicant) => ({
+  business: {
+    name: like(applicant?.business?.name ?? ''),
+    address: {
+      line1: like(applicant?.business?.address?.line1 ?? ''),
+      line2: like(applicant?.business?.address?.line2 ?? ''),
+      street: like(applicant?.business?.address?.street ?? ''),
+      city: like(applicant?.business?.address?.city ?? ''),
+      postalCode: like(applicant?.business?.address?.postalCode ?? '')
+    }
+  },
+  customer: {
+    name: {
+      title: like(applicant?.customer?.name?.title ?? ''),
+      first: like(applicant?.customer?.name?.first ?? ''),
+      middle: like(applicant?.customer?.name?.middle ?? ''),
+      last: like(applicant?.customer?.name?.last ?? '')
+    }
+  }
+})
+
+const buildPaymentSectionMatcher = (payment) => {
+  if (!payment) {
+    return payment
+  }
+
+  const payments = payment.payments ?? []
+
+  return {
+    agreementStartDate: like(payment.agreementStartDate),
+    agreementEndDate: like(payment.agreementEndDate),
+    parcelItems: like(payment.parcelItems ?? {}),
+    agreementLevelItems: like(payment.agreementLevelItems ?? {}),
+    payments: payments.length
+      ? eachLike(buildPaymentMatcher(payments[0]), { min: payments.length })
+      : like([])
+  }
+}
+
+const buildApplicationMatcher = (application) => {
+  const parcels = application?.parcel ?? []
+
+  return {
+    parcel: parcels.length
+      ? eachLike(buildParcelMatcher(parcels[0]), { min: parcels.length })
+      : like([]),
+    agreement: like(application?.agreement ?? [])
+  }
+}
+
+const buildAgreementWithMatchers = (agreement) => ({
+  agreementNumber: like(agreement.agreementNumber),
+  status: agreement.status,
+  identifiers: {
+    ...agreement.identifiers,
+    sbi: like(agreement.identifiers.sbi)
+  },
+  applicant: buildApplicantMatcher(agreement.applicant),
+  application: buildApplicationMatcher(agreement.application),
+  payment: buildPaymentSectionMatcher(agreement.payment),
+  actionApplications: like(agreement.actionApplications ?? []),
+  updatedAt: iso8601DateTimeWithMillis(agreement.updatedAt)
+})
+
+export const buildPactAgreement = (
+  { status = 'offered' } = {},
+  { useMatchers = false } = {}
+) => {
+  const agreement = {
+    ...baseAgreement,
+    status
+  }
+
+  return useMatchers ? buildAgreementWithMatchers(agreement) : agreement
+}
