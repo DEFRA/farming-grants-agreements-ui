@@ -1,10 +1,9 @@
-import path from 'node:path'
-
-import { MatchersV2, Pact } from '@pact-foundation/pact'
+import { MatchersV2 } from '@pact-foundation/pact'
 
 import { createServer } from '../server.js'
 import { buildPactAgreement } from '../common/helpers/sample-data/__test__/pact-agreement.fixture.js'
 import { config } from '../../config/config.js'
+import { createConsumerPact } from '../../contracts/consumer/pact-test-helpers.js'
 
 const { like } = MatchersV2
 
@@ -12,13 +11,7 @@ describe('#acceptOfferController', () => {
   describe('before accepting the offer', () => {
     let server
 
-    const provider = new Pact({
-      consumer: 'farming-grants-agreements-ui',
-      provider: 'farming-grants-agreements-api',
-      port: 0,
-      dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
-      pactfileWriteMode: 'update'
-    })
+    const provider = createConsumerPact(import.meta.url)
 
     beforeAll(async () => {
       server = await createServer()

@@ -102,6 +102,6 @@ const baseAgreement = {
 }
 
 export const buildPactAgreement = ({ status = 'offered' } = {}) => ({
-  ...JSON.parse(JSON.stringify(baseAgreement)),
+  ...baseAgreement,
   status
 })
