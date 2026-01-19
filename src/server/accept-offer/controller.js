@@ -28,7 +28,7 @@ export const validateAcceptOfferController = {
     })
 
     // Redirect to the offer accepted page
-    return h.redirect(path.join(getBaseUrl(request)))
+    return h.redirect(getBaseUrl(request))
   }
 }
 
