@@ -187,7 +187,7 @@ describe('#acceptOfferController', () => {
             }).then((r) => r.json())
           })
 
-          await server.inject({
+          const response = await server.inject({
             method: 'POST',
             url: '/',
             headers: {
@@ -206,6 +206,10 @@ describe('#acceptOfferController', () => {
             auth: 'mock-auth',
             body: { action: 'accept-offer' }
           })
+
+          // Verify redirect to base URL
+          expect(response.statusCode).toBe(302)
+          expect(response.headers.location).toBe('/')
 
           apiRequestSpy.mockRestore()
         })
@@ -250,7 +254,7 @@ describe('#acceptOfferController', () => {
             }).then((r) => r.json())
           })
 
-          await server.inject({
+          const response = await server.inject({
             method: 'POST',
             url: '/?x-encrypted-auth=query-auth',
             payload: {
@@ -266,6 +270,10 @@ describe('#acceptOfferController', () => {
             auth: 'query-auth',
             body: { action: 'accept-offer' }
           })
+
+          // Verify redirect to base URL
+          expect(response.statusCode).toBe(302)
+          expect(response.headers.location).toBe('/')
 
           apiRequestSpy.mockRestore()
         })
