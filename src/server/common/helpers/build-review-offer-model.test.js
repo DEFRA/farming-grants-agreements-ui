@@ -172,10 +172,7 @@ const sampleAgreementData = {
         address: 'meadow@example.test',
         _id: 'f0000000000000000000015f'
       },
-      phone: {
-        mobile: '02079460901',
-        _id: 'f00000000000000000000160'
-      },
+      phone: '02079460901',
       address: {
         line1: '3 Example Lane',
         line2: 'Example Village',
