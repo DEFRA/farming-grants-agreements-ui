@@ -47,7 +47,7 @@ const sampleAgreementData = {
   },
   status: 'offered',
   agreement: 'f00000000000000000000065',
-  scheme: 'SFI',
+  scheme: 'FPTT',
   actionApplications: [],
   payment: {
     agreementStartDate: '2026-01-01',
@@ -253,7 +253,7 @@ const sampleAgreementData = {
   __v: 0,
   createdAt: '2025-12-18T09:57:32.046Z',
   updatedAt: '2025-12-18T09:57:32.054Z',
-  agreementNumber: 'SFI987654321',
+  agreementNumber: 'FPTT987654321',
   invoice: [],
   version: 1
 }
