@@ -85,7 +85,7 @@ describe('#agreementController', () => {
       })
     })
 
-    test('should call the backend API including SFI number', async () => {
+    test('should call the backend API including FPTT number', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({})
@@ -93,22 +93,25 @@ describe('#agreementController', () => {
 
       await server.inject({
         method: 'GET',
-        url: '/SFI123456789',
+        url: '/FPTT123456789',
         headers: {
           'x-encrypted-auth': 'mock-auth'
         }
       })
 
-      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/SFI123456789', {
-        headers: {
-          'x-encrypted-auth': 'mock-auth'
-        },
-        method: 'GET',
-        signal: expect.any(AbortSignal)
-      })
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3555/FPTT123456789',
+        {
+          headers: {
+            'x-encrypted-auth': 'mock-auth'
+          },
+          method: 'GET',
+          signal: expect.any(AbortSignal)
+        }
+      )
     })
 
-    test('should call the backend API including SFI number and mode', async () => {
+    test('should call the backend API including FPTT number and mode', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({})
@@ -116,19 +119,22 @@ describe('#agreementController', () => {
 
       await server.inject({
         method: 'GET',
-        url: '/SFI123456789/print',
+        url: '/FPTT123456789/print',
         headers: {
           'x-encrypted-auth': 'mock-auth'
         }
       })
 
-      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/SFI123456789', {
-        headers: {
-          'x-encrypted-auth': 'mock-auth'
-        },
-        method: 'GET',
-        signal: expect.any(AbortSignal)
-      })
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3555/FPTT123456789',
+        {
+          headers: {
+            'x-encrypted-auth': 'mock-auth'
+          },
+          method: 'GET',
+          signal: expect.any(AbortSignal)
+        }
+      )
     })
 
     test('should call the backend API with POST data', async () => {
@@ -174,19 +180,22 @@ describe('#agreementController', () => {
 
       const { statusCode, result } = await server.inject({
         method: 'GET',
-        url: '/SFI123456789',
+        url: '/FPTT123456789',
         headers: {
           'x-encrypted-auth': 'mock-auth'
         }
       })
 
-      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/SFI123456789', {
-        headers: {
-          'x-encrypted-auth': 'mock-auth'
-        },
-        method: 'GET',
-        signal: expect.any(AbortSignal)
-      })
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3555/FPTT123456789',
+        {
+          headers: {
+            'x-encrypted-auth': 'mock-auth'
+          },
+          method: 'GET',
+          signal: expect.any(AbortSignal)
+        }
+      )
 
       expect(statusCode).toBe(statusCodes.internalServerError)
       expect(result).toContain('Sorry, there is a problem with the service')
@@ -202,19 +211,22 @@ describe('#agreementController', () => {
 
       const { statusCode, result } = await server.inject({
         method: 'GET',
-        url: '/SFI123456789',
+        url: '/FPTT123456789',
         headers: {
           'x-encrypted-auth': 'mock-auth'
         }
       })
 
-      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/SFI123456789', {
-        headers: {
-          'x-encrypted-auth': 'mock-auth'
-        },
-        method: 'GET',
-        signal: expect.any(AbortSignal)
-      })
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3555/FPTT123456789',
+        {
+          headers: {
+            'x-encrypted-auth': 'mock-auth'
+          },
+          method: 'GET',
+          signal: expect.any(AbortSignal)
+        }
+      )
 
       expect(statusCode).toBe(statusCodes.notFound)
       expect(result).toContain('Page not found')
@@ -229,19 +241,22 @@ describe('#agreementController', () => {
 
       const { statusCode, result } = await server.inject({
         method: 'GET',
-        url: '/SFI123456789',
+        url: '/FPTT123456789',
         headers: {
           'x-encrypted-auth': 'mock-auth'
         }
       })
 
-      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/SFI123456789', {
-        headers: {
-          'x-encrypted-auth': 'mock-auth'
-        },
-        method: 'GET',
-        signal: expect.any(AbortSignal)
-      })
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3555/FPTT123456789',
+        {
+          headers: {
+            'x-encrypted-auth': 'mock-auth'
+          },
+          method: 'GET',
+          signal: expect.any(AbortSignal)
+        }
+      )
 
       expect(statusCode).toBe(statusCodes.unauthorized)
       expect(result).toContain(

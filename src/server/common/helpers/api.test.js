@@ -23,7 +23,7 @@ const createErrorResponse = (overrides = {}) => ({
 
 describe('apiRequest error handling', () => {
   const baseRequest = {
-    agreementId: 'SFI123',
+    agreementId: 'FPTT123',
     auth: 'mock-auth-token'
   }
 

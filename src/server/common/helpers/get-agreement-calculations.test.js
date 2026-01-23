@@ -6,7 +6,7 @@ import {
 describe('getAgreementCalculations', () => {
   test('should return rendered HTML for accepted status', () => {
     const mockAgreement = {
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       status: 'accepted',
       actionApplications: [
         {
@@ -366,7 +366,7 @@ describe('getAgreementCalculations', () => {
 
   test('should return rendered HTML for offered status', () => {
     const mockAgreement = {
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       status: 'offered',
       actionApplications: [
         {
@@ -724,7 +724,7 @@ describe('getAgreementCalculations', () => {
     const agreementData = {
       status: 'accepted',
       username: 'User Name',
-      agreementNumber: 'SFI000000001',
+      agreementNumber: 'FPTT000000001',
       payment: {
         parcelItems: {
           'parcel-item-1': {
@@ -787,7 +787,7 @@ describe('getAgreementCalculations', () => {
     const agreementData = {
       status: 'offered',
       username: 'User Name',
-      agreementNumber: 'SFI000000001',
+      agreementNumber: 'FPTT000000001',
       payment: {
         parcelItems: {
           'parcel-item-1': {
@@ -849,7 +849,7 @@ describe('getAgreementCalculations', () => {
   test('should handle string rate and null currency formatting', () => {
     const agreementData = {
       status: 'offered',
-      agreementNumber: 'SFI-STR-NLL',
+      agreementNumber: 'FPTT-STR-NLL',
       payment: {
         parcelItems: {
           'parcel-item-x': {
@@ -896,7 +896,7 @@ describe('getAgreementCalculations', () => {
   test('should build schedule using agreementLevelItemId and sort codes numerically', () => {
     const agreementData = {
       status: 'offered',
-      agreementNumber: 'SFI-SCH-AL',
+      agreementNumber: 'FPTT-SCH-AL',
       payment: {
         parcelItems: {
           p1: {
@@ -969,7 +969,7 @@ describe('getAgreementCalculations', () => {
   test('should include first payment and subsequent payment columns in summary of payments', () => {
     const agreementData = {
       status: 'offered',
-      agreementNumber: 'SFI-FIRST-SUB',
+      agreementNumber: 'FPTT-FIRST-SUB',
       payment: {
         parcelItems: {
           1: {
@@ -1058,7 +1058,7 @@ describe('getAgreementCalculations', () => {
   test('should handle missing payment data gracefully', () => {
     const agreementData = {
       status: 'offered',
-      agreementNumber: 'SFI-NO-PAYMENTS',
+      agreementNumber: 'FPTT-NO-PAYMENTS',
       payment: {
         parcelItems: {
           1: {
@@ -1093,7 +1093,7 @@ describe('getAgreementCalculations', () => {
   test('summary of payments sorts rows and calculates totals row correctly', () => {
     const agreementData = {
       status: 'offered',
-      agreementNumber: 'SFI-SUMMARY-TOTALS',
+      agreementNumber: 'FPTT-SUMMARY-TOTALS',
       payment: {
         parcelItems: {
           2: {
