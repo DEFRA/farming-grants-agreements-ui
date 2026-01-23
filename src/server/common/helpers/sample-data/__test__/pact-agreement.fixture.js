@@ -3,7 +3,7 @@ import { MatchersV2 } from '@pact-foundation/pact'
 const { eachLike, iso8601DateTimeWithMillis, like } = MatchersV2
 
 const baseAgreement = {
-  agreementNumber: 'SFI987654321',
+  agreementNumber: 'FPTT987654321',
   status: 'offered',
   identifiers: {
     sbi: '106284736'
