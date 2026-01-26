@@ -168,11 +168,6 @@ const sampleAgreementData = {
   applicant: {
     business: {
       name: 'Example Ridge Farm Ltd',
-      email: {
-        address: 'meadow@example.test',
-        _id: 'f0000000000000000000015f'
-      },
-      phone: '02079460901',
       address: {
         line1: '3 Example Lane',
         line2: 'Example Village',
