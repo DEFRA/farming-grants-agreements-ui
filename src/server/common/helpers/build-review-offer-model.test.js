@@ -168,14 +168,6 @@ const sampleAgreementData = {
   applicant: {
     business: {
       name: 'J&S Hartley',
-      email: {
-        address: 'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test',
-        _id: '6943d00c8405b48c784990d1'
-      },
-      phone: {
-        mobile: '01234031670',
-        _id: '6943d00c8405b48c784990d2'
-      },
       address: {
         line1: 'Mason House Farm Clitheroe Rd',
         line2: 'Bashall Eaves',
