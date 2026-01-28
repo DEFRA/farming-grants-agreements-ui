@@ -67,6 +67,42 @@ describe('#acceptOfferController', () => {
           expect(data.agreementData.status).toBe('accepted')
         })
     })
+
+    test('redirects when accept-offer action is received with offered status', async () => {
+      return provider
+        .addInteraction()
+        .given('A customer has an agreement offer')
+        .uponReceiving('a POST request with accept-offer action')
+        .withRequest('POST', '/', (builder) => {
+          builder.headers({ 'x-encrypted-auth': 'mock-auth' })
+        })
+        .willRespondWith(200, (builder) => {
+          builder.headers({ 'Content-Type': 'application/json' })
+          builder.jsonBody({
+            agreementData: buildPactAgreement(
+              { status: like('offered') },
+              { useMatchers: true }
+            )
+          })
+        })
+        .executeTest(async (mockServer) => {
+          config.set('backend.url', mockServer.url)
+
+          const { statusCode, headers } = await server.inject({
+            method: 'POST',
+            url: '/',
+            headers: {
+              'x-encrypted-auth': 'mock-auth'
+            },
+            payload: {
+              action: 'accept-offer'
+            }
+          })
+
+          expect(statusCode).toBe(302)
+          expect(headers.location).toBe('/')
+        })
+    })
   })
 
   describe('validateAcceptOfferController', () => {
