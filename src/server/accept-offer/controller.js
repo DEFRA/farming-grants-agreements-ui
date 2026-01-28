@@ -2,6 +2,12 @@ import { apiRequest } from '../common/helpers/api.js'
 import { getBaseUrl } from '../common/helpers/base-url.js'
 import path from 'node:path'
 
+const generateRedirectUrl = (request, agreementId = '') => {
+  const redirectUrl = path.join(getBaseUrl(request), agreementId)
+  const queryString = request.url.search || ''
+  return `${redirectUrl}${queryString}`
+}
+
 export const validateAcceptOfferController = {
   async handler(request, h) {
     const confirm = request?.payload?.confirm
@@ -28,7 +34,7 @@ export const validateAcceptOfferController = {
     })
 
     // Redirect to the offer accepted page
-    return h.redirect(getBaseUrl(request))
+    return h.redirect(generateRedirectUrl(request))
   }
 }
 
@@ -39,7 +45,7 @@ export const acceptOfferController = {
     const { agreementData } = request.pre?.data || {}
 
     if (action === 'accept-offer' && agreementData.status === 'offered') {
-      return h.redirect(path.join(getBaseUrl(request), agreementId))
+      return h.redirect(generateRedirectUrl(request, agreementId))
     }
 
     return h.view('accept-offer/index', {

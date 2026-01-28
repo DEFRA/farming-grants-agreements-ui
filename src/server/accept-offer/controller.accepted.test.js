@@ -26,7 +26,7 @@ describe('#acceptOfferController', () => {
   describe('accept-offer action', () => {
     // This test verifies the POST interaction with the backend API
     test('sends the accept-offer action to the backend API', async () => {
-      return await provider
+      return provider
         .addInteraction()
         .given('A customer has confirmed checkbox and is ready to accept')
         .uponReceiving('a POST request to accept the offer')
@@ -67,11 +67,47 @@ describe('#acceptOfferController', () => {
           expect(data.agreementData.status).toBe('accepted')
         })
     })
+
+    test('redirects when accept-offer action is received with offered status', async () => {
+      return provider
+        .addInteraction()
+        .given('A customer has an agreement offer')
+        .uponReceiving('a POST request with accept-offer action')
+        .withRequest('POST', '/', (builder) => {
+          builder.headers({ 'x-encrypted-auth': 'mock-auth' })
+        })
+        .willRespondWith(200, (builder) => {
+          builder.headers({ 'Content-Type': 'application/json' })
+          builder.jsonBody({
+            agreementData: buildPactAgreement(
+              { status: like('offered') },
+              { useMatchers: true }
+            )
+          })
+        })
+        .executeTest(async (mockServer) => {
+          config.set('backend.url', mockServer.url)
+
+          const { statusCode, headers } = await server.inject({
+            method: 'POST',
+            url: '/',
+            headers: {
+              'x-encrypted-auth': 'mock-auth'
+            },
+            payload: {
+              action: 'accept-offer'
+            }
+          })
+
+          expect(statusCode).toBe(302)
+          expect(headers.location).toBe('/')
+        })
+    })
   })
 
   describe('validateAcceptOfferController', () => {
     test('returns 200 with error when checkbox is not checked', async () => {
-      return await provider
+      return provider
         .addInteraction()
         .given('A customer has an agreement offer')
         .uponReceiving(
@@ -111,7 +147,7 @@ describe('#acceptOfferController', () => {
     })
 
     test('returns 200 with error when confirm value is not "confirmed"', async () => {
-      return await provider
+      return provider
         .addInteraction()
         .given('A customer has an agreement offer')
         .uponReceiving(
@@ -154,7 +190,7 @@ describe('#acceptOfferController', () => {
       // Spy on apiRequest to verify the POST call is made
       const apiRequestSpy = vi.spyOn(apiModule, 'apiRequest')
 
-      return await provider
+      return provider
         .addInteraction()
         .given('A customer has an agreement offer')
         .uponReceiving('a GET request to fetch data before validation')
@@ -219,7 +255,7 @@ describe('#acceptOfferController', () => {
       // Spy on apiRequest to verify the POST call is made
       const apiRequestSpy = vi.spyOn(apiModule, 'apiRequest')
 
-      return await provider
+      return provider
         .addInteraction()
         .given('A customer has an agreement offer')
         .uponReceiving(
@@ -248,7 +284,7 @@ describe('#acceptOfferController', () => {
               }
             }
             // For GET requests, make the actual call
-            return await fetch(mockServer.url, {
+            return fetch(mockServer.url, {
               method: options.method,
               headers: { 'x-encrypted-auth': options.auth }
             }).then((r) => r.json())
@@ -271,9 +307,11 @@ describe('#acceptOfferController', () => {
             body: { action: 'accept-offer' }
           })
 
-          // Verify redirect to base URL
+          // Verify redirect to base URL with query string preserved
           expect(response.statusCode).toBe(302)
-          expect(response.headers.location).toBe('/')
+          expect(response.headers.location).toBe(
+            '/?x-encrypted-auth=query-auth'
+          )
 
           apiRequestSpy.mockRestore()
         })
