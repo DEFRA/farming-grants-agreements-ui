@@ -16,23 +16,21 @@
   text-decoration: none;
 }
 
-.dataset-info dt {
-  margin-left: 0;
-  width: 35%;
+.dataset-info {
+  display: grid;
+  grid-template-columns: 25% 1fr;
+  column-gap: govuk-spacing(2);
+  row-gap: 5px;
 }
 
-.dataset-info dd,
 .dataset-info dt {
-  display: inline-block;
-  margin-bottom: 5px;
-  vertical-align: text-top;
+  margin: 0;
+  font-weight: normal;
 }
 
 .dataset-info dd {
+  margin: 0;
   font-weight: bold;
-  width: 30%;
-  white-space: nowrap;
-  margin-right: 5px;
 }
 
 .toc {
