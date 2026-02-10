@@ -97,7 +97,7 @@
     "terser-webpack-plugin": "5.3.14",
     "vitest": "4.0.10",
     "vitest-fetch-mock": "0.4.5",
-    "webpack": "5.99.9",
+    "webpack": "5.105.0",
     "webpack-assets-manifest": "6.2.1",
     "webpack-cli": "6.0.1"
   },
