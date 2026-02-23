@@ -1,5 +1,5 @@
-import { apiRequest } from '../common/helpers/api.js'
-import { getBaseUrl } from '../common/helpers/base-url.js'
+import { apiRequest } from '#~/server/common/helpers/api.js'
+import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
 import path from 'node:path'
 
 const generateRedirectUrl = (request, agreementId = '') => {

@@ -1,12 +1,12 @@
 import Boom from '@hapi/boom'
 
-import { reviewOfferController } from '../../review-offer/controller.js'
+import { reviewOfferController } from '#~/server/review-offer/controller.js'
 import {
   acceptOfferController,
   validateAcceptOfferController
-} from '../../accept-offer/controller.js'
-import { offerAcceptedController } from '../../offer-accepted/controller.js'
-import { offerWithdrawnController } from '../../offer-withdrawn/controller.js'
+} from '#~/server/accept-offer/controller.js'
+import { offerAcceptedController } from '#~/server/offer-accepted/controller.js'
+import { offerWithdrawnController } from '#~/server/offer-withdrawn/controller.js'
 
 export const getControllerByAction = (agreementStatus) => {
   let chooseControllerByActionOffer
