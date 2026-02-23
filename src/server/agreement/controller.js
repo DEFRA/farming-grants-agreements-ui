@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
 
-import { getControllerByAction } from '../common/helpers/get-controller-by-action.js'
+import { getControllerByAction } from '#~/server/common/helpers/get-controller-by-action.js'
 
 export const agreementController = {
   /**

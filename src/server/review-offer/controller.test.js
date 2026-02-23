@@ -2,10 +2,10 @@ import { vi } from 'vitest'
 
 import { MatchersV2 } from '@pact-foundation/pact'
 
-import { createServer } from '../server.js'
-import { buildPactAgreement } from '../common/helpers/sample-data/__test__/pact-agreement.fixture.js'
-import { config } from '../../config/config.js'
-import { createConsumerPact } from '../../contracts/consumer/pact-test-helpers.js'
+import { createServer } from '#~/server/server.js'
+import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test__/pact-agreement.fixture.js'
+import { config } from '#~/config/config.js'
+import { createConsumerPact } from '#~/contracts/consumer/pact-test-helpers.js'
 
 const { like } = MatchersV2
 
@@ -79,12 +79,12 @@ describe('reviewOfferController handler fallbacks', () => {
 
   beforeEach(async () => {
     vi.resetModules()
-    vi.doMock('../common/helpers/build-review-offer-model.js', () => ({
+    vi.doMock('#~/server/common/helpers/build-review-offer-model.js', () => ({
       buildReviewOfferModel: vi.fn()
     }))
     ;({ reviewOfferController } = await import('./controller.js'))
     ;({ buildReviewOfferModel: mockedBuildReviewOfferModel } = await import(
-      '../common/helpers/build-review-offer-model.js'
+      '#~/server/common/helpers/build-review-offer-model.js'
     ))
   })
 

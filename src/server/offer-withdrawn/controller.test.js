@@ -1,9 +1,9 @@
 import { MatchersV2 } from '@pact-foundation/pact'
 
-import { createServer } from '../server.js'
-import { buildPactAgreement } from '../common/helpers/sample-data/__test__/pact-agreement.fixture.js'
-import { config } from '../../config/config.js'
-import { createConsumerPact } from '../../contracts/consumer/pact-test-helpers.js'
+import { createServer } from '#~/server/server.js'
+import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test__/pact-agreement.fixture.js'
+import { config } from '#~/config/config.js'
+import { createConsumerPact } from '#~/contracts/consumer/pact-test-helpers.js'
 
 const { like } = MatchersV2
 

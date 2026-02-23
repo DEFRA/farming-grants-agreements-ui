@@ -1,4 +1,4 @@
-import { getFirstPaymentDate } from '../common/helpers/get-first-payment-date.js'
+import { getFirstPaymentDate } from '#~/server/common/helpers/get-first-payment-date.js'
 
 export const offerAcceptedController = {
   async handler(request, h) {

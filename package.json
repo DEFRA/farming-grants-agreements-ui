@@ -5,6 +5,10 @@
   "sideEffects": false,
   "main": "src/index.js",
   "type": "module",
+  "imports": {
+    "#~/*": "./src/*",
+    "#node_modules/*": "./node_modules/*"
+  },
   "engines": {
     "node": ">=24.11.0"
   },
@@ -56,7 +60,6 @@
     "cssnano": "7.0.7",
     "cssnano-preset-default": "7.0.7",
     "date-fns": "4.1.0",
-    "dotenv": "17.2.3",
     "global-agent": "3.0.0",
     "govuk-frontend": "5.11.0",
     "hapi-pino": "13.0.0",

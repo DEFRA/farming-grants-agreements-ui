@@ -2,10 +2,10 @@ import { vi } from 'vitest'
 
 import { MatchersV2 } from '@pact-foundation/pact'
 
-import { createServer } from '../server.js'
-import { buildPactAgreement } from '../common/helpers/sample-data/__test__/pact-agreement.fixture.js'
-import { config } from '../../config/config.js'
-import { createConsumerPact } from '../../contracts/consumer/pact-test-helpers.js'
+import { createServer } from '#~/server/server.js'
+import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test__/pact-agreement.fixture.js'
+import { config } from '#~/config/config.js'
+import { createConsumerPact } from '#~/contracts/consumer/pact-test-helpers.js'
 
 const { like } = MatchersV2
 
@@ -130,7 +130,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
   test("sets isDraftAgreement true when agreement status is 'offered'", async () => {
     // Reset module cache and mock calculations helper before importing controller
     vi.resetModules()
-    vi.doMock('../common/helpers/get-agreement-calculations.js', () => ({
+    vi.doMock('#~/server/common/helpers/get-agreement-calculations.js', () => ({
       getAgreementCalculations: vi.fn(() => ({
         agreement: { applicant: { business: { name: 'Mock Biz' } } },
         payment: {
@@ -169,7 +169,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
 
   test("sets isAgreementAccepted false when agreement status is 'accepted'", async () => {
     vi.resetModules()
-    vi.doMock('../common/helpers/get-agreement-calculations.js', () => ({
+    vi.doMock('#~/server/common/helpers/get-agreement-calculations.js', () => ({
       getAgreementCalculations: vi.fn(() => ({
         agreement: { applicant: { business: { name: 'Mock Biz' } } },
         payment: {}
@@ -195,7 +195,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
 
   test("sets isWithdrawnAgreement false when agreement status is 'withdrawn'", async () => {
     vi.resetModules()
-    vi.doMock('../common/helpers/get-agreement-calculations.js', () => ({
+    vi.doMock('#~/server/common/helpers/get-agreement-calculations.js', () => ({
       getAgreementCalculations: vi.fn(() => ({
         agreement: { applicant: { business: { name: 'Mock Biz' } } },
         payment: {}
@@ -223,7 +223,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
 describe('viewAgreementController.redirect', () => {
   beforeEach(() => {
     vi.resetModules()
-    vi.doMock('../common/helpers/get-agreement-calculations.js', () => ({
+    vi.doMock('#~/server/common/helpers/get-agreement-calculations.js', () => ({
       getAgreementCalculations: vi.fn(() => ({
         agreement: { applicant: { business: { name: 'Mock Biz' } } },
         payment: {}

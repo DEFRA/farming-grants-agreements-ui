@@ -1,9 +1,17 @@
-import 'dotenv/config'
+import { loadEnvFile } from 'node:process'
 import convict from 'convict'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import convictFormatWithValidator from 'convict-format-with-validator'
+
+try {
+  loadEnvFile()
+} catch (error) {
+  if (error.code !== 'ENOENT') {
+    throw error
+  }
+}
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 

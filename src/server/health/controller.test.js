@@ -1,6 +1,6 @@
-import { createServer } from '../server.js'
-import { statusCodes } from '../common/constants/status-codes.js'
-import { config } from '../../config/config.js'
+import { createServer } from '#~/server/server.js'
+import { statusCodes } from '#~/server/common/constants/status-codes.js'
+import { config } from '#~/config/config.js'
 
 describe('#healthController', () => {
   let server

@@ -2,10 +2,10 @@ import { describe, test, expect } from 'vitest'
 
 import { getControllerByAction } from './get-controller-by-action.js'
 
-import { reviewOfferController } from '../../review-offer/controller.js'
-import { acceptOfferController } from '../../accept-offer/controller.js'
-import { offerAcceptedController } from '../../offer-accepted/controller.js'
-import { offerWithdrawnController } from '../../offer-withdrawn/controller.js'
+import { reviewOfferController } from '#~/server/review-offer/controller.js'
+import { acceptOfferController } from '#~/server/accept-offer/controller.js'
+import { offerAcceptedController } from '#~/server/offer-accepted/controller.js'
+import { offerWithdrawnController } from '#~/server/offer-withdrawn/controller.js'
 
 describe('#getControllerByAction', () => {
   test("when status is 'offered' returns acceptOfferController for display-accept and accept-offer, otherwise reviewOfferController", () => {

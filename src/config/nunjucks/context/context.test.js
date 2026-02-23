@@ -11,7 +11,7 @@ vi.mock('node:fs', async () => {
     readFileSync: () => mockReadFileSync()
   }
 })
-vi.mock('../../../server/common/helpers/logging/logger.js', () => ({
+vi.mock('#~/server/common/helpers/logging/logger.js', () => ({
   createLogger: () => ({ error: (...args) => mockLoggerError(...args) })
 }))
 

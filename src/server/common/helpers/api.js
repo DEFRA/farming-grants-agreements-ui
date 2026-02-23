@@ -1,7 +1,7 @@
 import Boom from '@hapi/boom'
 
-import { config } from '../../../config/config.js'
-import { statusCodes } from '../../common/constants/status-codes.js'
+import { config } from '#~/config/config.js'
+import { statusCodes } from '#~/server/common/constants/status-codes.js'
 
 export const apiRequest = async ({
   agreementId,
