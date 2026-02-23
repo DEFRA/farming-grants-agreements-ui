@@ -1,5 +1,5 @@
-import { buildAgreementViewModel } from '../common/helpers/build-view-agreement-model.js'
-import { getBaseUrl } from '../common/helpers/base-url.js'
+import { buildAgreementViewModel } from '#~/server/common/helpers/build-view-agreement-model.js'
+import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
 
 export const viewAgreementController = {
   async handler(request, h) {

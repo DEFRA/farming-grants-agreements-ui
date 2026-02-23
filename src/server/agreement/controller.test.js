@@ -1,8 +1,8 @@
 import { agreementController } from './controller.js'
-import { createServer } from '../server.js'
-import * as getControllerByActionModule from '../common/helpers/get-controller-by-action.js'
-import { statusCodes } from '../common/constants/status-codes.js'
-import { config } from '../../config/config.js'
+import { createServer } from '#~/server/server.js'
+import * as getControllerByActionModule from '#~/server/common/helpers/get-controller-by-action.js'
+import { statusCodes } from '#~/server/common/constants/status-codes.js'
+import { config } from '#~/config/config.js'
 
 describe('#agreementController', () => {
   let server

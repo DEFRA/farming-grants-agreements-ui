@@ -3,7 +3,7 @@ import { vi } from 'vitest'
 import { StorageResolution, Unit } from 'aws-embedded-metrics'
 
 import { metricsCounter } from './metrics.js'
-import { config } from '../../../config/config.js'
+import { config } from '#~/config/config.js'
 
 const mockPutMetric = vi.fn()
 const mockFlush = vi.fn()

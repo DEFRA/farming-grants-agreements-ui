@@ -4,7 +4,7 @@ import {
   calculateSubsequentPaymentForAgreementLevelItem,
   calculateSubsequentPaymentForParcelItem
 } from './payment-calculations.js'
-import { formatPenceCurrency } from '../../../config/nunjucks/filters/format-currency.js'
+import { formatPenceCurrency } from '#~/config/nunjucks/filters/format-currency.js'
 
 const dateOptions = {
   year: 'numeric',

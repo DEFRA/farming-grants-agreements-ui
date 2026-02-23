@@ -1,4 +1,4 @@
-import { buildReviewOfferModel } from '../common/helpers/build-review-offer-model.js'
+import { buildReviewOfferModel } from '#~/server/common/helpers/build-review-offer-model.js'
 
 export const reviewOfferController = {
   async handler(request, h) {

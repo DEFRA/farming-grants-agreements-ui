@@ -1,6 +1,6 @@
 import { agreementController } from './controller.js'
-import { apiRequest } from '../common/helpers/api.js'
-import { viewAgreementController } from '../view-agreement/controller.js'
+import { apiRequest } from '#~/server/common/helpers/api.js'
+import { viewAgreementController } from '#~/server/view-agreement/controller.js'
 
 const getAgreementData = async (request) => {
   const { agreementId = '' } = request.params
