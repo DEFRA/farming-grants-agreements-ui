@@ -10,13 +10,15 @@ export const getConsentDetails = (consentObjects = []) => {
   const hasSssiConsent = consentCodes.has(SSSI_CONSENT_CODE)
   const hasHeferConsent = consentCodes.has(HEFER_CONSENT_CODE)
 
-  let consentVariant = 'none'
+  let consentVariant
   if (hasSssiConsent && hasHeferConsent) {
     consentVariant = 'both'
   } else if (hasSssiConsent) {
     consentVariant = 'sssi'
   } else if (hasHeferConsent) {
     consentVariant = 'hefer'
+  } else {
+    consentVariant = 'none'
   }
 
   return {
