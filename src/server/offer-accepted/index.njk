@@ -31,7 +31,7 @@
 
             <ul class="govuk-list govuk-list--bullet">
               {% if hasHeferConsent %}
-                <li><a href="https://grants-ui.dev.cdp-int.defra.cloud/farm-payments/fptt-information#sec-5-check-if-your-land-is-eligible-for-FPTT-actions" class="govuk-link">a Historic Environment Farm Environment Record (HEFER)</a> from Historic England</li>
+                <li><a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-information#sec-5-check-if-your-land-is-eligible-for-FPTT-actions') }}" class="govuk-link">a Historic Environment Farm Environment Record (HEFER)</a> from Historic England</li>
               {% endif %}
               {% if hasSssiConsent %}
                 <li><a href="https://grants-ui.dev.cdp-int.defra.cloud/farm-payments/fptt-information#sec-10-get-all-necessary-regulatory-consents-permissions-and-licences-in-place" class="govuk-link">SSSI consent</a> from Natural England</li>
