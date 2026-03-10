@@ -7,9 +7,9 @@ import { createConsumerPact } from '#~/contracts/consumer/pact-test-helpers.js'
 
 const { like } = MatchersV2
 const heferLink =
-  'farm-payments/fptt-information#sec-5-check-if-your-land-is-eligible-for-FPTT-actions'
+  '/farm-payments/fptt-information#sec-5-check-if-your-land-is-eligible-for-FPTT-actions'
 const sssiLink =
-  'farm-payments/fptt-information#sec-10-get-all-necessary-regulatory-consents-permissions-and-licences-in-place'
+  '/farm-payments/fptt-information#sec-10-get-all-necessary-regulatory-consents-permissions-and-licences-in-place'
 
 describe('#offerAcceptedController', () => {
   let server
