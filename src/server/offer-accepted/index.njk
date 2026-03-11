@@ -15,6 +15,31 @@
         </div>
         <div class="govuk-panel__body">
           <p class="govuk-body">Your agreement number is {{ agreement.agreementNumber }}.</p>
+
+          {% if showConsentSection %}
+            <h2 class="govuk-heading-m">You must get consent to do your actions</h2>
+
+            {% if consentVariant === 'both' %}
+              <p class="govuk-body">You are applying for actions on land that's a site of special scientific interest (SSSI) and land with historic or archaeological features.</p>
+            {% elif consentVariant === 'sssi' %}
+              <p class="govuk-body">You are applying for actions on land that's a site of special scientific interest (SSSI).</p>
+            {% elif consentVariant === 'hefer' %}
+              <p class="govuk-body">You are applying for actions on land with historic or archaeological features.</p>
+            {% endif %}
+
+            <p class="govuk-body">Before starting your actions, you must get:</p>
+
+            <ul class="govuk-list govuk-list--bullet">
+              {% if hasHeferConsent %}
+                <li><a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-information#sec-5-check-if-your-land-is-eligible-for-FPTT-actions') }}" class="govuk-link">a Historic Environment Farm Environment Record (HEFER)</a> from Historic England</li>
+              {% endif %}
+              {% if hasSssiConsent %}
+                <li><a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-information#sec-10-get-all-necessary-regulatory-consents-permissions-and-licences-in-place') }}" class="govuk-link">SSSI consent</a> from Natural England</li>
+              {% endif %}
+            </ul>
+          {% endif %}
+
+          <h2 class="govuk-heading-m">What you've agreed</h2>
           <p class="govuk-body">You can view:</p>
 
           <ul class="govuk-list govuk-list--bullet">
