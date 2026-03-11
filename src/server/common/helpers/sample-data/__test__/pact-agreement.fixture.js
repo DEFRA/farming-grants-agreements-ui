@@ -2,9 +2,65 @@ import { MatchersV2 } from '@pact-foundation/pact'
 
 const { eachLike, iso8601DateTimeWithMillis, like } = MatchersV2
 
+const consentFixtures = {
+  none: [],
+  sssi: [
+    {
+      code: 'ne-consent-required',
+      description: 'A consent is required from Natural England',
+      metadata: {
+        actionCode: 'CMOR1',
+        parcelId: '8333',
+        sheetId: 'SD6743'
+      }
+    }
+  ],
+  hefer: [
+    {
+      code: 'hefer-consent-required',
+      description: 'A hefer is needed from Historic England',
+      metadata: {
+        actionCode: 'CMOR1',
+        parcelId: '8083',
+        sheetId: 'SD6743'
+      }
+    }
+  ],
+  both: [
+    {
+      code: 'hefer-consent-required',
+      description: 'A hefer is needed from Historic England',
+      metadata: {
+        actionCode: 'CMOR1',
+        parcelId: '8083',
+        sheetId: 'SD6743'
+      }
+    },
+    {
+      code: 'ne-consent-required',
+      description: 'A consent is required from Natural England',
+      metadata: {
+        actionCode: 'CMOR1',
+        parcelId: '8333',
+        sheetId: 'SD6743'
+      }
+    }
+  ]
+}
+
+const cloneConsentObjects = (consentObjects = []) =>
+  consentObjects.map((consentObject) => ({
+    ...consentObject,
+    metadata: { ...consentObject.metadata }
+  }))
+
+export const buildConsentObjects = (consentVariant = 'none') =>
+  cloneConsentObjects(consentFixtures[consentVariant] ?? consentFixtures.none)
+
 const baseAgreement = {
   agreementNumber: 'FPTT987654321',
   status: 'offered',
+  consentObjects: buildConsentObjects(),
   identifiers: {
     sbi: '106284736'
   },
@@ -198,6 +254,7 @@ const buildApplicationMatcher = (application) => {
 const buildAgreementWithMatchers = (agreement) => ({
   agreementNumber: like(agreement.agreementNumber),
   status: agreement.status,
+  consentObjects: like(agreement.consentObjects ?? []),
   identifiers: {
     ...agreement.identifiers,
     sbi: like(agreement.identifiers.sbi)
@@ -210,12 +267,17 @@ const buildAgreementWithMatchers = (agreement) => ({
 })
 
 export const buildPactAgreement = (
-  { status = 'offered' } = {},
+  {
+    status = 'offered',
+    consentVariant = 'none',
+    consentObjects = buildConsentObjects(consentVariant)
+  } = {},
   { useMatchers = false } = {}
 ) => {
   const agreement = {
     ...baseAgreement,
-    status
+    status,
+    consentObjects
   }
 
   return useMatchers ? buildAgreementWithMatchers(agreement) : agreement
