@@ -10,7 +10,7 @@ const heferLink =
   '/farm-payments/fptt-information#sec-5-check-if-your-land-is-eligible-for-FPTT-actions'
 const sssiLink =
   '/farm-payments/fptt-information#sec-10-get-all-necessary-regulatory-consents-permissions-and-licences-in-place'
-const heferListItem = `a <a href="${heferLink}" class="govuk-link">Historic Environment Farm Environment Record (HEFER)</a> from Historic England`
+const heferListItem = `a <a href="${heferLink}" class="govuk-link" rel="noopener noreferrer" target="_blank">Historic Environment Farm Environment Record (HEFER)</a> from Historic England`
 const heferOnlyHeading =
   'You must get an SFI Historic Environment Farm Environment Record (SFI HEFER) from Historic England'
 const heferOnlyBody =
@@ -20,6 +20,7 @@ const sssiOnlyHeading = 'You must have SSSI consent'
 const sssiOnlyBody =
   "You are applying for actions on land that's a site of special scientific interest (SSSI). You must get SSSI consent from Natural England."
 const sssiOnlyGuidance = `href="${sssiLink}" class="govuk-link" rel="noopener noreferrer" target="_blank">Read the guidance on SSSI consent (opens in new tab).</a>`
+const sssiListItem = `<a href="${sssiLink}" class="govuk-link" rel="noopener noreferrer" target="_blank">SSSI consent</a> from Natural England`
 
 describe('#offerAcceptedController', () => {
   let server
@@ -112,6 +113,7 @@ describe('#offerAcceptedController', () => {
         expect(result).toContain(`href="${heferLink}"`)
         expect(result).toContain(`href="${sssiLink}"`)
         expect(result).toContain(heferListItem)
+        expect(result).toContain(sssiListItem)
         expect(result).not.toContain(heferOnlyHeading)
         expect(result).not.toContain(sssiOnlyHeading)
       })
