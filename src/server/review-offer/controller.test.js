@@ -72,6 +72,7 @@ describe('#reviewOfferController', () => {
 describe('reviewOfferController handler fallbacks', () => {
   let reviewOfferController
   let mockedBuildReviewOfferModel
+  let mockedAuditEvent
 
   const createH = () => ({
     view: vi.fn((template, context) => ({ template, context }))
@@ -82,9 +83,16 @@ describe('reviewOfferController handler fallbacks', () => {
     vi.doMock('#~/server/common/helpers/build-review-offer-model.js', () => ({
       buildReviewOfferModel: vi.fn()
     }))
+    vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
+      auditEvent: vi.fn(),
+      AuditEvent: { REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED' }
+    }))
     ;({ reviewOfferController } = await import('./controller.js'))
     ;({ buildReviewOfferModel: mockedBuildReviewOfferModel } = await import(
       '#~/server/common/helpers/build-review-offer-model.js'
+    ))
+    ;({ auditEvent: mockedAuditEvent } = await import(
+      '#~/server/common/helpers/audit-event.js'
     ))
   })
 
@@ -143,6 +151,24 @@ describe('reviewOfferController handler fallbacks', () => {
       expect.objectContaining({
         pageTitle: 'Review your agreement offer'
       })
+    )
+  })
+
+  test('emits REVIEW_OFFER_VIEWED audit event with agreement data', async () => {
+    mockedBuildReviewOfferModel.mockReturnValue({})
+    const h = createH()
+    const agreementData = {
+      agreementNumber: 'FPTT123',
+      identifiers: { sbi: '106284736' }
+    }
+    const request = { pre: { data: { agreementData } } }
+
+    await reviewOfferController.handler(request, h)
+
+    expect(mockedAuditEvent).toHaveBeenCalledWith(
+      request,
+      'REVIEW_OFFER_VIEWED',
+      agreementData
     )
   })
 })
