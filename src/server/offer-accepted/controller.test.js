@@ -239,6 +239,7 @@ describe('#offerAcceptedController', () => {
         expect(result).not.toContain('You must get consent to do your actions')
         expect(result).not.toContain(`href="${sssiLink}"`)
         expect(result).not.toContain(`href="${heferLink}"`)
+        expect(result).not.toContain("What you've agreed")
       })
   })
 })
