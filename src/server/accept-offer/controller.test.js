@@ -1,4 +1,5 @@
 import { MatchersV2 } from '@pact-foundation/pact'
+import { vi } from 'vitest'
 
 import { createServer } from '#~/server/server.js'
 import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test__/pact-agreement.fixture.js'
@@ -64,5 +65,80 @@ describe('#acceptOfferController', () => {
           expect(result).toContain('Accept offer')
         })
     })
+  })
+})
+
+describe('acceptOfferController handler', () => {
+  let acceptOfferController
+  let mockedAuditEvent
+
+  const createH = () => ({
+    view: vi.fn((template, context) => ({ template, context })),
+    redirect: vi.fn((url) => ({ redirect: url }))
+  })
+
+  beforeEach(async () => {
+    vi.resetModules()
+    vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
+      auditEvent: vi.fn(),
+      AuditEvent: { REVIEW_OFFER_CONTINUED: 'REVIEW_OFFER_CONTINUED' }
+    }))
+    vi.doMock('#~/server/common/helpers/api.js', () => ({
+      apiRequest: vi.fn()
+    }))
+    ;({ acceptOfferController } = await import('./controller.js'))
+    ;({ auditEvent: mockedAuditEvent } = await import(
+      '#~/server/common/helpers/audit-event.js'
+    ))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('emits REVIEW_OFFER_CONTINUED audit event when rendering the accept offer view', async () => {
+    const h = createH()
+    const agreementData = {
+      agreementNumber: 'FPTT123',
+      identifiers: { sbi: '106284736' }
+    }
+    const request = {
+      params: { agreementId: 'FPTT123' },
+      payload: { action: 'display-accept' },
+      pre: { data: { agreementData } },
+      url: { search: '' },
+      headers: {},
+      query: {}
+    }
+
+    await acceptOfferController.handler(request, h)
+
+    expect(mockedAuditEvent).toHaveBeenCalledWith(
+      request,
+      'REVIEW_OFFER_CONTINUED',
+      agreementData
+    )
+  })
+
+  test('does not emit audit event when redirecting for accept-offer with offered status', async () => {
+    const h = createH()
+    const agreementData = {
+      agreementNumber: 'FPTT123',
+      status: 'offered',
+      identifiers: { sbi: '106284736' }
+    }
+    const request = {
+      params: { agreementId: 'FPTT123' },
+      payload: { action: 'accept-offer' },
+      pre: { data: { agreementData } },
+      url: { search: '' },
+      headers: {},
+      query: {}
+    }
+
+    await acceptOfferController.handler(request, h)
+
+    expect(mockedAuditEvent).not.toHaveBeenCalled()
   })
 })
