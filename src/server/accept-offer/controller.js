@@ -24,6 +24,8 @@ export const validateAcceptOfferController = {
       })
     }
 
+    auditEvent(request, AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED)
+
     // Checkbox confirmed - now submit the accept-offer action to the API
     await apiRequest({
       agreementId,
@@ -33,6 +35,8 @@ export const validateAcceptOfferController = {
         request.query['x-encrypted-auth'],
       body: { action: 'accept-offer' }
     })
+
+    auditEvent(request, AuditEvent.ACCEPT_OFFER_SUBMITTED)
 
     // Redirect to the offer accepted page
     return h.redirect(generateRedirectUrl(request))

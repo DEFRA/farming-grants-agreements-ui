@@ -21,6 +21,10 @@ describe('AuditEvent', () => {
   test('contains expected event keys', () => {
     expect(AuditEvent.REVIEW_OFFER_VIEWED).toBe('REVIEW_OFFER_VIEWED')
     expect(AuditEvent.REVIEW_OFFER_CONTINUED).toBe('REVIEW_OFFER_CONTINUED')
+    expect(AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED).toBe(
+      'ACCEPT_OFFER_DECLARATION_CONFIRMED'
+    )
+    expect(AuditEvent.ACCEPT_OFFER_SUBMITTED).toBe('ACCEPT_OFFER_SUBMITTED')
   })
 
   test('cannot be mutated', () => {
