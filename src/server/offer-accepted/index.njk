@@ -45,7 +45,9 @@
             {% endif %}
           {% endif %}
 
-          <h2 class="govuk-heading-m">What you've agreed</h2>
+          {% if showConsentSection and (hasHeferConsent or hasSssiConsent) %}
+            <h2 class="govuk-heading-m">What you've agreed</h2>
+          {% endif %}
           <p class="govuk-body">You can view:</p>
 
           <ul class="govuk-list govuk-list--bullet">
