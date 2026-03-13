@@ -58,7 +58,7 @@ export const buildConsentObjects = (consentVariant = 'none') =>
   cloneConsentObjects(consentFixtures[consentVariant] ?? consentFixtures.none)
 
 const baseAgreement = {
-  agreementNumber: 'FPTT987654321',
+  agreementNumber: 'FPTT123456789',
   status: 'offered',
   consentObjects: buildConsentObjects(),
   identifiers: {

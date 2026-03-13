@@ -71,7 +71,7 @@ describe('#offerAcceptedController', () => {
         expect(result).toContain('Agreement offer accepted')
         expect(result).toContain('The start date for this agreement is')
         expect(result).toContain('1 September 2025')
-        expect(result).toContain('FPTT987654321')
+        expect(result).toContain('FPTT123456789')
       })
   })
 
