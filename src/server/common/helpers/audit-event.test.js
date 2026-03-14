@@ -51,7 +51,7 @@ describe('auditEvent', () => {
   test('calls audit with event and extracted agreement context', () => {
     const request = { params: { agreementId: 'AGR123' } }
     const agreementData = {
-      agreementNumber: 'FPTT987654321',
+      agreementNumber: 'FPTT123456789',
       identifiers: { sbi: '106284736' }
     }
 
@@ -61,7 +61,7 @@ describe('auditEvent', () => {
       event: 'REVIEW_OFFER_VIEWED',
       agreement: {
         agreementId: 'AGR123',
-        agreementNumber: 'FPTT987654321',
+        agreementNumber: 'FPTT123456789',
         sbi: '106284736'
       }
     })

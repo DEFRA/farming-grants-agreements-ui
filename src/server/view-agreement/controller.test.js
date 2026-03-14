@@ -30,7 +30,7 @@ describe('#viewAgreementController', () => {
       .uponReceiving(
         'a request from the customer to view their agreement details'
       )
-      .withRequest('GET', '/FPTT987654321', (builder) => {
+      .withRequest('GET', '/FPTT123456789', (builder) => {
         builder.headers({ 'x-encrypted-auth': 'mock-auth' })
       })
       .willRespondWith(200, (builder) => {
@@ -47,7 +47,7 @@ describe('#viewAgreementController', () => {
 
         const { statusCode, result } = await server.inject({
           method: 'GET',
-          url: '/FPTT987654321',
+          url: '/FPTT123456789',
           headers: {
             'x-encrypted-auth': 'mock-auth'
           }
