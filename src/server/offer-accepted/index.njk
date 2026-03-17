@@ -36,10 +36,10 @@
 
               <ul class="govuk-list govuk-list--bullet">
                 {% if hasHeferConsent %}
-                  <li>a <a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-information#sec-5-check-if-your-land-is-eligible-for-FPTT-actions') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Historic Environment Farm Environment Record (HEFER)</a> from Historic England</li>
+                  <li>a <a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-information#sec-5-check-if-your-land-is-eligible-for-FPTT-actions') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Historic Environment Farm Environment Record (HEFER) (opens in new tab)</a> from Historic England</li>
                 {% endif %}
                 {% if hasSssiConsent %}
-                  <li><a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-information#sec-10-get-all-necessary-regulatory-consents-permissions-and-licences-in-place') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">SSSI consent</a> from Natural England</li>
+                  <li><a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-information#sec-10-get-all-necessary-regulatory-consents-permissions-and-licences-in-place') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">SSSI consent (opens in new tab)</a> from Natural England</li>
                 {% endif %}
               </ul>
             {% endif %}
@@ -52,14 +52,14 @@
 
           <ul class="govuk-list govuk-list--bullet">
             <li>your <a href="{{ buildUrl(baseUrl, agreement.agreementNumber) }}" class="govuk-link">agreement document</a></li>
-            <li>the <a href="{{ buildUrl(serviceUrl, 'farm-payments/terms-and-conditions') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test terms and conditions (opens in a new tab)</a></li>
+            <li>the <a href="{{ buildUrl(serviceUrl, 'farm-payments/terms-and-conditions') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test terms and conditions (opens in new tab)</a></li>
           </ul>
 
           <p class="govuk-body">To check what you must do to get paid for your selected actions, read:</p>
 
           <ul class="govuk-list govuk-list--bullet">
-            <li>the <a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-information') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test information (opens in a new tab)</a></li>
-            <li>the <a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-actions') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test actions (opens in a new tab)</a></li>
+            <li>the <a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-information') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test information (opens in new tab)</a></li>
+            <li>the <a href="{{ buildUrl(serviceUrl, 'farm-payments/fptt-actions') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test actions (opens in new tab)</a></li>
           </ul>
 
           {% if nearestQuarterlyPaymentDate %}
