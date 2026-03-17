@@ -13,9 +13,15 @@ export const validateAcceptOfferController = {
   async handler(request, h) {
     const confirm = request?.payload?.confirm
     const { agreementId = '' } = request.params
+    const { agreementData } = request.pre?.data || {}
 
     // Validate that the checkbox has been checked
     if (confirm !== 'confirmed') {
+      auditEvent(
+        request,
+        AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED,
+        agreementData
+      )
       return h.view('accept-offer/index', {
         pageTitle: 'Accept your agreement offer',
         errorMessage: {
@@ -33,6 +39,8 @@ export const validateAcceptOfferController = {
         request.query['x-encrypted-auth'],
       body: { action: 'accept-offer' }
     })
+
+    auditEvent(request, AuditEvent.ACCEPT_OFFER_SUBMITTED, agreementData)
 
     // Redirect to the offer accepted page
     return h.redirect(generateRedirectUrl(request))

@@ -21,8 +21,8 @@ describe('AuditEvent', () => {
   test('contains expected event keys', () => {
     expect(AuditEvent.REVIEW_OFFER_VIEWED).toBe('REVIEW_OFFER_VIEWED')
     expect(AuditEvent.REVIEW_OFFER_CONTINUED).toBe('REVIEW_OFFER_CONTINUED')
-    expect(AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED).toBe(
-      'ACCEPT_OFFER_DECLARATION_CONFIRMED'
+    expect(AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED).toBe(
+      'ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED'
     )
     expect(AuditEvent.ACCEPT_OFFER_SUBMITTED).toBe('ACCEPT_OFFER_SUBMITTED')
   })
@@ -121,7 +121,7 @@ describe('auditEvent', () => {
     const cases = [
       [AuditEvent.REVIEW_OFFER_VIEWED, '2301'],
       [AuditEvent.REVIEW_OFFER_CONTINUED, '2302'],
-      [AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED, '2303'],
+      [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED, '2303'],
       [AuditEvent.ACCEPT_OFFER_SUBMITTED, '2304']
     ]
 
