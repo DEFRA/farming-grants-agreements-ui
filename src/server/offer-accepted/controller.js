@@ -1,9 +1,12 @@
 import { getFirstPaymentDate } from '#~/server/common/helpers/get-first-payment-date.js'
 import { getConsentDetails } from '#~/server/common/helpers/get-consent-details.js'
+import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
 
 export const offerAcceptedController = {
   async handler(request, h) {
     const { agreementData } = request.pre?.data || {}
+
+    auditEvent(request, AuditEvent.OFFER_ACCEPTED_VIEWED, agreementData)
 
     return h.view('offer-accepted/index', {
       pageTitle: 'Offer accepted',
