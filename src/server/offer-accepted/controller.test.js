@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { MatchersV2 } from '@pact-foundation/pact'
 
 import { createServer } from '#~/server/server.js'
@@ -241,5 +242,56 @@ describe('#offerAcceptedController', () => {
         expect(result).not.toContain(`href="${heferLink}"`)
         expect(result).not.toContain("What you've agreed")
       })
+  })
+})
+
+describe('offerAcceptedController handler', () => {
+  let offerAcceptedController
+  let mockedAuditEvent
+
+  const agreementData = {
+    agreementNumber: 'FPTT123',
+    payment: { agreementStartDate: '2025-09-01' },
+    consentObjects: []
+  }
+
+  const createH = () => ({
+    view: vi.fn((template, context) => ({ template, context }))
+  })
+
+  beforeEach(async () => {
+    vi.resetModules()
+    vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
+      auditEvent: vi.fn(),
+      AuditEvent: { OFFER_ACCEPTED_VIEWED: 'OFFER_ACCEPTED_VIEWED' }
+    }))
+    vi.doMock('#~/server/common/helpers/get-first-payment-date.js', () => ({
+      getFirstPaymentDate: vi.fn(() => '5 December 2025')
+    }))
+    vi.doMock('#~/server/common/helpers/get-consent-details.js', () => ({
+      getConsentDetails: vi.fn(() => ({}))
+    }))
+    ;({ offerAcceptedController } = await import('./controller.js'))
+    ;({ auditEvent: mockedAuditEvent } = await import(
+      '#~/server/common/helpers/audit-event.js'
+    ))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('emits OFFER_ACCEPTED_VIEWED with agreementData when the screen is rendered', async () => {
+    const h = createH()
+    const request = { pre: { data: { agreementData } }, params: {} }
+
+    await offerAcceptedController.handler(request, h)
+
+    expect(mockedAuditEvent).toHaveBeenCalledWith(
+      request,
+      'OFFER_ACCEPTED_VIEWED',
+      agreementData
+    )
   })
 })

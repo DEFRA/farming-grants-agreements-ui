@@ -7,7 +7,9 @@ export const AuditEvent = Object.freeze({
   REVIEW_OFFER_CONTINUED: 'REVIEW_OFFER_CONTINUED',
   ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED:
     'ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED',
-  ACCEPT_OFFER_SUBMITTED: 'ACCEPT_OFFER_SUBMITTED'
+  ACCEPT_OFFER_SUBMITTED: 'ACCEPT_OFFER_SUBMITTED',
+  OFFER_ACCEPTED_VIEWED: 'OFFER_ACCEPTED_VIEWED',
+  AGREEMENT_VIEWED: 'AGREEMENT_VIEWED'
 })
 
 // Human-readable description for each audit event, used in security.details.message
@@ -17,7 +19,9 @@ const eventMessages = {
     'User continued from review offer to accept offer screen',
   [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED]:
     'User submitted the Accept offer form but the "I have read the information (checkbox)" has not been selected',
-  [AuditEvent.ACCEPT_OFFER_SUBMITTED]: 'User selected Accept offer'
+  [AuditEvent.ACCEPT_OFFER_SUBMITTED]: 'User selected Accept offer',
+  [AuditEvent.OFFER_ACCEPTED_VIEWED]: 'User viewed the offer accepted screen',
+  [AuditEvent.AGREEMENT_VIEWED]: 'User viewed the agreement'
 }
 
 // Transaction code for each audit event, used in security.details.transactioncode
@@ -25,7 +29,9 @@ const eventTransactionCodes = {
   [AuditEvent.REVIEW_OFFER_VIEWED]: '2301',
   [AuditEvent.REVIEW_OFFER_CONTINUED]: '2302',
   [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED]: '2303',
-  [AuditEvent.ACCEPT_OFFER_SUBMITTED]: '2304'
+  [AuditEvent.ACCEPT_OFFER_SUBMITTED]: '2304',
+  [AuditEvent.OFFER_ACCEPTED_VIEWED]: '2305',
+  [AuditEvent.AGREEMENT_VIEWED]: '2306'
 }
 
 /**
