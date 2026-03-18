@@ -116,6 +116,18 @@ describe('auditEvent', () => {
     )
   })
 
+  test('passes failure status through to the audit payload', () => {
+    const request = createRequest()
+
+    auditEvent(request, AuditEvent.ACCEPT_OFFER_SUBMITTED, {}, 'failure')
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audit: expect.objectContaining({ status: 'failure' })
+      })
+    )
+  })
+
   test('uses correct transaction code per event', () => {
     const request = createRequest()
     const cases = [

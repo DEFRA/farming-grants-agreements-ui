@@ -229,7 +229,7 @@ describe('validateAcceptOfferController handler', () => {
     )
   })
 
-  test('emits ACCEPT_OFFER_SUBMITTED after the API call when checkbox is confirmed', async () => {
+  test('emits ACCEPT_OFFER_SUBMITTED with success status after the API call when checkbox is confirmed', async () => {
     const h = createH()
 
     await validateAcceptOfferController.handler(createRequest('confirmed'), h)
@@ -237,7 +237,27 @@ describe('validateAcceptOfferController handler', () => {
     expect(mockedAuditEvent).toHaveBeenCalledWith(
       expect.anything(),
       'ACCEPT_OFFER_SUBMITTED',
-      agreementData
+      agreementData,
+      'success'
+    )
+  })
+
+  test('emits ACCEPT_OFFER_SUBMITTED with failure status when the API call throws', async () => {
+    const { apiRequest: mockedApiRequest } = await import(
+      '#~/server/common/helpers/api.js'
+    )
+    mockedApiRequest.mockRejectedValueOnce(new Error('API error'))
+    const h = createH()
+
+    await expect(
+      validateAcceptOfferController.handler(createRequest('confirmed'), h)
+    ).rejects.toThrow('API error')
+
+    expect(mockedAuditEvent).toHaveBeenCalledWith(
+      expect.anything(),
+      'ACCEPT_OFFER_SUBMITTED',
+      agreementData,
+      'failure'
     )
   })
 
@@ -249,6 +269,7 @@ describe('validateAcceptOfferController handler', () => {
     expect(mockedAuditEvent).not.toHaveBeenCalledWith(
       expect.anything(),
       'ACCEPT_OFFER_SUBMITTED',
+      expect.anything(),
       expect.anything()
     )
   })

@@ -36,8 +36,14 @@ const eventTransactionCodes = {
  * @param {import('@hapi/hapi').Request} request
  * @param {AuditEvent[keyof AuditEvent]} event
  * @param {object} [agreementData]
+ * @param {'success'|'failure'} [status]
  */
-const buildAuditPayload = (request, event, agreementData = {}) => ({
+const buildAuditPayload = (
+  request,
+  event,
+  agreementData = {},
+  status = 'success'
+) => ({
   user: request.payload?.requesterUsername,
   sessionid: request.auth?.credentials?.sessionId,
   correlationid: agreementData.correlationId,
@@ -63,7 +69,7 @@ const buildAuditPayload = (request, event, agreementData = {}) => ({
     action: event,
     entity: 'Agreements',
     entityid: agreementData.agreementNumber ?? request.params?.agreementId,
-    status: 'success',
+    status,
     details: agreementData
   }
 })
@@ -73,7 +79,13 @@ const buildAuditPayload = (request, event, agreementData = {}) => ({
  * @param {import('@hapi/hapi').Request} request
  * @param {AuditEvent[keyof AuditEvent]} event
  * @param {object} [agreementData] - Agreement data from the API pre-handler
+ * @param {'success'|'failure'} [status] - Outcome of the action being audited
  */
-export const auditEvent = (request, event, agreementData = {}) => {
-  audit(buildAuditPayload(request, event, agreementData))
+export const auditEvent = (
+  request,
+  event,
+  agreementData = {},
+  status = 'success'
+) => {
+  audit(buildAuditPayload(request, event, agreementData, status))
 }
