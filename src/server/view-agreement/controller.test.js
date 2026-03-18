@@ -371,3 +371,50 @@ describe('viewAgreementController.redirect', () => {
     expect(h.redirect).not.toHaveBeenCalled()
   })
 })
+
+describe('viewAgreementController audit events', () => {
+  let mockedAuditEvent
+
+  beforeEach(async () => {
+    vi.resetModules()
+    vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
+      auditEvent: vi.fn(),
+      AuditEvent: { AGREEMENT_VIEWED: 'AGREEMENT_VIEWED' }
+    }))
+    vi.doMock('#~/server/common/helpers/build-view-agreement-model.js', () => ({
+      buildAgreementViewModel: vi.fn(() => ({}))
+    }))
+    ;({ auditEvent: mockedAuditEvent } = await import(
+      '#~/server/common/helpers/audit-event.js'
+    ))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('emits AGREEMENT_VIEWED with agreementData when the agreement is rendered', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({ status: 'accepted' })
+
+    await viewAgreementController.handler(request, h)
+
+    expect(mockedAuditEvent).toHaveBeenCalledWith(
+      request,
+      'AGREEMENT_VIEWED',
+      request.pre.data.agreementData
+    )
+  })
+
+  test('does not emit AGREEMENT_VIEWED when redirecting', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({ status: 'offered', authSource: 'defra' })
+
+    await viewAgreementController.handler(request, h)
+
+    expect(mockedAuditEvent).not.toHaveBeenCalled()
+  })
+})

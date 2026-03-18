@@ -21,6 +21,10 @@ describe('AuditEvent', () => {
   test('contains expected event keys', () => {
     expect(AuditEvent.REVIEW_OFFER_VIEWED).toBe('REVIEW_OFFER_VIEWED')
     expect(AuditEvent.REVIEW_OFFER_CONTINUED).toBe('REVIEW_OFFER_CONTINUED')
+    expect(AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED).toBe(
+      'ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED'
+    )
+    expect(AuditEvent.ACCEPT_OFFER_SUBMITTED).toBe('ACCEPT_OFFER_SUBMITTED')
   })
 
   test('cannot be mutated', () => {
@@ -36,6 +40,14 @@ describe('auditEvent', () => {
   let auditEvent
   let AuditEvent
 
+  const createRequest = (overrides = {}) => ({
+    params: { agreementId: 'AGR123' },
+    auth: { credentials: { sessionId: 'session-abc' } },
+    headers: {},
+    info: { remoteAddress: '10.0.0.1' },
+    ...overrides
+  })
+
   beforeEach(async () => {
     vi.resetModules()
     vi.doMock('@defra/cdp-auditing', () => ({ audit: vi.fn() }))
@@ -48,50 +60,126 @@ describe('auditEvent', () => {
     vi.clearAllMocks()
   })
 
-  test('calls audit with event and extracted agreement context', () => {
-    const request = { params: { agreementId: 'AGR123' } }
+  test('calls audit with the correct top-level fields', () => {
+    const request = createRequest()
     const agreementData = {
-      agreementNumber: 'FPTT123456789',
-      identifiers: { sbi: '106284736' }
+      agreementNumber: 'FPTT987654321',
+      correlationId: 'corr-xyz'
     }
 
     auditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, agreementData)
 
-    expect(audit).toHaveBeenCalledWith({
-      event: 'REVIEW_OFFER_VIEWED',
-      agreement: {
-        agreementId: 'AGR123',
-        agreementNumber: 'FPTT123456789',
-        sbi: '106284736'
-      }
-    })
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionid: 'session-abc',
+        correlationid: 'corr-xyz',
+        datetime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+        ip: '10.0.0.1'
+      })
+    )
   })
 
-  test('handles missing request params gracefully', () => {
-    auditEvent({}, AuditEvent.REVIEW_OFFER_VIEWED, {})
+  test('calls audit with the correct security fields', () => {
+    const request = createRequest()
 
-    expect(audit).toHaveBeenCalledWith({
-      event: 'REVIEW_OFFER_VIEWED',
-      agreement: {
-        agreementId: undefined,
-        agreementNumber: undefined,
-        sbi: undefined
-      }
-    })
+    auditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, {})
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        security: expect.objectContaining({
+          pmccode: '0706',
+          details: expect.objectContaining({
+            transactioncode: '2301',
+            message: 'User viewed the review offer screen',
+            additionalinfo: 'agreementId: AGR123'
+          })
+        })
+      })
+    )
   })
 
-  test('handles omitted agreementData gracefully', () => {
-    const request = { params: { agreementId: 'AGR123' } }
+  test('calls audit with the correct audit fields', () => {
+    const request = createRequest()
+    const agreementData = { agreementNumber: 'FPTT987654321' }
 
-    auditEvent(request, AuditEvent.REVIEW_OFFER_CONTINUED)
+    auditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, agreementData)
 
-    expect(audit).toHaveBeenCalledWith({
-      event: 'REVIEW_OFFER_CONTINUED',
-      agreement: {
-        agreementId: 'AGR123',
-        agreementNumber: undefined,
-        sbi: undefined
-      }
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audit: expect.objectContaining({
+          action: 'REVIEW_OFFER_VIEWED',
+          entityid: 'FPTT987654321',
+          status: 'success',
+          details: agreementData
+        })
+      })
+    )
+  })
+
+  test('passes failure status through to the audit payload', () => {
+    const request = createRequest()
+
+    auditEvent(request, AuditEvent.ACCEPT_OFFER_SUBMITTED, {}, 'failure')
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audit: expect.objectContaining({ status: 'failure' })
+      })
+    )
+  })
+
+  test('uses correct transaction code per event', () => {
+    const request = createRequest()
+    const cases = [
+      [AuditEvent.REVIEW_OFFER_VIEWED, '2301'],
+      [AuditEvent.REVIEW_OFFER_CONTINUED, '2302'],
+      [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED, '2303'],
+      [AuditEvent.ACCEPT_OFFER_SUBMITTED, '2304']
+    ]
+
+    for (const [event, expectedCode] of cases) {
+      auditEvent(request, event)
+      expect(audit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          security: expect.objectContaining({
+            details: expect.objectContaining({ transactioncode: expectedCode })
+          })
+        })
+      )
+    }
+  })
+
+  test('falls back to agreementId from params when agreementNumber is absent', () => {
+    const request = createRequest()
+
+    auditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, {})
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audit: expect.objectContaining({ entityid: 'AGR123' })
+      })
+    )
+  })
+
+  test('handles missing auth gracefully', () => {
+    const request = createRequest({ auth: undefined })
+
+    auditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, {})
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({ sessionid: undefined })
+    )
+  })
+
+  test('prefers x-forwarded-for over remoteAddress for ip', () => {
+    const request = createRequest({
+      headers: { 'x-forwarded-for': '203.0.113.5' }
     })
+
+    auditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, {})
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({ ip: '203.0.113.5' })
+    )
   })
 })
