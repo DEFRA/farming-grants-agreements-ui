@@ -1,8 +1,7 @@
-import {
-  getConsentDetails,
-  HEFER_CONSENT_CODE,
-  SSSI_CONSENT_CODE
-} from './get-consent-details.js'
+import { getConsentDetails } from './get-consent-details.js'
+
+const SSSI_CONSENT_CODE = 'ne-consent-required'
+const HEFER_CONSENT_CODE = 'hefer-consent-required'
 
 describe('getConsentDetails', () => {
   test('returns none when there are no consent objects', () => {

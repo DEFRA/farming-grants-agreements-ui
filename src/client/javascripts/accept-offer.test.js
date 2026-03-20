@@ -1,11 +1,26 @@
-import { beforeEach, describe, it, expect } from 'vitest'
+import { beforeEach, describe, it, expect, vi } from 'vitest'
 import { JSDOM } from 'jsdom'
-import { initCheckbox } from './accept-offer.js'
 
 describe('accept-offer.js', () => {
   let dom
   let window
   let document
+
+  const runInitCheckbox = async () => {
+    vi.useFakeTimers()
+    // Re-import the module to trigger the side-effect (adding 'load' listener)
+    // We use a query param to ensure a fresh import if needed,
+    // though vi.resetModules() is better.
+    vi.resetModules()
+    await import('./accept-offer.js')
+
+    // Trigger the load event which calls initCheckbox
+    window.dispatchEvent(new window.Event('load'))
+
+    // The implementation has a 100ms delay
+    vi.advanceTimersByTime(100)
+    vi.useRealTimers()
+  }
 
   beforeEach(() => {
     // Create a new JSDOM instance for each test
@@ -51,7 +66,7 @@ describe('accept-offer.js', () => {
   })
 
   describe('initCheckbox function', () => {
-    it('should initialize checkbox and button with event listeners', () => {
+    it('should initialize checkbox and button with event listeners', async () => {
       const checkbox = document.querySelector('#confirm')
       const button = document.getElementById('accept-offer-button')
 
@@ -60,7 +75,7 @@ describe('accept-offer.js', () => {
       expect(button.classList.contains('govuk-button--disabled')).toBe(false)
 
       // Call the actual function - this should disable the button
-      initCheckbox()
+      await runInitCheckbox()
 
       // Button should be disabled after JS initializes
       expect(button.disabled).toBe(true)
@@ -83,8 +98,8 @@ describe('accept-offer.js', () => {
       expect(button.classList.contains('govuk-button--disabled')).toBe(true)
     })
 
-    it('should handle click events after initialization', () => {
-      initCheckbox()
+    it('should handle click events after initialization', async () => {
+      await runInitCheckbox()
 
       const checkbox = document.querySelector('#confirm')
       const button = document.getElementById('accept-offer-button')
@@ -97,22 +112,22 @@ describe('accept-offer.js', () => {
       expect(button.getAttribute('aria-disabled')).toBe('false')
     })
 
-    it('should not fail when checkbox is missing', () => {
+    it('should not fail when checkbox is missing', async () => {
       document.querySelector('#confirm').remove()
 
       // Should not throw
-      expect(() => initCheckbox()).not.toThrow()
+      await expect(runInitCheckbox()).resolves.not.toThrow()
     })
 
-    it('should not fail when button is missing', () => {
+    it('should not fail when button is missing', async () => {
       document.getElementById('accept-offer-button').remove()
 
       // Should not throw
-      expect(() => initCheckbox()).not.toThrow()
+      await expect(runInitCheckbox()).resolves.not.toThrow()
     })
 
-    it('should properly set all button attributes when enabling', () => {
-      initCheckbox()
+    it('should properly set all button attributes when enabling', async () => {
+      await runInitCheckbox()
 
       const checkbox = document.querySelector('#confirm')
       const button = document.getElementById('accept-offer-button')
@@ -126,8 +141,8 @@ describe('accept-offer.js', () => {
       expect(button.classList.contains('govuk-button--disabled')).toBe(false)
     })
 
-    it('should properly set all button attributes when disabling', () => {
-      initCheckbox()
+    it('should properly set all button attributes when disabling', async () => {
+      await runInitCheckbox()
 
       const checkbox = document.querySelector('#confirm')
       const button = document.getElementById('accept-offer-button')
@@ -168,8 +183,8 @@ describe('accept-offer.js', () => {
       expect(button.classList.contains('govuk-button--disabled')).toBe(false)
     })
 
-    it('should have button disabled after JS initializes', () => {
-      initCheckbox()
+    it('should have button disabled after JS initializes', async () => {
+      await runInitCheckbox()
       const button = document.getElementById('accept-offer-button')
       expect(button.disabled).toBe(true)
       expect(button.getAttribute('aria-disabled')).toBe('true')
