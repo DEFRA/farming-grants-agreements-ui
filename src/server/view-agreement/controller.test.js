@@ -372,6 +372,98 @@ describe('viewAgreementController.redirect', () => {
   })
 })
 
+describe('viewAgreementController agreement ended', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    vi.doMock('#~/server/common/helpers/get-agreement-calculations.js', () => ({
+      getAgreementCalculations: vi.fn(() => ({
+        agreement: { applicant: { business: { name: 'Mock Biz' } } },
+        payment: {}
+      })),
+      getAdditionalAnnualPayments: vi.fn(() => ({ annualPayments: [] }))
+    }))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('renders agreement-ended template when status is terminated', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({ status: 'terminated' })
+
+    await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/agreement-ended',
+      expect.objectContaining({ pageTitle: 'Agreement ended' })
+    )
+  })
+
+  test('renders agreement-ended template when current date is past agreementEndDate', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({ status: 'accepted' })
+    request.pre.data.agreementData.payment.agreementEndDate = '2020-01-01'
+
+    await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/agreement-ended',
+      expect.objectContaining({ pageTitle: 'Agreement ended' })
+    )
+  })
+
+  test('renders normal index template when status is accepted and date has not passed', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({ status: 'accepted' })
+
+    await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/index',
+      expect.any(Object)
+    )
+  })
+
+  test('emits AGREEMENT_VIEWED when rendering agreement-ended template', async () => {
+    vi.resetModules()
+    vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
+      auditEvent: vi.fn(),
+      AuditEvent: { AGREEMENT_VIEWED: 'AGREEMENT_VIEWED' }
+    }))
+    vi.doMock('#~/server/common/helpers/get-agreement-calculations.js', () => ({
+      getAgreementCalculations: vi.fn(() => ({
+        agreement: { applicant: { business: { name: 'Mock Biz' } } },
+        payment: {}
+      })),
+      getAdditionalAnnualPayments: vi.fn(() => ({ annualPayments: [] }))
+    }))
+
+    const { viewAgreementController } = await import('./controller.js')
+    const { auditEvent: mockedAuditEvent } = await import(
+      '#~/server/common/helpers/audit-event.js'
+    )
+    const h = createH()
+    const request = buildRequest({ status: 'terminated' })
+
+    await viewAgreementController.handler(request, h)
+
+    expect(mockedAuditEvent).toHaveBeenCalledWith(
+      request,
+      'AGREEMENT_VIEWED',
+      request.pre.data.agreementData
+    )
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/agreement-ended',
+      expect.any(Object)
+    )
+  })
+})
+
 describe('viewAgreementController audit events', () => {
   let mockedAuditEvent
 
