@@ -15,7 +15,7 @@ function statusCodeMessage(statusCode) {
   }
 }
 
-export const catchAll = (request, h) => {
+const catchAll = (request, h) => {
   const { response } = request
 
   if (!('isBoom' in response)) {

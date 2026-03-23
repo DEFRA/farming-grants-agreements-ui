@@ -54,7 +54,7 @@ const cloneConsentObjects = (consentObjects = []) =>
     metadata: { ...consentObject.metadata }
   }))
 
-export const buildConsentObjects = (consentVariant = 'none') =>
+const buildConsentObjects = (consentVariant = 'none') =>
   cloneConsentObjects(consentFixtures[consentVariant] ?? consentFixtures.none)
 
 const baseAgreement = {

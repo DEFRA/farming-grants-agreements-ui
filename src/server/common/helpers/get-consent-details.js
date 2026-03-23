@@ -29,5 +29,3 @@ export const getConsentDetails = (consentObjects = []) => {
     showConsentSection: consentVariant !== 'none'
   }
 }
-
-export { SSSI_CONSENT_CODE, HEFER_CONSENT_CODE }

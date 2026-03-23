@@ -3,16 +3,10 @@ import { fileURLToPath } from 'node:url'
 
 import { Pact } from '@pact-foundation/pact'
 
-export const pactConsumer = 'farming-grants-agreements-ui'
-export const pactProvider = 'farming-grants-agreements-api'
-export const pactOutputDir = path.resolve(
-  'src',
-  'contracts',
-  'consumer',
-  'pacts'
-)
-export const pactGeneratedDir = path.join(pactOutputDir, 'generated')
-export const pactOutputFile = `${pactConsumer}-${pactProvider}.json`
+const pactConsumer = 'farming-grants-agreements-ui'
+const pactProvider = 'farming-grants-agreements-api'
+const pactOutputDir = path.resolve('src', 'contracts', 'consumer', 'pacts')
+const pactGeneratedDir = path.join(pactOutputDir, 'generated')
 
 export const createConsumerPact = (testFileUrl) => {
   const testFilePath = fileURLToPath(testFileUrl)
