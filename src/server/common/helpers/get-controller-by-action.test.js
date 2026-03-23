@@ -6,6 +6,7 @@ import { reviewOfferController } from '#~/server/review-offer/controller.js'
 import { acceptOfferController } from '#~/server/accept-offer/controller.js'
 import { offerAcceptedController } from '#~/server/offer-accepted/controller.js'
 import { offerWithdrawnController } from '#~/server/offer-withdrawn/controller.js'
+import { viewAgreementController } from '#~/server/view-agreement/controller.js'
 
 describe('#getControllerByAction', () => {
   test("when status is 'offered' returns acceptOfferController for display-accept and accept-offer, otherwise reviewOfferController", () => {
@@ -33,6 +34,13 @@ describe('#getControllerByAction', () => {
 
     expect(chooser()).toBe(offerWithdrawnController)
     expect(chooser('any-action')).toBe(offerWithdrawnController)
+  })
+
+  test("when status is 'terminated' always returns viewAgreementController", () => {
+    const chooser = getControllerByAction('terminated')
+
+    expect(chooser()).toBe(viewAgreementController)
+    expect(chooser('any-action')).toBe(viewAgreementController)
   })
 
   test('throws a bad request for unknown agreement status', () => {
