@@ -16,7 +16,9 @@ const formatApplicantName = (customer) => {
 export const buildAgreementViewModel = (agreementData) => {
   const isDraftAgreement = agreementData?.status === 'offered'
   const isAgreementAccepted = agreementData?.status === 'accepted'
-  const isWithdrawnAgreement = agreementData?.status === 'withdrawn'
+  const isWithdrawnAgreement =
+    agreementData?.status === 'withdrawn' ||
+    agreementData?.status === 'cancelled'
 
   let businessName = agreementData.applicant.business.name
   let applicantName = formatApplicantName(agreementData.applicant.customer)
