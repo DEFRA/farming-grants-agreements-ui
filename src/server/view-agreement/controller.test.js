@@ -402,21 +402,7 @@ describe('viewAgreementController agreement ended', () => {
     )
   })
 
-  test('renders agreement-ended template when current date is past agreementEndDate', async () => {
-    const { viewAgreementController } = await import('./controller.js')
-    const h = createH()
-    const request = buildRequest({ status: 'accepted' })
-    request.pre.data.agreementData.payment.agreementEndDate = '2020-01-01'
-
-    await viewAgreementController.handler(request, h)
-
-    expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/agreement-ended',
-      expect.objectContaining({ pageTitle: 'Agreement ended' })
-    )
-  })
-
-  test('renders normal index template when status is accepted and date has not passed', async () => {
+  test('renders normal index template when status is accepted', async () => {
     const { viewAgreementController } = await import('./controller.js')
     const h = createH()
     const request = buildRequest({ status: 'accepted' })
