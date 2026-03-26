@@ -36,6 +36,13 @@ describe('#getControllerByAction', () => {
     expect(chooser('any-action')).toBe(offerWithdrawnController)
   })
 
+  test("when status is 'cancelled' always returns offerWithdrawnController", () => {
+    const chooser = getControllerByAction('cancelled')
+
+    expect(chooser()).toBe(offerWithdrawnController)
+    expect(chooser('any-action')).toBe(offerWithdrawnController)
+  })
+
   test("when status is 'terminated' always returns viewAgreementController", () => {
     const chooser = getControllerByAction('terminated')
 

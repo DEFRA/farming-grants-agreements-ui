@@ -129,4 +129,21 @@ describe('buildAgreementViewModel', () => {
     expect(model.agreementStartDate).toBe('XXXXX')
     expect(model.agreementEndDate).toBe('XXXXX')
   })
+
+  test('masks business and applicant names for cancelled status', () => {
+    mockedGetAgreementCalculations.mockReturnValue({})
+
+    const model = buildAgreementViewModel({
+      ...baseAgreementData,
+      status: 'cancelled'
+    })
+
+    expect(model.isDraftAgreement).toBe(false)
+    expect(model.isAgreementAccepted).toBe(false)
+    expect(model.isWithdrawnAgreement).toBe(true)
+    expect(model.businessName).toBe('XXXXX')
+    expect(model.applicantName).toBe('XXXXX')
+    expect(model.agreementStartDate).toBe('XXXXX')
+    expect(model.agreementEndDate).toBe('XXXXX')
+  })
 })

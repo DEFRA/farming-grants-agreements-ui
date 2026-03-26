@@ -26,7 +26,10 @@ export const getControllerByAction = (agreementStatus) => {
     }
   } else if (agreementStatus === 'accepted') {
     chooseControllerByActionOffer = () => offerAcceptedController
-  } else if (agreementStatus === 'withdrawn') {
+  } else if (
+    agreementStatus === 'withdrawn' ||
+    agreementStatus === 'cancelled'
+  ) {
     chooseControllerByActionOffer = () => offerWithdrawnController
   } else if (agreementStatus === 'terminated') {
     chooseControllerByActionOffer = () => viewAgreementController
