@@ -54,6 +54,12 @@ describe('#viewAgreementController', () => {
         })
 
         expect(statusCode).toBe(200)
+        expect(result).not.toContain(
+          'If you need to amend your agreement offer'
+        )
+        expect(result).not.toContain(
+          'Contact the Rural Payments Agency (RPA) to explain:'
+        )
         expect(result).toContain('J&amp;S Hartley FPTT')
         expect(result).toContain(
           'You, J&amp;S Hartley, of Mason House Farm Clitheroe Rd, Bashall Eaves, Bartindale Road, Clitheroe, BB7 3DD'
@@ -72,6 +78,51 @@ describe('#viewAgreementController', () => {
         // Total row
         expect(result).toContain('£80.07')
         expect(result).toContain('£320.06')
+      })
+  })
+
+  test('does not show the review-offer RPA amendment guidance on the printable draft agreement', async () => {
+    return await provider
+      .addInteraction()
+      .given('A customer has an agreement offer')
+      .uponReceiving(
+        'a request from the customer to view the printable draft agreement'
+      )
+      .withRequest('GET', '/FPTT123456789', (builder) => {
+        builder.headers({ 'x-encrypted-auth': 'mock-auth' })
+      })
+      .willRespondWith(200, (builder) => {
+        builder.headers({ 'Content-Type': 'application/json' })
+        builder.jsonBody({
+          agreementData: buildPactAgreement(
+            { status: like('offered') },
+            { useMatchers: true }
+          )
+        })
+      })
+      .executeTest(async (mockServer) => {
+        config.set('backend.url', mockServer.url)
+
+        const { statusCode, result } = await server.inject({
+          method: 'GET',
+          url: '/FPTT123456789/print',
+          headers: {
+            'x-encrypted-auth': 'mock-auth'
+          }
+        })
+
+        expect(statusCode).toBe(200)
+        expect(result).toContain(
+          'Farm payments technical test agreement document'
+        )
+        expect(result).not.toContain(
+          'If you need to amend your agreement offer'
+        )
+        expect(result).not.toContain(
+          'Contact the Rural Payments Agency (RPA) to explain:'
+        )
+        expect(result).not.toContain('the changes you want to make')
+        expect(result).not.toContain('why you want to make the changes')
       })
   })
 })

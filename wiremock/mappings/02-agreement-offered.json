@@ -1,0 +1,15 @@
+{
+  "scenarioName": "agreement-offer",
+  "requiredScenarioState": "Started",
+  "request": {
+    "method": "GET",
+    "urlPath": "/FPTT123456789"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "agreement-offered.json"
+  }
+}

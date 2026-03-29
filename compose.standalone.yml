@@ -1,0 +1,30 @@
+services:
+  wiremock:
+    image: wiremock/wiremock:3.13.1
+    command: ['--verbose']
+    ports:
+      - '${WIREMOCK_PORT:-8080}:8080'
+    volumes:
+      - ./wiremock:/home/wiremock
+    networks:
+      - standalone
+
+  farming-grants-agreements-ui:
+    build: ./
+    ports:
+      - '127.0.0.1:${UI_PORT:-3000}:3000'
+    depends_on:
+      - wiremock
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      SESSION_CACHE_ENGINE: memory
+      SESSION_COOKIE_SECURE: 'false'
+      ENABLE_SECURE_CONTEXT: 'false'
+      BACKEND_URL: http://wiremock:8080
+    networks:
+      - standalone
+
+networks:
+  standalone:
+    driver: bridge
