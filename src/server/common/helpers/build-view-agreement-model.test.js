@@ -59,6 +59,8 @@ describe('buildAgreementViewModel', () => {
       isDraftAgreement: false,
       isAgreementAccepted: true,
       isWithdrawnAgreement: false,
+      isCancelledAgreement: false,
+      isTerminatedAgreement: false,
       businessName: 'Farm Business',
       applicantName: 'Mr. Edward Jones',
       ...calculations
@@ -140,10 +142,31 @@ describe('buildAgreementViewModel', () => {
 
     expect(model.isDraftAgreement).toBe(false)
     expect(model.isAgreementAccepted).toBe(false)
-    expect(model.isWithdrawnAgreement).toBe(true)
+    expect(model.isWithdrawnAgreement).toBe(false)
+    expect(model.isCancelledAgreement).toBe(true)
+    expect(model.isTerminatedAgreement).toBe(false)
     expect(model.businessName).toBe('XXXXX')
     expect(model.applicantName).toBe('XXXXX')
     expect(model.agreementStartDate).toBe('XXXXX')
     expect(model.agreementEndDate).toBe('XXXXX')
+  })
+
+  test('retains real data for terminated status', () => {
+    mockedGetAgreementCalculations.mockReturnValue({})
+
+    const model = buildAgreementViewModel({
+      ...baseAgreementData,
+      status: 'terminated'
+    })
+
+    expect(model.isDraftAgreement).toBe(false)
+    expect(model.isAgreementAccepted).toBe(false)
+    expect(model.isWithdrawnAgreement).toBe(false)
+    expect(model.isCancelledAgreement).toBe(false)
+    expect(model.isTerminatedAgreement).toBe(true)
+    expect(model.businessName).toBe('Farm Business')
+    expect(model.applicantName).toBe('Mr. Edward Jones')
+    expect(model.agreementStartDate).toBe('1 January 2026')
+    expect(model.agreementEndDate).toBe('1 January 2027')
   })
 })

@@ -16,9 +16,9 @@ const formatApplicantName = (customer) => {
 export const buildAgreementViewModel = (agreementData) => {
   const isDraftAgreement = agreementData?.status === 'offered'
   const isAgreementAccepted = agreementData?.status === 'accepted'
-  const isWithdrawnAgreement =
-    agreementData?.status === 'withdrawn' ||
-    agreementData?.status === 'cancelled'
+  const isWithdrawnAgreement = agreementData?.status === 'withdrawn'
+  const isCancelledAgreement = agreementData?.status === 'cancelled'
+  const isTerminatedAgreement = agreementData?.status === 'terminated'
 
   let businessName = agreementData.applicant.business.name
   let applicantName = formatApplicantName(agreementData.applicant.customer)
@@ -32,7 +32,7 @@ export const buildAgreementViewModel = (agreementData) => {
     'd MMMM yyyy'
   )
 
-  if (isDraftAgreement || isWithdrawnAgreement) {
+  if (isDraftAgreement || isWithdrawnAgreement || isCancelledAgreement) {
     businessName = 'XXXXX'
     applicantName = 'XXXXX'
     agreementStartDate = 'XXXXX'
@@ -46,6 +46,8 @@ export const buildAgreementViewModel = (agreementData) => {
     isDraftAgreement,
     isAgreementAccepted,
     isWithdrawnAgreement,
+    isCancelledAgreement,
+    isTerminatedAgreement,
     businessName,
     applicantName,
     ...agreementCalcs.getAgreementCalculations(agreementData)
