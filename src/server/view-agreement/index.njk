@@ -1,4 +1,4 @@
-{% set bodyClasses = "view-offer-page" ~ (" view-agreement-has-watermark" if isDraftAgreement or isWithdrawnAgreement else "") %}
+{% set bodyClasses = "view-offer-page" ~ (" view-agreement-has-watermark" if isDraftAgreement or isWithdrawnAgreement or isCancelledAgreement or isTerminatedAgreement else "") %}
 {% set mainClasses = "" %}
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
@@ -26,11 +26,40 @@
     {{ govukNotificationBanner({
      html: html
     }) }}
+  {% elif isCancelledAgreement %}
+    {% set html %}
+     <p class="govuk-notification-banner__heading">This agreement offer has been cancelled.</p>
+    {% endset %}
+
+    {{ govukNotificationBanner({
+     html: html
+    }) }}
+  {% elif isTerminatedAgreement %}
+    {% set html %}
+     <p class="govuk-notification-banner__heading">This agreement offer has been terminated.</p>
+    {% endset %}
+
+    {{ govukNotificationBanner({
+     html: html
+    }) }}
   {% endif %}
 
-  {% if isDraftAgreement or isWithdrawnAgreement %}
-    <div class="print-watermark{{ ' print-watermark--withdrawn' if isWithdrawnAgreement else '' }}" aria-hidden="true">{{ 'DRAFT' if isDraftAgreement else 'WITHDRAWN' }}</div>
-    <div class="print-watermark-header" aria-hidden="true">{{ 'Draft Agreement' if isDraftAgreement else 'Withdrawn Agreement' }}</div>
+  {% if isDraftAgreement or isWithdrawnAgreement or isCancelledAgreement or isTerminatedAgreement %}
+    {% if isDraftAgreement %}
+      {% set watermarkLabel = 'DRAFT' %}
+      {% set watermarkHeader = 'Draft Agreement' %}
+    {% elif isCancelledAgreement %}
+      {% set watermarkLabel = 'CANCELLED' %}
+      {% set watermarkHeader = 'Cancelled Agreement' %}
+    {% elif isTerminatedAgreement %}
+      {% set watermarkLabel = 'TERMINATED' %}
+      {% set watermarkHeader = 'Terminated Agreement' %}
+    {% else %}
+      {% set watermarkLabel = 'WITHDRAWN' %}
+      {% set watermarkHeader = 'Withdrawn Agreement' %}
+    {% endif %}
+    <div class="print-watermark{{ ' print-watermark--withdrawn' if isWithdrawnAgreement or isCancelledAgreement or isTerminatedAgreement else '' }}" aria-hidden="true">{{ watermarkLabel }}</div>
+    <div class="print-watermark-header" aria-hidden="true">{{ watermarkHeader }}</div>
   {% endif %}
 
   <div class="with-watermark">
