@@ -22,7 +22,6 @@ Core delivery platform Node.js Frontend Template.
   - [Development image](#development-image)
   - [Production image](#production-image)
   - [Docker Compose](#docker-compose)
-  - [Viewing messages in LocalStack SQS](#viewing-messages-in-localstack-sqs)
   - [The Google Analytics trackingId secret configuration GA_TRACKING_ID(googleAnalytics.trackingId)](#the-google-analytics-trackingid-secret-configuration-ga_tracking_idgoogleanalyticstrackingid)
   - [Dependabot](#dependabot)
   - [SonarCloud](#sonarcloud)
@@ -186,7 +185,7 @@ docker run -p 3000:3000 farming-grants-agreements-ui
 
    - `JWT_ENABLED=true`
 
-2. Start the stack (MongoDB, LocalStack and this service):
+2. Start the stack (Mock server and this service):
 
    ```bash
    docker compose up -d --build
@@ -201,7 +200,7 @@ docker run -p 3000:3000 farming-grants-agreements-ui
    NAME                                                           COMMAND                  STATE     PORTS
 farming-grants-agreements-ui-farming-grants-agreements-api-1   "/sbin/tini -- node ."   running   3000/tcp, 0.0.0.0:3555->3555/tcp, [::]:3555->3555/tcp
 farming-grants-agreements-ui-farming-grants-agreements-ui-1    "/sbin/tini -- node …"   running   127.0.0.1:3000->3000/tcp
-farming-grants-agreements-ui-localstack-1                      "docker-entrypoint.sh"   running   0.0.0.0:4510-4559->4510-4559/tcp, [::]:4510-4559->4510-4559/tcp, 0.0.0.0:4566->4566/tcp, [::]:4566->4566/tcp, 5678/tcp
+farming-grants-agreements-ui-mock-server-1                      "docker-entrypoint.sh"   running   0.0.0.0:4510-4559->4510-4559/tcp, [::]:4510-4559->4510-4559/tcp, 0.0.0.0:4566->4566/tcp, [::]:4566->4566/tcp, 5678/tcp
 farming-grants-agreements-ui-mongodb-1                         "docker-entrypoint.s…"   running   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
 farming-grants-agreements-ui-redis-1                           "docker-entrypoint.s…"   running   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
 ```
@@ -267,32 +266,10 @@ Example decoded payload:
 
 A local environment with:
 
-- Localstack for AWS services (S3, SQS)
 - Redis
-- MongoDB
+- Mock server
 - This service.
 - The backend service.
-
-### Viewing messages in LocalStack SQS
-
-By default, our LocalStack monitor only shows message counts (`ApproximateNumberOfMessages`, `ApproximateNumberOfMessagesNotVisible`) for each queue. This is intentional, so we don’t interfere with the application’s consumers — pulling messages removes them from visibility until they are deleted or the visibility timeout expires.
-
-If you want to peek at the actual messages (for debugging or development only), you can run:
-
-```bash
-docker compose exec localstack sh -lc '
-  QURL=$(awslocal sqs get-queue-url \
-    --queue-name record_agreement_status_update \
-    --query QueueUrl --output text)
-
-  awslocal sqs receive-message \
-    --queue-url "$QURL" \
-    --max-number-of-messages 10 \
-    --wait-time-seconds 1 \
-    --message-attribute-names All \
-    --attribute-names All
-'
-```
 
 ### The Google Analytics trackingId secret configuration GA_TRACKING_ID(googleAnalytics.trackingId)
 
