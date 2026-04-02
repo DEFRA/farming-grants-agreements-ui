@@ -13,7 +13,6 @@ Core delivery platform Node.js Frontend Template.
 - [Local Development](#local-development)
   - [Setup](#setup)
   - [Development](#development)
-  - [Standalone UI with WireMock (no auth)](#standalone-ui-with-wiremock-no-auth)
   - [Production](#production)
   - [Npm scripts](#npm-scripts)
   - [Update dependencies](#update-dependencies)
@@ -107,58 +106,6 @@ If you want to be able to run the app without dependencies on external service l
 
 ```bash
 docker compose --profile mock up
-```
-
-### Standalone UI with WireMock (no auth)
-
-If you want to run just the UI with no auth and no real backend, use `compose.standalone.yml`.
-
-This stack:
-
-- starts `farming-grants-agreements-ui` and WireMock only
-- points `BACKEND_URL` at WireMock
-- uses `SESSION_CACHE_ENGINE=memory`, so Redis is not required
-- does not require an `x-encrypted-auth` header
-
-Start it with:
-
-```bash
-docker compose -f compose.standalone.yml up --build
-```
-
-If `3000` or `8080` is already in use locally, override the published ports:
-
-```bash
-UI_PORT=3001 WIREMOCK_PORT=8081 docker compose -f compose.standalone.yml up --build
-```
-
-Or via npm:
-
-```bash
-npm run docker:standalone
-```
-
-Then open `http://127.0.0.1:3000` (or your chosen `UI_PORT`).
-
-The included stubs support a simple end-to-end journey:
-
-- `GET /` shows an offered agreement for `FPTT123456789`
-- continuing to accept the offer works without auth
-- submitting the accept action switches the WireMock scenario to an accepted agreement
-- `GET /FPTT123456789` and `GET /FPTT123456789/print` then render against the accepted agreement data
-
-To reset the stubbed journey back to the offered state without restarting the containers:
-
-```bash
-curl -X POST http://127.0.0.1:8080/__admin/scenarios/reset
-```
-
-If you overrode the WireMock port, use that `WIREMOCK_PORT` value instead.
-
-To stop the standalone stack:
-
-```bash
-docker compose -f compose.standalone.yml down -v
 ```
 
 ### Production
@@ -378,3 +325,4 @@ information providers in the public sector to license the use and re-use of thei
 licence.
 
 It is designed to encourage use and re-use of information freely and flexibly, with only a few conditions.
+.
