@@ -200,6 +200,8 @@
     </tbody>
   </table>
 
+  {% include "partials/help/review-offer-update.njk" %}
+
   <form method="POST" action="{{ buildUrl(baseUrl) }}">
     {{ govukButton({
       text: "Continue",
@@ -208,5 +210,8 @@
     }) }}
   </form>
 
-  {% include "partials/help/review-offer-update.njk" %}
+  {% set section = {
+    message: "Contact the Rural Payments Agency (RPA) to update your offer."
+  } %}
+  {% include "partials/help/update.njk" %}
 {% endblock %}
