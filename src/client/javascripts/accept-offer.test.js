@@ -15,7 +15,7 @@ describe('accept-offer.js', () => {
     await import('./accept-offer.js')
 
     // Trigger the load event which calls initCheckbox
-    window.dispatchEvent(new window.Event('load'))
+    globalThis.dispatchEvent(new globalThis.Event('load'))
 
     // The implementation has a 100ms delay
     vi.advanceTimersByTime(100)
@@ -61,8 +61,19 @@ describe('accept-offer.js', () => {
 
     window = dom.window
     document = window.document
-    global.window = window
-    global.document = document
+    globalThis.window = window
+    globalThis.document = document
+    globalThis.addEventListener = window.addEventListener.bind(window)
+    globalThis.dispatchEvent = window.dispatchEvent.bind(window)
+    globalThis.Event = window.Event
+  })
+
+  afterEach(() => {
+    delete globalThis.window
+    delete globalThis.document
+    delete globalThis.addEventListener
+    delete globalThis.dispatchEvent
+    delete globalThis.Event
   })
 
   describe('initCheckbox function', () => {
@@ -83,7 +94,7 @@ describe('accept-offer.js', () => {
 
       // Check the checkbox
       checkbox.checked = true
-      checkbox.dispatchEvent(new window.Event('change'))
+      checkbox.dispatchEvent(new globalThis.Event('change'))
 
       // Button should be enabled
       expect(button.disabled).toBe(false)
@@ -91,7 +102,7 @@ describe('accept-offer.js', () => {
 
       // Uncheck the checkbox
       checkbox.checked = false
-      checkbox.dispatchEvent(new window.Event('change'))
+      checkbox.dispatchEvent(new globalThis.Event('change'))
 
       // Button should be disabled again
       expect(button.disabled).toBe(true)
@@ -106,7 +117,7 @@ describe('accept-offer.js', () => {
 
       // Check via click event
       checkbox.checked = true
-      checkbox.dispatchEvent(new window.Event('click'))
+      checkbox.dispatchEvent(new globalThis.Event('click'))
 
       expect(button.disabled).toBe(false)
       expect(button.getAttribute('aria-disabled')).toBe('false')
@@ -133,7 +144,7 @@ describe('accept-offer.js', () => {
       const button = document.getElementById('accept-offer-button')
 
       checkbox.checked = true
-      checkbox.dispatchEvent(new window.Event('change'))
+      checkbox.dispatchEvent(new globalThis.Event('change'))
 
       expect(button.disabled).toBe(false)
       expect(button.hasAttribute('disabled')).toBe(false)
@@ -149,11 +160,11 @@ describe('accept-offer.js', () => {
 
       // First enable
       checkbox.checked = true
-      checkbox.dispatchEvent(new window.Event('change'))
+      checkbox.dispatchEvent(new globalThis.Event('change'))
 
       // Then disable
       checkbox.checked = false
-      checkbox.dispatchEvent(new window.Event('change'))
+      checkbox.dispatchEvent(new globalThis.Event('change'))
 
       expect(button.disabled).toBe(true)
       expect(button.getAttribute('disabled')).toBe('disabled')
