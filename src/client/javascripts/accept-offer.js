@@ -49,9 +49,9 @@ function initCheckbox() {
 
 // Auto-initialize when loaded in browser
 /* c8 ignore start */
-if (globalThis.window !== undefined) {
+if (typeof globalThis.addEventListener === 'function') {
   // Wait for both DOM and GOV.UK Frontend to be ready
-  globalThis.window.addEventListener('load', function () {
+  globalThis.addEventListener('load', function () {
     // Add small delay to ensure GOV.UK Frontend has initialized
     setTimeout(initCheckbox, 100)
   })

@@ -25,8 +25,9 @@ const setDomContent = (body = '') => {
   dom = new JSDOM(`<!DOCTYPE html><html><body>${body}</body></html>`, {
     url: 'http://localhost'
   })
-  global.window = dom.window
-  global.document = dom.window.document
+  globalThis.window = dom.window
+  globalThis.document = dom.window.document
+  globalThis.Event = dom.window.Event
 }
 
 beforeEach(() => {
@@ -35,8 +36,10 @@ beforeEach(() => {
     dom.window.close()
     dom = null
   }
-  delete global.window
-  delete global.document
+  delete globalThis.window
+  delete globalThis.document
+  delete globalThis.print
+  delete globalThis.Event
 })
 
 afterEach(() => {
@@ -44,8 +47,10 @@ afterEach(() => {
     dom.window.close()
     dom = null
   }
-  delete global.window
-  delete global.document
+  delete globalThis.window
+  delete globalThis.document
+  delete globalThis.print
+  delete globalThis.Event
 })
 
 const loadApplication = async () => {
@@ -77,33 +82,34 @@ describe('application.js', () => {
       <a data-module="print-link" href="/print">Link</a>
     `)
 
-    window.print = vi.fn()
+    globalThis.print = vi.fn()
 
     await loadApplication()
 
-    document.dispatchEvent(new window.Event('DOMContentLoaded'))
+    document.dispatchEvent(new globalThis.Event('DOMContentLoaded'))
 
     const button = document.querySelector('.gem-c-print-link__button')
     const link = document.querySelector('[data-module="print-link"]')
 
     expect(button.type).toBe('button')
 
-    const buttonClick = new window.Event('click', {
+    const buttonClick = new globalThis.Event('click', {
       bubbles: true,
       cancelable: true
     })
     button.dispatchEvent(buttonClick)
 
     expect(buttonClick.defaultPrevented).toBe(true)
-    expect(window.print).toHaveBeenCalledTimes(1)
+    expect(globalThis.print).toHaveBeenCalledTimes(1)
 
-    const linkClick = new window.Event('click', {
+    const linkClick = new globalThis.Event('click', {
       bubbles: true,
       cancelable: true
     })
     link.dispatchEvent(linkClick)
 
     expect(linkClick.defaultPrevented).toBe(true)
-    expect(window.print).toHaveBeenCalledTimes(2)
+    expect(globalThis.print).toHaveBeenCalledTimes(2)
+    expect(globalThis.print).toHaveBeenCalledWith()
   })
 })
