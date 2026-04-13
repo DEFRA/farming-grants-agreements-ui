@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     element.addEventListener('click', (e) => {
       e.preventDefault()
-      window.print()
+      globalThis.print()
     })
   })
 })

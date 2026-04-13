@@ -20,9 +20,9 @@ export const apiRequest = async ({
     response = await fetch(`${config.get('backend.url')}/${agreementId}`, {
       method,
       headers: {
-        ...(method.toUpperCase() !== 'GET'
-          ? { 'Content-Type': 'application/json' }
-          : {}),
+        ...(method.toUpperCase() === 'GET'
+          ? {}
+          : { 'Content-Type': 'application/json' }),
         'x-encrypted-auth': auth
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
