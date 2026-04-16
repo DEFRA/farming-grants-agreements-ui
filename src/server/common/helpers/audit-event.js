@@ -34,6 +34,16 @@ const eventTransactionCodes = {
   [AuditEvent.AGREEMENT_VIEWED]: '2306'
 }
 
+// Allowed action values for audit.action per event
+const eventActions = {
+  [AuditEvent.REVIEW_OFFER_VIEWED]: 'read',
+  [AuditEvent.REVIEW_OFFER_CONTINUED]: 'read',
+  [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED]: 'submitted',
+  [AuditEvent.ACCEPT_OFFER_SUBMITTED]: 'accepted',
+  [AuditEvent.OFFER_ACCEPTED_VIEWED]: 'read',
+  [AuditEvent.AGREEMENT_VIEWED]: 'read'
+}
+
 /**
  * Builds the full audit payload conforming to the agreed schema.
  * Fields marked UNKNOWN require future work to source from decoded auth or other context.
@@ -72,8 +82,8 @@ const buildAuditPayload = (
 
   audit: {
     eventtype: 'GrantsAcceptAgreement',
-    action: event,
-    entity: 'Agreements',
+    action: eventActions[event],
+    entity: 'agreement',
     entityid: agreementData.agreementNumber ?? request.params?.agreementId,
     status,
     details: agreementData

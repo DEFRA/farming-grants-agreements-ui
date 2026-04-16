@@ -107,7 +107,7 @@ describe('auditEvent', () => {
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({
         audit: expect.objectContaining({
-          action: 'REVIEW_OFFER_VIEWED',
+          action: 'read',
           entityid: 'FPTT987654321',
           status: 'success',
           details: agreementData
@@ -169,6 +169,28 @@ describe('auditEvent', () => {
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({ sessionid: undefined })
     )
+  })
+
+  test('uses the correct action per event', () => {
+    const request = createRequest()
+    const cases = [
+      [AuditEvent.REVIEW_OFFER_VIEWED, 'read'],
+      [AuditEvent.REVIEW_OFFER_CONTINUED, 'read'],
+      [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED, 'submitted'],
+      [AuditEvent.ACCEPT_OFFER_SUBMITTED, 'accepted'],
+      [AuditEvent.OFFER_ACCEPTED_VIEWED, 'read'],
+      [AuditEvent.AGREEMENT_VIEWED, 'read']
+    ]
+
+    for (const [event, expectedAction] of cases) {
+      audit.mockClear()
+      auditEvent(request, event)
+      expect(audit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          audit: expect.objectContaining({ action: expectedAction })
+        })
+      )
+    }
   })
 
   test('prefers x-forwarded-for over remoteAddress for ip', () => {
