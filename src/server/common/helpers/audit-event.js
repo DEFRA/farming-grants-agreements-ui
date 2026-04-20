@@ -1,6 +1,8 @@
-import { audit } from '@defra/cdp-auditing'
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
 
 import { config } from '#~/config/config.js'
+
+const snsClient = new SNSClient({})
 
 export const AuditEvent = Object.freeze({
   REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED',
@@ -110,7 +112,24 @@ export const auditEvent = (
   request,
   event,
   agreementData = {},
-  status = 'success'
+  status = 'success',
+  client = snsClient
 ) => {
-  audit(buildAuditPayload(request, event, agreementData, status))
+  const topicArn = config.get('snsTopicArnAudit')
+  if (!topicArn) {
+    return
+  }
+
+  const payload = buildAuditPayload(request, event, agreementData, status)
+
+  client
+    .send(
+      new PublishCommand({
+        TopicArn: topicArn,
+        Message: JSON.stringify(payload)
+      })
+    )
+    .catch((err) => {
+      request.logger?.error({ err }, 'Failed to publish audit event to SNS')
+    })
 }
