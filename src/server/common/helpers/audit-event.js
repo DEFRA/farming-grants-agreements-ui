@@ -82,9 +82,18 @@ const buildAuditPayload = (
 
   audit: {
     eventtype: 'GrantsAcceptAgreement',
-    action: eventActions[event],
-    entity: 'agreement',
-    entityid: agreementData.agreementNumber ?? request.params?.agreementId,
+    accounts: {
+      ...(agreementData.sbi !== undefined && { sbi: agreementData.sbi }),
+      ...(agreementData.frn !== undefined && { frn: agreementData.frn }),
+      ...(agreementData.crn !== undefined && { crn: agreementData.crn })
+    },
+    entities: [
+      {
+        entity: 'agreement',
+        action: eventActions[event],
+        id: agreementData.agreementNumber ?? request.params?.agreementId
+      }
+    ],
     status,
     details: agreementData
   }

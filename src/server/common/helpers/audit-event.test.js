@@ -107,13 +107,36 @@ describe('auditEvent', () => {
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({
         audit: expect.objectContaining({
-          action: 'read',
-          entityid: 'FPTT987654321',
+          accounts: {},
+          entities: [
+            expect.objectContaining({
+              entity: 'agreement',
+              action: 'read',
+              id: 'FPTT987654321'
+            })
+          ],
           status: 'success',
           details: agreementData
         })
       })
     )
+  })
+
+  test('builds accounts from agreementData, omitting undefined fields', () => {
+    const request = createRequest()
+    const agreementData = { sbi: '123456789', frn: 'FRN1' }
+
+    auditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, agreementData)
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audit: expect.objectContaining({
+          accounts: { sbi: '123456789', frn: 'FRN1' }
+        })
+      })
+    )
+    const payload = audit.mock.calls[0][0]
+    expect(payload.audit.accounts).not.toHaveProperty('crn')
   })
 
   test('passes failure status through to the audit payload', () => {
@@ -156,7 +179,9 @@ describe('auditEvent', () => {
 
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({
-        audit: expect.objectContaining({ entityid: 'AGR123' })
+        audit: expect.objectContaining({
+          entities: [expect.objectContaining({ id: 'AGR123' })]
+        })
       })
     )
   })
@@ -187,7 +212,9 @@ describe('auditEvent', () => {
       auditEvent(request, event)
       expect(audit).toHaveBeenCalledWith(
         expect.objectContaining({
-          audit: expect.objectContaining({ action: expectedAction })
+          audit: expect.objectContaining({
+            entities: [expect.objectContaining({ action: expectedAction })]
+          })
         })
       )
     }
