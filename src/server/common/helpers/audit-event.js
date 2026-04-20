@@ -1,6 +1,8 @@
-import { audit } from '@defra/cdp-auditing'
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
 
 import { config } from '#~/config/config.js'
+
+const snsClient = new SNSClient({})
 
 export const AuditEvent = Object.freeze({
   REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED',
@@ -32,6 +34,16 @@ const eventTransactionCodes = {
   [AuditEvent.ACCEPT_OFFER_SUBMITTED]: '2304',
   [AuditEvent.OFFER_ACCEPTED_VIEWED]: '2305',
   [AuditEvent.AGREEMENT_VIEWED]: '2306'
+}
+
+// Allowed action values for audit.action per event
+const eventActions = {
+  [AuditEvent.REVIEW_OFFER_VIEWED]: 'read',
+  [AuditEvent.REVIEW_OFFER_CONTINUED]: 'read',
+  [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED]: 'submitted',
+  [AuditEvent.ACCEPT_OFFER_SUBMITTED]: 'accepted',
+  [AuditEvent.OFFER_ACCEPTED_VIEWED]: 'read',
+  [AuditEvent.AGREEMENT_VIEWED]: 'read'
 }
 
 /**
@@ -72,9 +84,18 @@ const buildAuditPayload = (
 
   audit: {
     eventtype: 'GrantsAcceptAgreement',
-    action: event,
-    entity: 'Agreements',
-    entityid: agreementData.agreementNumber ?? request.params?.agreementId,
+    accounts: {
+      ...(agreementData.sbi !== undefined && { sbi: agreementData.sbi }),
+      ...(agreementData.frn !== undefined && { frn: agreementData.frn }),
+      ...(agreementData.crn !== undefined && { crn: agreementData.crn })
+    },
+    entities: [
+      {
+        entity: 'agreement',
+        action: eventActions[event],
+        id: agreementData.agreementNumber ?? request.params?.agreementId
+      }
+    ],
     status,
     details: agreementData
   }
@@ -91,7 +112,24 @@ export const auditEvent = (
   request,
   event,
   agreementData = {},
-  status = 'success'
+  status = 'success',
+  client = snsClient
 ) => {
-  audit(buildAuditPayload(request, event, agreementData, status))
+  const topicArn = config.get('snsTopicArnAudit')
+  if (!topicArn) {
+    return
+  }
+
+  const payload = buildAuditPayload(request, event, agreementData, status)
+
+  client
+    .send(
+      new PublishCommand({
+        TopicArn: topicArn,
+        Message: JSON.stringify(payload)
+      })
+    )
+    .catch((err) => {
+      request.logger?.error({ err }, 'Failed to publish audit event to SNS')
+    })
 }
