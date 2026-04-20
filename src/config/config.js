@@ -265,6 +265,13 @@ export const config = convict({
       default: 30000,
       env: 'BACKEND_TIMEOUT'
     }
+  },
+  snsTopicArnAudit: {
+    doc: 'SNS Topic ARN for audit events',
+    format: String,
+    nullable: true,
+    default: null,
+    env: 'SNS_TOPIC_ARN_AUDIT'
   }
 })
 
