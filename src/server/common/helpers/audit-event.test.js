@@ -64,7 +64,7 @@ describe('auditEvent', () => {
   const callAuditEvent = (
     request,
     event,
-    agreementData = {},
+    agreementData = { identifiers: {} },
     status = 'success'
   ) => {
     const client = { send: mockSend }
@@ -129,7 +129,9 @@ describe('auditEvent', () => {
   })
 
   test('publishes to the configured SNS topic ARN', async () => {
-    callAuditEvent(createRequest(), AuditEvent.REVIEW_OFFER_VIEWED, {})
+    callAuditEvent(createRequest(), AuditEvent.REVIEW_OFFER_VIEWED, {
+      identifiers: {}
+    })
 
     await Promise.resolve()
     expect(mockSend).toHaveBeenCalledOnce()
@@ -141,7 +143,8 @@ describe('auditEvent', () => {
   test('publishes the correct top-level fields', async () => {
     const agreementData = {
       agreementNumber: 'FPTT987654321',
-      correlationId: 'corr-xyz'
+      correlationId: 'corr-xyz',
+      identifiers: {}
     }
 
     callAuditEvent(
@@ -161,7 +164,9 @@ describe('auditEvent', () => {
   })
 
   test('publishes the correct security fields', async () => {
-    callAuditEvent(createRequest(), AuditEvent.REVIEW_OFFER_VIEWED, {})
+    callAuditEvent(createRequest(), AuditEvent.REVIEW_OFFER_VIEWED, {
+      identifiers: {}
+    })
 
     await Promise.resolve()
     const payload = getPublishedPayload()
@@ -178,8 +183,7 @@ describe('auditEvent', () => {
   test('published audit contains accounts and entities', async () => {
     const agreementData = {
       agreementNumber: 'FPTT987',
-      sbi: '123',
-      frn: 'FRN1'
+      identifiers: { sbi: '123', frn: 'FRN1' }
     }
 
     callAuditEvent(
@@ -198,7 +202,7 @@ describe('auditEvent', () => {
   })
 
   test('builds accounts omitting undefined fields', async () => {
-    const agreementData = { sbi: '123456789', frn: 'FRN1' }
+    const agreementData = { identifiers: { sbi: '123456789', frn: 'FRN1' } }
 
     callAuditEvent(
       createRequest(),
@@ -213,7 +217,9 @@ describe('auditEvent', () => {
   })
 
   test('entities id falls back to agreementId from params when agreementNumber is absent', async () => {
-    callAuditEvent(createRequest(), AuditEvent.REVIEW_OFFER_VIEWED, {})
+    callAuditEvent(createRequest(), AuditEvent.REVIEW_OFFER_VIEWED, {
+      identifiers: {}
+    })
 
     await Promise.resolve()
     const payload = getPublishedPayload()
@@ -224,7 +230,7 @@ describe('auditEvent', () => {
     callAuditEvent(
       createRequest(),
       AuditEvent.ACCEPT_OFFER_SUBMITTED,
-      {},
+      { identifiers: {} },
       'failure'
     )
 
@@ -273,7 +279,7 @@ describe('auditEvent', () => {
     mockSend.mockRejectedValueOnce(new Error('SNS down'))
     const request = createRequest()
 
-    callAuditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, {})
+    callAuditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, { identifiers: {} })
 
     await Promise.resolve()
     await Promise.resolve()
@@ -288,7 +294,19 @@ describe('auditEvent', () => {
       headers: { 'x-forwarded-for': '203.0.113.5' }
     })
 
-    callAuditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, {})
+    callAuditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, { identifiers: {} })
+
+    await Promise.resolve()
+    const payload = getPublishedPayload()
+    expect(payload.ip).toBe('203.0.113.5')
+  })
+
+  test('extracts the first ip from x-forwarded-for when multiple are present', async () => {
+    const request = createRequest({
+      headers: { 'x-forwarded-for': '203.0.113.5, 10.0.0.1, 172.16.0.1' }
+    })
+
+    callAuditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, { identifiers: {} })
 
     await Promise.resolve()
     const payload = getPublishedPayload()
@@ -298,7 +316,7 @@ describe('auditEvent', () => {
   test('handles missing auth gracefully', async () => {
     const request = createRequest({ auth: undefined })
 
-    callAuditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, {})
+    callAuditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, { identifiers: {} })
 
     await Promise.resolve()
     const payload = getPublishedPayload()

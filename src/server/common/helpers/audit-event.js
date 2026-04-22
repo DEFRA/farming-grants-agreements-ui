@@ -87,9 +87,15 @@ const buildAuditPayload = (
   audit: {
     eventtype: 'GrantsAcceptAgreement',
     accounts: {
-      ...(agreementData.sbi !== undefined && { sbi: agreementData.sbi }),
-      ...(agreementData.frn !== undefined && { frn: agreementData.frn }),
-      ...(agreementData.crn !== undefined && { crn: agreementData.crn })
+      ...(agreementData.identifiers.sbi !== undefined && {
+        sbi: agreementData.identifiers.sbi
+      }),
+      ...(agreementData.identifiers.frn !== undefined && {
+        frn: agreementData.identifiers.frn
+      }),
+      ...(agreementData.identifiers.crn !== undefined && {
+        crn: agreementData.identifiers.crn
+      })
     },
     entities: [
       {
