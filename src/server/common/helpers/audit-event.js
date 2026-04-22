@@ -1,4 +1,4 @@
-import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
+import { PublishCommand, SNSClient } from '@aws-sdk/client-sns'
 
 import { config } from '#~/config/config.js'
 
@@ -70,7 +70,9 @@ const buildAuditPayload = (
   version: '0.1.0',
   application: 'Grants',
   component: config.get('serviceName'),
-  ip: request.headers['x-forwarded-for'] ?? request.info?.remoteAddress,
+  ip:
+    request.headers['x-forwarded-for']?.split(',')[0].trim() ??
+    request.info?.remoteAddress,
 
   security: {
     pmccode: '0706', // Consider all actions an internal or external user can execute, for example the menu options available to them
