@@ -146,6 +146,105 @@ describe('#acceptOfferController', () => {
         })
     })
 
+    test('returns WMP accept page content for woodland agreements', async () => {
+      return provider
+        .addInteraction()
+        .given('A customer has a WMP agreement offer')
+        .uponReceiving('a GET request to fetch WMP data before accept display')
+        .withRequest('GET', '/', (builder) => {
+          builder.headers({ 'x-encrypted-auth': 'mock-auth' })
+        })
+        .willRespondWith(200, (builder) => {
+          builder.headers({ 'Content-Type': 'application/json' })
+          builder.jsonBody({
+            agreementData: buildPactAgreement(
+              {
+                agreementNumber: 'WMP123456789',
+                code: 'woodland',
+                status: like('offered')
+              },
+              { useMatchers: true }
+            )
+          })
+        })
+        .executeTest(async (mockServer) => {
+          config.set('backend.url', mockServer.url)
+
+          const { statusCode, result } = await server.inject({
+            method: 'POST',
+            url: '/',
+            headers: {
+              'x-encrypted-auth': 'mock-auth'
+            },
+            payload: {
+              action: 'display-accept'
+            }
+          })
+
+          expect(statusCode).toBe(200)
+          expect(result).toContain('Accept your agreement offer')
+          expect(result).toContain(
+            'Capital grants agreements: terms and conditions 2026'
+          )
+          expect(result).toContain(
+            'I confirm I have read the information in this section and accept this agreement offer.'
+          )
+          expect(result).toContain('Phone: 03000 200 301')
+          expect(result).toContain('ruralpayments@defra.gov.uk')
+          expect(result).not.toContain('actions you have selected')
+        })
+    })
+
+    test('returns WMP validation error and WMP content when checkbox is not checked for woodland agreements', async () => {
+      return provider
+        .addInteraction()
+        .given('A customer has a WMP agreement offer')
+        .uponReceiving(
+          'a GET request to fetch WMP data before showing validation error'
+        )
+        .withRequest('GET', '/', (builder) => {
+          builder.headers({ 'x-encrypted-auth': 'mock-auth' })
+        })
+        .willRespondWith(200, (builder) => {
+          builder.headers({ 'Content-Type': 'application/json' })
+          builder.jsonBody({
+            agreementData: buildPactAgreement(
+              {
+                agreementNumber: 'WMP123456789',
+                code: 'woodland',
+                status: like('offered')
+              },
+              { useMatchers: true }
+            )
+          })
+        })
+        .executeTest(async (mockServer) => {
+          config.set('backend.url', mockServer.url)
+
+          const { statusCode, result } = await server.inject({
+            method: 'POST',
+            url: '/',
+            headers: {
+              'x-encrypted-auth': 'mock-auth'
+            },
+            payload: {
+              action: 'validate-accept-offer'
+            }
+          })
+
+          expect(statusCode).toBe(200)
+          expect(result).toContain(
+            'Select the checkbox to confirm you accept this agreement offer'
+          )
+          expect(result).toContain(
+            'Capital grants agreements: terms and conditions 2026'
+          )
+          expect(result).not.toContain(
+            'Please agree with the Terms and Conditions'
+          )
+        })
+    })
+
     test('returns 200 with error when confirm value is not "confirmed"', async () => {
       return provider
         .addInteraction()

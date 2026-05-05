@@ -101,6 +101,7 @@ describe('acceptOfferController handler', () => {
     const h = createH()
     const agreementData = {
       agreementNumber: 'FPTT123',
+      code: 'frps-private-beta',
       identifiers: { sbi: '106284736' }
     }
     const request = {
@@ -121,10 +122,61 @@ describe('acceptOfferController handler', () => {
     )
   })
 
+  test('renders WMP accept offer view for woodland agreements', async () => {
+    const h = createH()
+    const agreementData = {
+      agreementNumber: 'WMP123',
+      code: 'woodland',
+      identifiers: { sbi: '106284736' }
+    }
+    const request = {
+      params: { agreementId: 'WMP123' },
+      payload: { action: 'display-accept' },
+      pre: { data: { agreementData } },
+      url: { search: '' },
+      headers: {},
+      query: {}
+    }
+
+    await acceptOfferController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'grant-types/wmp/templates/accept-offer',
+      expect.objectContaining({
+        pageTitle: 'Accept your agreement offer',
+        termsHref: '#wmp-capital-grants-terms-placeholder'
+      })
+    )
+  })
+
+  test('throws bad request for unsupported agreement codes', async () => {
+    const h = createH()
+    const request = {
+      params: { agreementId: 'UNKNOWN123' },
+      payload: { action: 'display-accept' },
+      pre: {
+        data: {
+          agreementData: {
+            agreementNumber: 'UNKNOWN123',
+            code: 'unknown'
+          }
+        }
+      },
+      url: { search: '' },
+      headers: {},
+      query: {}
+    }
+
+    await expect(acceptOfferController.handler(request, h)).rejects.toThrow(
+      'Unsupported agreement code: unknown'
+    )
+  })
+
   test('does not emit audit event when redirecting for accept-offer with offered status', async () => {
     const h = createH()
     const agreementData = {
       agreementNumber: 'FPTT123',
+      code: 'frps-private-beta',
       status: 'offered',
       identifiers: { sbi: '106284736' }
     }
@@ -178,6 +230,7 @@ describe('validateAcceptOfferController handler', () => {
 
   const agreementData = {
     agreementNumber: 'FPTT123',
+    code: 'frps-private-beta',
     identifiers: { sbi: '106284736' }
   }
 
@@ -199,6 +252,34 @@ describe('validateAcceptOfferController handler', () => {
       expect.anything(),
       'ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED',
       agreementData
+    )
+  })
+
+  test('renders WMP accept page with WMP validation error when checkbox is not ticked', async () => {
+    const h = createH()
+    const request = {
+      ...createRequest(undefined),
+      pre: {
+        data: {
+          agreementData: {
+            agreementNumber: 'WMP123',
+            code: 'woodland',
+            identifiers: { sbi: '106284736' }
+          }
+        }
+      }
+    }
+
+    await validateAcceptOfferController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'grant-types/wmp/templates/accept-offer',
+      expect.objectContaining({
+        pageTitle: 'Accept your agreement offer',
+        errorMessage: {
+          text: 'Select the checkbox to confirm you accept this agreement offer'
+        }
+      })
     )
   })
 
