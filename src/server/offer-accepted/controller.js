@@ -1,20 +1,16 @@
-import { getFirstPaymentDate } from '#~/server/common/helpers/get-first-payment-date.js'
-import { getConsentDetails } from '#~/server/common/helpers/get-consent-details.js'
 import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
+import { getGrantTypeFor } from '#~/server/grant-types/index.js'
 
 export const offerAcceptedController = {
   async handler(request, h) {
     const { agreementData } = request.pre?.data || {}
+    const { offerAccepted } = getGrantTypeFor(agreementData)
 
     auditEvent(request, AuditEvent.OFFER_ACCEPTED_VIEWED, agreementData)
 
-    return h.view('offer-accepted/index', {
-      pageTitle: 'Offer accepted',
-      panelTitle: 'Agreement offer accepted',
-      nearestQuarterlyPaymentDate: getFirstPaymentDate(
-        agreementData.payment.agreementStartDate
-      ),
-      ...getConsentDetails(agreementData?.consentObjects)
-    })
+    return h.view(
+      offerAccepted.template,
+      offerAccepted.buildModel({ agreementData })
+    )
   }
 }
