@@ -95,7 +95,9 @@ describe('reviewOfferController handler fallbacks', () => {
       auditEvent: vi.fn(),
       AuditEvent: { REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED' }
     }))
-    ;({ reviewOfferController } = await import('./controller.js'))
+    ;({ reviewOfferController } = await import(
+      '#~/server/review-offer/controller.js'
+    ))
     ;({ buildReviewOfferModel: mockedBuildReviewOfferModel } = await import(
       '#~/server/common/helpers/build-review-offer-model.js'
     ))

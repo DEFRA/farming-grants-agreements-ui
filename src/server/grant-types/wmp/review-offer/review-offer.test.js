@@ -88,16 +88,21 @@ describe('reviewOfferController handler fallbacks', () => {
 
   beforeEach(async () => {
     vi.resetModules()
-    vi.doMock('#~/server/common/helpers/build-review-offer-model.js', () => ({
-      buildReviewOfferModel: vi.fn()
-    }))
+    vi.doMock(
+      '#~/server/common/helpers/build-wmp-review-offer-model.js',
+      () => ({
+        buildWMPReviewOfferModel: vi.fn()
+      })
+    )
     vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
       auditEvent: vi.fn(),
       AuditEvent: { REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED' }
     }))
-    ;({ reviewOfferController } = await import('./controller.js'))
-    ;({ buildReviewOfferModel: mockedBuildReviewOfferModel } = await import(
-      '#~/server/common/helpers/build-review-offer-model.js'
+    ;({ reviewOfferController } = await import(
+      '#~/server/review-offer/controller.js'
+    ))
+    ;({ buildWMPReviewOfferModel: mockedBuildReviewOfferModel } = await import(
+      '#~/server/common/helpers/build-wmp-review-offer-model.js'
     ))
     ;({ auditEvent: mockedAuditEvent } = await import(
       '#~/server/common/helpers/audit-event.js'
@@ -114,15 +119,15 @@ describe('reviewOfferController handler fallbacks', () => {
     const h = createH()
 
     await reviewOfferController.handler(
-      { pre: { data: { agreementData: { code: 'frps-private-beta' } } } },
+      { pre: { data: { agreementData: { code: 'woodland' } } } },
       h
     )
 
     expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
-      code: 'frps-private-beta'
+      code: 'woodland'
     })
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/review-offer/review-offer',
+      'grant-types/wmp/review-offer/review-offer',
       { any: 'thing' }
     )
   })
@@ -132,15 +137,15 @@ describe('reviewOfferController handler fallbacks', () => {
     const h = createH()
 
     await reviewOfferController.handler(
-      { pre: { data: { agreementData: { code: 'frps-private-beta' } } } },
+      { pre: { data: { agreementData: { code: 'woodland' } } } },
       h
     )
 
     expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
-      code: 'frps-private-beta'
+      code: 'woodland'
     })
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/review-offer/review-offer',
+      'grant-types/wmp/review-offer/review-offer',
       {}
     )
   })
@@ -152,7 +157,7 @@ describe('reviewOfferController handler fallbacks', () => {
     const request = {
       pre: {
         data: {
-          agreementData: { code: 'frps-private-beta' }
+          agreementData: { code: 'woodland' }
         }
       }
     }
@@ -160,10 +165,10 @@ describe('reviewOfferController handler fallbacks', () => {
     await reviewOfferController.handler(request, h)
 
     expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
-      code: 'frps-private-beta'
+      code: 'woodland'
     })
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/review-offer/review-offer',
+      'grant-types/wmp/review-offer/review-offer',
       {}
     )
   })
@@ -172,7 +177,7 @@ describe('reviewOfferController handler fallbacks', () => {
     mockedBuildReviewOfferModel.mockReturnValue({})
     const h = createH()
     const agreementData = {
-      code: 'frps-private-beta',
+      code: 'woodland',
       agreementNumber: 'FPTT123',
       identifiers: { sbi: '106284736' }
     }
