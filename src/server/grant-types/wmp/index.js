@@ -1,6 +1,7 @@
 import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
 
-const WMP_TERMS_PLACEHOLDER = '#wmp-capital-grants-terms-placeholder'
+const WMP_TERMS_URL =
+  'https://www.gov.uk/government/publications/capital-grants-agreements-terms-and-conditions-2026'
 
 export const wmp = {
   acceptOffer: {
@@ -22,7 +23,7 @@ export const wmp = {
     },
     buildModel: ({ errorMessage } = {}) => ({
       pageTitle: 'Accept your agreement offer',
-      termsHref: WMP_TERMS_PLACEHOLDER,
+      termsHref: WMP_TERMS_URL,
       errorMessage
     })
   },
@@ -32,7 +33,7 @@ export const wmp = {
       pageTitle: 'Offer accepted',
       panelTitle: 'Agreement offer accepted',
       agreement: agreementData,
-      termsHref: WMP_TERMS_PLACEHOLDER
+      termsHref: WMP_TERMS_URL
     })
   }
 }

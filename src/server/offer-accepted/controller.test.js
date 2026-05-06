@@ -320,7 +320,8 @@ describe('offerAcceptedController handler', () => {
       expect.objectContaining({
         pageTitle: 'Offer accepted',
         panelTitle: 'Agreement offer accepted',
-        termsHref: '#wmp-capital-grants-terms-placeholder'
+        termsHref:
+          'https://www.gov.uk/government/publications/capital-grants-agreements-terms-and-conditions-2026'
       })
     )
   })
