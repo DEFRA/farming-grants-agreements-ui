@@ -144,7 +144,8 @@ describe('acceptOfferController handler', () => {
       'grant-types/wmp/templates/accept-offer',
       expect.objectContaining({
         pageTitle: 'Accept your agreement offer',
-        termsHref: '#wmp-capital-grants-terms-placeholder'
+        termsHref:
+          'https://www.gov.uk/government/publications/capital-grants-agreements-terms-and-conditions-2026'
       })
     )
   })
