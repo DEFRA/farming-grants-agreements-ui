@@ -1,5 +1,5 @@
 import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
-import { getGrantTypeFor } from '#~/server/grant-types/grant-types.js'
+import { getGrantTypeFor } from '#~/server/grant-types/index.js'
 
 export const offerAcceptedController = {
   async handler(request, h) {
