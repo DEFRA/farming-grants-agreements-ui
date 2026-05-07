@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
-import { fptt } from './fptt/fptt.js'
-import { wmp } from './wmp/wmp.js'
+import { fptt } from './fptt/index.js'
+import { wmp } from './wmp/index.js'
 
 const grantsByCode = {
   'frps-private-beta': fptt,

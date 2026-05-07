@@ -141,7 +141,7 @@ describe('acceptOfferController handler', () => {
     await acceptOfferController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/wmp/templates/accept-offer',
+      'grant-types/wmp/accept-offer',
       expect.objectContaining({
         pageTitle: 'Accept your agreement offer',
         termsHref:
@@ -274,7 +274,7 @@ describe('validateAcceptOfferController handler', () => {
     await validateAcceptOfferController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/wmp/templates/accept-offer',
+      'grant-types/wmp/accept-offer',
       expect.objectContaining({
         pageTitle: 'Accept your agreement offer',
         errorMessage: {

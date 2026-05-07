@@ -1,7 +1,7 @@
 import { apiRequest } from '#~/server/common/helpers/api.js'
 import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
 import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
-import { getGrantTypeFor } from '#~/server/grant-types/grant-types.js'
+import { getGrantTypeFor } from '#~/server/grant-types/index.js'
 import path from 'node:path'
 
 const generateRedirectUrl = (request, agreementId = '') => {
