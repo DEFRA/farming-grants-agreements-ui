@@ -2,56 +2,75 @@ import { viewAgreement } from './view-agreement.js'
 
 describe('wmp viewAgreement', () => {
   const agreementData = {
-    clientRef: 'wmp-926-wlw',
+    clientRef: 'WMP-20260507133228-24643',
     code: 'woodland',
     status: 'accepted',
-    updatedAt: '2026-04-20T09:15:33.583Z',
-    identifiers: { sbi: '107593059', frn: '1076543210', crn: '1100957269' },
-    answers: {
-      landParcels: [
-        { parcelId: 'SD7560-9193', areaHa: 25.3874 },
-        { parcelId: 'SD5848-9205', areaHa: 169.8586 }
-      ],
-      totalAgreementPaymentPence: 166200,
-      payments: {
-        agreement: [
-          {
-            code: 'PA3',
-            description: 'Woodland management plan',
-            quantity: 55.4,
-            agreementTotalPence: 166200,
-            unit: 'ha'
-          }
-        ]
+    updatedAt: '2026-05-07T12:53:16.167Z',
+    signatureDate: '2026-05-07T12:53:16.162Z',
+    identifiers: { sbi: '106284736', frn: '1234567890', crn: '1100014934' },
+    applicant: {
+      business: {
+        name: 'Example Farm Ltd',
+        address: {
+          line1: 'Farm House',
+          line2: 'Village Lane',
+          line3: null,
+          line4: null,
+          line5: null,
+          street: 'Village Lane',
+          city: 'York',
+          postalCode: 'YO1 1AA'
+        }
       },
-      referenceNumber: 'WMP-926-WLW',
-      applicant: {
-        business: {
-          name: 'Taylor Equestrian Yards',
-          address: {
-            line1: 'Taylor Equestrian Yards',
-            line2: 'Riding Lane',
-            line3: null,
-            line4: null,
-            line5: null,
-            street: 'Riding Lane',
-            city: 'Cambridge',
-            postalCode: 'CB1 2AB'
-          }
-        },
-        customer: {
-          name: {
-            title: 'Mr',
-            first: 'Oliver',
-            middle: 'J',
-            last: 'Taylor'
-          }
+      customer: {
+        name: {
+          title: 'Mr',
+          first: 'John',
+          middle: null,
+          last: 'Doe'
         }
       }
     },
+    application: {
+      parcel: [
+        {
+          sheetId: 'SD4841-4684',
+          parcelId: 'SD4841-4684',
+          area: { quantity: 25 }
+        },
+        {
+          sheetId: 'SD4842-3020',
+          parcelId: 'SD4842-3020',
+          area: { quantity: 27.5 }
+        }
+      ]
+    },
+    actionApplications: [
+      {
+        code: 'WMP1',
+        sheetId: 'SD4841-4684',
+        parcelId: 'SD4841-4684',
+        appliedFor: { quantity: 25 }
+      },
+      {
+        code: 'WMP1',
+        sheetId: 'SD4842-3020',
+        parcelId: 'SD4842-3020',
+        appliedFor: { quantity: 30.4 }
+      }
+    ],
     payment: {
-      agreementStartDate: '2026-07-01',
-      agreementEndDate: '2029-06-30'
+      agreementStartDate: '2026-05-07',
+      agreementEndDate: '2027-05-07',
+      agreementTotalPence: 157500,
+      agreementLevelItems: {
+        1: {
+          code: 'PA3',
+          description: 'PA3: Woodland management plan',
+          annualPaymentPence: 157500,
+          quantity: 55.4
+        }
+      }
     }
   }
 
@@ -59,31 +78,33 @@ describe('wmp viewAgreement', () => {
     expect(viewAgreement.template).toBe('grant-types/wmp/view-agreement')
   })
 
-  test('builds the view model from nested WMP answers data', () => {
+  test('builds the view model from the accepted WMP agreement payload', () => {
     expect(viewAgreement.buildModel({ agreementData })).toEqual({
       pageTitle: 'Woodland Management Plan PA3 agreement document',
       agreementTitle: 'Woodland Management Plan PA3 agreement document',
-      agreementNumber: 'WMP-926-WLW',
-      agreementHolderName: 'Taylor Equestrian Yards',
-      applicantName: 'Mr Oliver J Taylor',
-      address:
-        'Taylor Equestrian Yards, Riding Lane, Riding Lane, Cambridge, CB1 2AB',
-      sbi: '107593059',
-      agreementStartDate: '1 July 2026',
-      agreementEndDate: '30 June 2029',
-      landParcels: agreementData.answers.landParcels,
+      agreementNumber: 'WMP-20260507133228-24643',
+      agreementHolderName: 'Example Farm Ltd',
+      applicantName: 'Mr John Doe',
+      address: 'Farm House, Village Lane, Village Lane, York, YO1 1AA',
+      sbi: '106284736',
+      agreementStartDate: '7 May 2026',
+      agreementEndDate: '7 May 2027',
+      landParcels: [
+        { parcelId: 'SD4841-4684', areaHa: 25 },
+        { parcelId: 'SD4842-3020', areaHa: 27.5 }
+      ],
       capitalItems: [
         {
           code: 'PA3',
-          description: 'Woodland management plan',
+          description: 'PA3: Woodland management plan',
           quantity: 55.4,
           unit: 'ha',
-          totalPaymentPence: 166200,
-          totalPayment: '£1,662'
+          totalPaymentPence: 157500,
+          totalPayment: '£1,575'
         }
       ],
-      agreementTotalPayment: '£1,662',
-      acceptedOn: '20 April 2026',
+      agreementTotalPayment: '£1,575',
+      acceptedOn: '7 May 2026',
       isDraftAgreement: false,
       isAgreementAccepted: true,
       isWithdrawnAgreement: false,
@@ -96,13 +117,10 @@ describe('wmp viewAgreement', () => {
     const model = viewAgreement.buildModel({
       agreementData: {
         ...agreementData,
-        answers: {
-          ...agreementData.answers,
-          referenceNumber: undefined
-        }
+        clientRef: 'WMP-ALT-123'
       }
     })
 
-    expect(model.agreementNumber).toBe('wmp-926-wlw')
+    expect(model.agreementNumber).toBe('WMP-ALT-123')
   })
 })

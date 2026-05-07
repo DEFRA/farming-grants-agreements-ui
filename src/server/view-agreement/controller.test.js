@@ -495,39 +495,48 @@ describe('viewAgreementController agreement ended', () => {
       code: 'woodland',
       status: 'accepted',
       agreementData: {
-        clientRef: 'wmp-926-wlw',
-        answers: {
-          referenceNumber: 'WMP-926-WLW',
-          landParcels: [{ parcelId: 'SD7560-9193', areaHa: 25.3874 }],
-          totalAgreementPaymentPence: 166200,
-          payments: {
-            agreement: [
-              {
-                code: 'PA3',
-                description: 'Woodland management plan',
-                quantity: 55.4,
-                agreementTotalPence: 166200,
-                unit: 'ha'
-              }
-            ]
+        clientRef: 'WMP-20260507133228-24643',
+        signatureDate: '2026-05-07T12:53:16.162Z',
+        applicant: {
+          business: {
+            name: 'Example Farm Ltd',
+            address: {
+              line1: 'Farm House',
+              city: 'York',
+              postalCode: 'YO1 1AA'
+            }
           },
-          applicant: {
-            business: {
-              name: 'Taylor Equestrian Yards',
-              address: {
-                line1: 'Taylor Equestrian Yards',
-                city: 'Cambridge',
-                postalCode: 'CB1 2AB'
-              }
-            },
-            customer: {
-              name: {
-                title: 'Mr',
-                first: 'Oliver',
-                last: 'Taylor'
-              }
+          customer: {
+            name: {
+              title: 'Mr',
+              first: 'John',
+              last: 'Doe'
             }
           }
+        },
+        application: {
+          parcel: [{ parcelId: 'SD4841-4684', area: { quantity: 25.3874 } }]
+        },
+        actionApplications: [
+          {
+            code: 'WMP1',
+            parcelId: 'SD4841-4684',
+            appliedFor: { quantity: 25.3874 }
+          }
+        ],
+        payment: {
+          agreementStartDate: '2026-05-07',
+          agreementEndDate: '2027-05-07',
+          agreementTotalPence: 157500,
+          agreementLevelItems: {
+            1: {
+              code: 'PA3',
+              description: 'PA3: Woodland management plan',
+              annualPaymentPence: 157500
+            }
+          },
+          parcelItems: {},
+          payments: []
         }
       }
     })

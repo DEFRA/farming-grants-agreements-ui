@@ -14,12 +14,11 @@ export const viewAgreement = {
   buildModel: ({ agreementData }) => {
     const statusFlags = getAgreementStatusFlags(agreementData)
     const shouldMask = shouldMaskAgreementPartyDetails(statusFlags)
-    const answers = agreementData.answers ?? {}
-    const applicant = answers.applicant ?? {}
+    const applicant = agreementData.applicant ?? {}
     const business = applicant.business ?? {}
     const customer = applicant.customer ?? {}
     const address = business.address ?? {}
-    const capitalItems = mapWmpCapitalItems(answers)
+    const capitalItems = mapWmpCapitalItems(agreementData)
     const payment = agreementData.payment ?? {}
 
     return {
@@ -38,13 +37,13 @@ export const viewAgreement = {
         payment.agreementEndDate,
         shouldMask
       ),
-      landParcels: mapWmpLandParcels(answers),
+      landParcels: mapWmpLandParcels(agreementData),
       capitalItems,
       agreementTotalPayment: formatPenceCurrency(
-        getAgreementTotalPaymentPence(answers, capitalItems)
+        agreementData.payment?.agreementTotalPence
       ),
       acceptedOn: statusFlags.isAgreementAccepted
-        ? formatAgreementDate(agreementData.updatedAt, false)
+        ? formatAgreementDate(agreementData.signatureDate, false)
         : '',
       ...statusFlags
     }
@@ -65,35 +64,29 @@ const buildAddress = (address = {}) =>
     .filter(Boolean)
     .join(', ')
 
-const mapWmpCapitalItem = (item) => ({
-  code: item.code,
-  description: item.description,
-  quantity: item.quantity,
-  unit: item.unit,
-  totalPaymentPence: item.agreementTotalPence
-})
-
-const mapWmpCapitalItems = (answers = {}) =>
-  (answers.payments?.agreement ?? []).map((item) => ({
-    ...mapWmpCapitalItem(item),
-    totalPayment: formatPenceCurrency(item.agreementTotalPence)
-  }))
-
-const mapWmpLandParcels = (answers = {}) =>
-  (answers.landParcels ?? []).map((parcel) => ({
-    parcelId: parcel.parcelId,
-    areaHa: parcel.areaHa
-  }))
-
-const getAgreementTotalPaymentPence = (answers = {}, capitalItems = []) =>
-  answers.totalAgreementPaymentPence ??
-  capitalItems.reduce(
-    (sum, item) => sum + (Number(item.totalPaymentPence) || 0),
-    0
+const mapWmpCapitalItems = (agreementData = {}) => {
+  return Object.values(agreementData.payment?.agreementLevelItems ?? {}).map(
+    (item) => ({
+      code: item.code,
+      description: item.description,
+      quantity: item.quantity,
+      unit: item.unit ?? 'ha',
+      totalPaymentPence:
+        item.agreementTotalPence ?? item.annualPaymentPence ?? 0,
+      totalPayment: formatPenceCurrency(
+        item.agreementTotalPence ?? item.annualPaymentPence ?? 0
+      )
+    })
   )
+}
+
+const mapWmpLandParcels = (agreementData = {}) => {
+  const applicationParcels = agreementData.application?.parcel ?? []
+  return applicationParcels.map((parcel) => ({
+    parcelId: parcel.parcelId,
+    areaHa: parcel.area?.quantity ?? parcel.areaHa
+  }))
+}
 
 const getAgreementNumber = (agreementData = {}) =>
-  agreementData.answers?.referenceNumber ||
-  agreementData.clientRef ||
-  agreementData.agreementNumber ||
-  ''
+  agreementData.clientRef || agreementData.agreementNumber || ''
