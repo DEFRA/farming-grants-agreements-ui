@@ -14,18 +14,13 @@ export const viewAgreement = {
   buildModel: ({ agreementData }) => {
     const statusFlags = getAgreementStatusFlags(agreementData)
     const shouldMask = shouldMaskAgreementPartyDetails(statusFlags)
-    const applicant =
-      agreementData.answers?.applicant ?? agreementData.applicant ?? {}
+    const answers = agreementData.answers ?? {}
+    const applicant = answers.applicant ?? {}
     const business = applicant.business ?? {}
     const customer = applicant.customer ?? {}
     const address = business.address ?? {}
+    const capitalItems = mapWmpCapitalItems(answers)
     const payment = agreementData.payment ?? {}
-    const landParcels = buildLandParcels(agreementData)
-    const capitalItems = buildCapitalItems(agreementData)
-    const agreementTotalPaymentPence = getAgreementTotalPaymentPence(
-      agreementData,
-      capitalItems
-    )
 
     return {
       pageTitle: WMP_AGREEMENT_TITLE,
@@ -43,9 +38,11 @@ export const viewAgreement = {
         payment.agreementEndDate,
         shouldMask
       ),
-      landParcels,
+      landParcels: mapWmpLandParcels(answers),
       capitalItems,
-      agreementTotalPayment: formatPenceCurrency(agreementTotalPaymentPence),
+      agreementTotalPayment: formatPenceCurrency(
+        getAgreementTotalPaymentPence(answers, capitalItems)
+      ),
       acceptedOn: statusFlags.isAgreementAccepted
         ? formatAgreementDate(agreementData.updatedAt, false)
         : '',
@@ -68,7 +65,7 @@ const buildAddress = (address = {}) =>
     .filter(Boolean)
     .join(', ')
 
-const mapAnswerCapitalItem = (item) => ({
+const mapWmpCapitalItem = (item) => ({
   code: item.code,
   description: item.description,
   quantity: item.quantity,
@@ -76,81 +73,27 @@ const mapAnswerCapitalItem = (item) => ({
   totalPaymentPence: item.agreementTotalPence
 })
 
-const mapPaymentCapitalItem = (item, agreementData) => ({
-  code: item.code,
-  description:
-    item.description?.replace(`${item.code}: `, '') ?? item.description,
-  quantity:
-    firstDefined(
-      item.quantity,
-      getNested(agreementData, ['answers', 'totalHectaresAppliedFor'])
-    ) ?? '',
-  unit: item.unit ?? 'ha',
-  totalPaymentPence:
-    firstDefined(item.agreementTotalPence, item.annualPaymentPence) ?? 0
-})
-
-const buildCapitalItems = (agreementData = {}) => {
-  const answerItems = firstNonEmptyArray(
-    agreementData.answers?.payments?.agreement,
-    agreementData.answers?.payments?.items
-  )
-
-  const items = answerItems.length
-    ? answerItems.map(mapAnswerCapitalItem)
-    : Object.values(agreementData.payment?.agreementLevelItems ?? {}).map(
-        (item) => mapPaymentCapitalItem(item, agreementData)
-      )
-
-  return items.map((item) => ({
-    ...item,
-    totalPayment: formatPenceCurrency(item.totalPaymentPence)
+const mapWmpCapitalItems = (answers = {}) =>
+  (answers.payments?.agreement ?? []).map((item) => ({
+    ...mapWmpCapitalItem(item),
+    totalPayment: formatPenceCurrency(item.agreementTotalPence)
   }))
-}
 
-const buildLandParcels = (agreementData = {}) => {
-  const answerParcels = firstNonEmptyArray(
-    agreementData.answers?.landParcels,
-    agreementData.answers?.parcels
-  )
-
-  if (answerParcels.length) {
-    return answerParcels.map((parcel) => ({
-      parcelId: parcel.parcelId,
-      areaHa: firstDefined(parcel.areaHa, parcel.area?.quantity) ?? ''
-    }))
-  }
-
-  return (agreementData.application?.parcel ?? []).map((parcel) => ({
-    parcelId:
-      firstDefined(
-        parcel.parcelId && parcel.sheetId
-          ? `${parcel.sheetId} ${parcel.parcelId}`
-          : undefined,
-        parcel.parcelId
-      ) ?? '',
-    areaHa: firstDefined(parcel.areaHa, parcel.area?.quantity) ?? ''
+const mapWmpLandParcels = (answers = {}) =>
+  (answers.landParcels ?? []).map((parcel) => ({
+    parcelId: parcel.parcelId,
+    areaHa: parcel.areaHa
   }))
-}
 
-const getAgreementTotalPaymentPence = (agreementData = {}, capitalItems = []) =>
-  firstDefined(
-    agreementData.answers?.totalAgreementPaymentPence,
-    agreementData.payment?.agreementTotalPence,
-    capitalItems.reduce(
-      (sum, item) => sum + (Number(item.totalPaymentPence) || 0),
-      0
-    )
-  ) ?? 0
+const getAgreementTotalPaymentPence = (answers = {}, capitalItems = []) =>
+  answers.totalAgreementPaymentPence ??
+  capitalItems.reduce(
+    (sum, item) => sum + (Number(item.totalPaymentPence) || 0),
+    0
+  )
 
 const getAgreementNumber = (agreementData = {}) =>
   agreementData.answers?.referenceNumber ||
   agreementData.clientRef ||
   agreementData.agreementNumber ||
   ''
-const getNested = (obj, path) => path.reduce((value, key) => value?.[key], obj)
-
-const firstDefined = (...values) => values.find((value) => value !== undefined)
-
-const firstNonEmptyArray = (...values) =>
-  values.find((value) => Array.isArray(value) && value.length > 0) ?? []
