@@ -12,7 +12,7 @@ describe('#getGrantTypeFor', () => {
       'grant-types/fptt/offer-accepted/offer-accepted'
     )
     expect(grantType.viewAgreement.template).toBe(
-      'grant-types/fptt/view-agreement'
+      'grant-types/fptt/view-agreement/view-agreement'
     )
   })
 
@@ -26,7 +26,7 @@ describe('#getGrantTypeFor', () => {
       'grant-types/wmp/offer-accepted/offer-accepted'
     )
     expect(grantType.viewAgreement.template).toBe(
-      'grant-types/wmp/view-agreement'
+      'grant-types/wmp/view-agreement/view-agreement'
     )
   })
 

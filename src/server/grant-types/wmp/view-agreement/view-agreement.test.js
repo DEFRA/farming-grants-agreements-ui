@@ -75,7 +75,9 @@ describe('wmp viewAgreement', () => {
   }
 
   test('exposes the WMP view-agreement template path', () => {
-    expect(viewAgreement.template).toBe('grant-types/wmp/view-agreement')
+    expect(viewAgreement.template).toBe(
+      'grant-types/wmp/view-agreement/view-agreement'
+    )
   })
 
   test('builds the view model from the accepted WMP agreement payload', () => {

@@ -35,7 +35,7 @@ const buildAgreementViewModel = (agreementData) => {
 }
 
 export const viewAgreement = {
-  template: 'grant-types/fptt/view-agreement',
+  template: 'grant-types/fptt/view-agreement/view-agreement',
   buildModel: ({ agreementData }) => ({
     pageTitle: 'Farm payments technical test agreement document',
     ...buildAgreementViewModel(agreementData)

@@ -10,7 +10,7 @@ import {
 const WMP_AGREEMENT_TITLE = 'Woodland Management Plan PA3 agreement document'
 
 export const viewAgreement = {
-  template: 'grant-types/wmp/view-agreement',
+  template: 'grant-types/wmp/view-agreement/view-agreement',
   buildModel: ({ agreementData }) => {
     const statusFlags = getAgreementStatusFlags(agreementData)
     const shouldMask = shouldMaskAgreementPartyDetails(statusFlags)

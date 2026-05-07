@@ -232,7 +232,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/view-agreement',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.isDraftAgreement).toBe(true)
@@ -258,7 +258,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/view-agreement',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.isDraftAgreement).toBe(false)
@@ -283,7 +283,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/view-agreement',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.isDraftAgreement).toBe(false)
@@ -351,7 +351,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/view-agreement',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -372,7 +372,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/view-agreement',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -393,7 +393,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/view-agreement',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -414,7 +414,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/view-agreement',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -435,7 +435,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/view-agreement',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -483,7 +483,7 @@ describe('viewAgreementController agreement ended', () => {
     await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/view-agreement',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
   })
@@ -544,7 +544,7 @@ describe('viewAgreementController agreement ended', () => {
     await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/wmp/view-agreement',
+      'grant-types/wmp/view-agreement/view-agreement',
       expect.objectContaining({
         pageTitle: 'Woodland Management Plan PA3 agreement document'
       })

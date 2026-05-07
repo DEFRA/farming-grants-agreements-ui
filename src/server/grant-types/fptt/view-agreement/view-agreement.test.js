@@ -39,7 +39,9 @@ describe('fptt viewAgreement', () => {
   }
 
   test('exposes the FPTT view-agreement template path', () => {
-    expect(viewAgreement.template).toBe('grant-types/fptt/view-agreement')
+    expect(viewAgreement.template).toBe(
+      'grant-types/fptt/view-agreement/view-agreement'
+    )
   })
 
   test('builds the accepted agreement view model', () => {
