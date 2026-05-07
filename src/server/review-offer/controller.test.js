@@ -80,6 +80,7 @@ describe('#reviewOfferController', () => {
 describe('reviewOfferController handler fallbacks', () => {
   let reviewOfferController
   let mockedBuildReviewOfferModel
+  let mockedBuildWMPReviewOfferModel
   let mockedAuditEvent
 
   const createH = () => ({
@@ -89,16 +90,18 @@ describe('reviewOfferController handler fallbacks', () => {
   beforeEach(async () => {
     vi.resetModules()
     vi.doMock('#~/server/common/helpers/build-review-offer-model.js', () => ({
-      buildReviewOfferModel: vi.fn()
+      buildReviewOfferModel: vi.fn(),
+      buildWMPReviewOfferModel: vi.fn()
     }))
     vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
       auditEvent: vi.fn(),
       AuditEvent: { REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED' }
     }))
     ;({ reviewOfferController } = await import('./controller.js'))
-    ;({ buildReviewOfferModel: mockedBuildReviewOfferModel } = await import(
-      '#~/server/common/helpers/build-review-offer-model.js'
-    ))
+    ;({
+      buildReviewOfferModel: mockedBuildReviewOfferModel,
+      buildWMPReviewOfferModel: mockedBuildWMPReviewOfferModel
+    } = await import('#~/server/common/helpers/build-review-offer-model.js'))
     ;({ auditEvent: mockedAuditEvent } = await import(
       '#~/server/common/helpers/audit-event.js'
     ))
@@ -177,6 +180,41 @@ describe('reviewOfferController handler fallbacks', () => {
       request,
       'REVIEW_OFFER_VIEWED',
       agreementData
+    )
+  })
+
+  test('sets isWoodland to true and uses buildWMPReviewOfferModel when agreement code is woodland', async () => {
+    mockedBuildWMPReviewOfferModel.mockReturnValue({ woodland: 'data' })
+    const h = createH()
+    const agreementData = { code: 'woodland' }
+    const request = { pre: { data: { agreementData } } }
+
+    await reviewOfferController.handler(request, h)
+
+    expect(mockedBuildWMPReviewOfferModel).toHaveBeenCalledWith(agreementData)
+    expect(h.view).toHaveBeenCalledWith(
+      'review-offer/index',
+      expect.objectContaining({
+        pageTitle: 'Review your agreement offer',
+        viewType: 'woodland',
+        woodland: 'data'
+      })
+    )
+  })
+
+  test('sets isWoodland to false when agreement code is not woodland', async () => {
+    mockedBuildReviewOfferModel.mockReturnValue({})
+    const h = createH()
+    const agreementData = { code: 'something-else' }
+    const request = { pre: { data: { agreementData } } }
+
+    await reviewOfferController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'review-offer/index',
+      expect.objectContaining({
+        pageTitle: 'Review your agreement offer'
+      })
     )
   })
 })
