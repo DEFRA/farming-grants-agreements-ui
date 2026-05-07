@@ -1,7 +1,7 @@
-import { WMP_TERMS_URL } from './constants.js'
+import { WMP_TERMS_URL } from '../constants.js'
 
 export const offerAccepted = {
-  template: 'grant-types/wmp/offer-accepted',
+  template: 'grant-types/wmp/offer-accepted/offer-accepted',
   buildModel: ({ agreementData }) => ({
     pageTitle: 'Offer accepted',
     panelTitle: 'Agreement offer accepted',

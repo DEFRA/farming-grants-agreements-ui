@@ -1,7 +1,7 @@
 import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
 
 export const acceptOffer = {
-  template: 'grant-types/fptt/accept-offer',
+  template: 'grant-types/fptt/accept-offer/accept-offer',
   validate(request, agreementData) {
     if (request.payload?.confirm !== 'confirmed') {
       auditEvent(

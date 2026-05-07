@@ -5,18 +5,22 @@ describe('#getGrantTypeFor', () => {
   test('returns the FPTT grant type for frps-private-beta agreements', () => {
     const grantType = getGrantTypeFor({ code: 'frps-private-beta' })
 
-    expect(grantType.acceptOffer.template).toBe('grant-types/fptt/accept-offer')
+    expect(grantType.acceptOffer.template).toBe(
+      'grant-types/fptt/accept-offer/accept-offer'
+    )
     expect(grantType.offerAccepted.template).toBe(
-      'grant-types/fptt/offer-accepted'
+      'grant-types/fptt/offer-accepted/offer-accepted'
     )
   })
 
   test('returns the WMP grant type for woodland agreements', () => {
     const grantType = getGrantTypeFor({ code: 'woodland' })
 
-    expect(grantType.acceptOffer.template).toBe('grant-types/wmp/accept-offer')
+    expect(grantType.acceptOffer.template).toBe(
+      'grant-types/wmp/accept-offer/accept-offer'
+    )
     expect(grantType.offerAccepted.template).toBe(
-      'grant-types/wmp/offer-accepted'
+      'grant-types/wmp/offer-accepted/offer-accepted'
     )
   })
 

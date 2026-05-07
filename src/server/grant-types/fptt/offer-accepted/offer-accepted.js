@@ -2,7 +2,7 @@ import { getConsentDetails } from '#~/server/common/helpers/get-consent-details.
 import { getFirstPaymentDate } from '#~/server/common/helpers/get-first-payment-date.js'
 
 export const offerAccepted = {
-  template: 'grant-types/fptt/offer-accepted',
+  template: 'grant-types/fptt/offer-accepted/offer-accepted',
   buildModel: ({ agreementData }) => ({
     pageTitle: 'Offer accepted',
     panelTitle: 'Agreement offer accepted',
