@@ -4,7 +4,9 @@ import { offerAccepted } from './offer-accepted.js'
 
 describe('wmp offerAccepted', () => {
   test('exposes the WMP offer-accepted template path', () => {
-    expect(offerAccepted.template).toBe('grant-types/wmp/offer-accepted')
+    expect(offerAccepted.template).toBe(
+      'grant-types/wmp/offer-accepted/offer-accepted'
+    )
   })
 
   test('builds the view model with the agreement and WMP terms link', () => {

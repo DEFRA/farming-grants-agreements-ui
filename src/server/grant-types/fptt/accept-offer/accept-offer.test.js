@@ -19,7 +19,9 @@ describe('fptt acceptOffer', () => {
   })
 
   test('exposes the FPTT accept-offer template path', () => {
-    expect(acceptOffer.template).toBe('grant-types/fptt/accept-offer')
+    expect(acceptOffer.template).toBe(
+      'grant-types/fptt/accept-offer/accept-offer'
+    )
   })
 
   test('returns valid when the confirmation is present', () => {

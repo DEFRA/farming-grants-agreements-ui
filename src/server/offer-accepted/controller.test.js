@@ -295,7 +295,7 @@ describe('offerAcceptedController handler', () => {
       agreementData
     )
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/offer-accepted',
+      'grant-types/fptt/offer-accepted/offer-accepted',
       expect.objectContaining({
         pageTitle: 'Offer accepted',
         panelTitle: 'Agreement offer accepted'
@@ -316,7 +316,7 @@ describe('offerAcceptedController handler', () => {
     await offerAcceptedController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/wmp/offer-accepted',
+      'grant-types/wmp/offer-accepted/offer-accepted',
       expect.objectContaining({
         pageTitle: 'Offer accepted',
         panelTitle: 'Agreement offer accepted',

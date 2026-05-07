@@ -20,7 +20,9 @@ vi.mock('#~/server/common/helpers/get-first-payment-date.js', () => ({
 
 describe('fptt offerAccepted', () => {
   test('exposes the FPTT offer-accepted template path', () => {
-    expect(offerAccepted.template).toBe('grant-types/fptt/offer-accepted')
+    expect(offerAccepted.template).toBe(
+      'grant-types/fptt/offer-accepted/offer-accepted'
+    )
   })
 
   test('builds the view model with payment date and consent details', () => {
