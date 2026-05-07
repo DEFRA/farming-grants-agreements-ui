@@ -1,8 +1,8 @@
 import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
-import { WMP_TERMS_URL } from './constants.js'
+import { WMP_TERMS_URL } from '../constants.js'
 
 export const acceptOffer = {
-  template: 'grant-types/wmp/accept-offer',
+  template: 'grant-types/wmp/accept-offer/accept-offer',
   validate(request, agreementData) {
     if (request.payload?.confirm !== 'confirmed') {
       auditEvent(

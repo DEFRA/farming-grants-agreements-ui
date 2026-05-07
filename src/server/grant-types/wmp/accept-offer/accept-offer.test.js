@@ -19,7 +19,9 @@ describe('wmp acceptOffer', () => {
   })
 
   test('exposes the WMP accept-offer template path', () => {
-    expect(acceptOffer.template).toBe('grant-types/wmp/accept-offer')
+    expect(acceptOffer.template).toBe(
+      'grant-types/wmp/accept-offer/accept-offer'
+    )
   })
 
   test('returns valid when the confirmation is present', () => {
