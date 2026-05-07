@@ -1,9 +1,6 @@
 {% set bodyClasses = "view-offer-page" ~ (" view-agreement-has-watermark" if isDraftAgreement or isWithdrawnAgreement or isCancelledAgreement or isTerminatedAgreement else "") %}
 {% set mainClasses = "" %}
 {% extends 'layouts/page.njk' %}
-{% from "govuk/components/button/macro.njk" import govukButton %}
-{% from "govuk/components/details/macro.njk" import govukDetails %}
-{% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
 
 {% block content %}
@@ -337,7 +334,6 @@
       </div>
 
       <div class="t-and-c-print-only">
-        {# Rendered only in print — hidden in browser view #}
         <!-- T&Cs text will be placed here -->
       </div>
     </div>

@@ -1,6 +1,6 @@
-import { buildAgreementViewModel } from '#~/server/common/helpers/build-view-agreement-model.js'
 import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
 import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
+import { getGrantTypeFor } from '#~/server/grant-types/index.js'
 
 export const viewAgreementController = {
   async handler(request, h) {
@@ -25,9 +25,11 @@ export const viewAgreementController = {
       })
     }
 
-    return h.view('view-agreement/index', {
-      pageTitle: 'Farm payments technical test agreement document',
-      ...buildAgreementViewModel(agreementData)
-    })
+    const { viewAgreement } = getGrantTypeFor(agreementData)
+
+    return h.view(
+      viewAgreement.template,
+      viewAgreement.buildModel({ agreementData })
+    )
   }
 }
