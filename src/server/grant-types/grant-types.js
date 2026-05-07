@@ -11,7 +11,7 @@ const grantsByCode = {
  * Retrieves the grant-type configuration for a given agreement.
  * @param {object} agreementData - The agreement data object.
  * @returns {object} The grant-type configuration.
- * @throws {Boom.PayloadTooLarge} If the agreement code is unsupported.
+ * @throws {Boom.badRequest} If the agreement code is unsupported.
  */
 export const getGrantTypeFor = (agreementData = {}) => {
   const grant = grantsByCode[agreementData.code]
