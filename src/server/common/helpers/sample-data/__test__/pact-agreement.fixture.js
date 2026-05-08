@@ -59,6 +59,7 @@ const buildConsentObjects = (consentVariant = 'none') =>
 
 const baseAgreement = {
   agreementNumber: 'FPTT123456789',
+  code: 'frps-private-beta',
   status: 'offered',
   consentObjects: buildConsentObjects(),
   identifiers: {
@@ -253,6 +254,7 @@ const buildApplicationMatcher = (application) => {
 
 const buildAgreementWithMatchers = (agreement) => ({
   agreementNumber: like(agreement.agreementNumber),
+  code: like(agreement.code),
   status: agreement.status,
   consentObjects: like(agreement.consentObjects ?? []),
   identifiers: {
@@ -270,14 +272,16 @@ export const buildPactAgreement = (
   {
     status = 'offered',
     consentVariant = 'none',
-    consentObjects = buildConsentObjects(consentVariant)
+    consentObjects = buildConsentObjects(consentVariant),
+    ...rest
   } = {},
   { useMatchers = false } = {}
 ) => {
   const agreement = {
     ...baseAgreement,
     status,
-    consentObjects
+    consentObjects,
+    ...rest
   }
 
   return useMatchers ? buildAgreementWithMatchers(agreement) : agreement

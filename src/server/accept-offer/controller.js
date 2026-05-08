@@ -1,6 +1,7 @@
 import { apiRequest } from '#~/server/common/helpers/api.js'
 import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
 import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
+import { getGrantTypeFor } from '#~/server/grant-types/index.js'
 import path from 'node:path'
 
 const generateRedirectUrl = (request, agreementId = '') => {
@@ -11,22 +12,21 @@ const generateRedirectUrl = (request, agreementId = '') => {
 
 export const validateAcceptOfferController = {
   async handler(request, h) {
-    const confirm = request?.payload?.confirm
     const { agreementId = '' } = request.params
     const { agreementData } = request.pre?.data || {}
+    const { acceptOffer } = getGrantTypeFor(agreementData)
 
-    // Validate that the checkbox has been checked
-    if (confirm !== 'confirmed') {
-      auditEvent(
-        request,
-        AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED,
-        agreementData
-      )
-      return h.view('accept-offer/index', {
-        pageTitle: 'Accept your agreement offer',
-        errorMessage: {
-          text: 'Please agree with the Terms and Conditions'
-        }
+    // Perform grant-specific validation
+    const validation = acceptOffer.validate(request, agreementData)
+
+    if (!validation.isValid) {
+      return h.view(acceptOffer.template, {
+        ...acceptOffer.buildModel({
+          agreementData,
+          errorMessage: {
+            text: validation.errorMessage
+          }
+        })
       })
     }
 
@@ -66,6 +66,7 @@ export const acceptOfferController = {
     const action = request?.payload?.action
     const { agreementId = '' } = request.params
     const { agreementData } = request.pre?.data || {}
+    const { acceptOffer } = getGrantTypeFor(agreementData)
 
     if (action === 'accept-offer' && agreementData.status === 'offered') {
       return h.redirect(generateRedirectUrl(request, agreementId))
@@ -73,8 +74,9 @@ export const acceptOfferController = {
 
     auditEvent(request, AuditEvent.REVIEW_OFFER_CONTINUED, agreementData)
 
-    return h.view('accept-offer/index', {
-      pageTitle: 'Accept your agreement offer'
-    })
+    return h.view(
+      acceptOffer.template,
+      acceptOffer.buildModel({ agreementData })
+    )
   }
 }
