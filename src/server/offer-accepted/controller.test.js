@@ -251,6 +251,7 @@ describe('offerAcceptedController handler', () => {
 
   const agreementData = {
     agreementNumber: 'FPTT123',
+    code: 'frps-private-beta',
     payment: { agreementStartDate: '2025-09-01' },
     consentObjects: []
   }
@@ -292,6 +293,55 @@ describe('offerAcceptedController handler', () => {
       request,
       'OFFER_ACCEPTED_VIEWED',
       agreementData
+    )
+    expect(h.view).toHaveBeenCalledWith(
+      'grant-types/fptt/offer-accepted/offer-accepted',
+      expect.objectContaining({
+        pageTitle: 'Offer accepted',
+        panelTitle: 'Agreement offer accepted'
+      })
+    )
+  })
+
+  test('renders WMP-safe confirmation through the WMP grant-code view', async () => {
+    const h = createH()
+    const wmpAgreementData = {
+      agreementNumber: 'WMP123',
+      code: 'woodland',
+      payment: { agreementStartDate: '2026-04-16' },
+      consentObjects: []
+    }
+    const request = { pre: { data: { agreementData: wmpAgreementData } } }
+
+    await offerAcceptedController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'grant-types/wmp/offer-accepted/offer-accepted',
+      expect.objectContaining({
+        pageTitle: 'Offer accepted',
+        panelTitle: 'Agreement offer accepted',
+        termsHref:
+          'https://www.gov.uk/government/publications/capital-grants-agreements-terms-and-conditions-2026'
+      })
+    )
+  })
+
+  test('throws bad request for unsupported agreement codes', async () => {
+    const h = createH()
+    const request = {
+      pre: {
+        data: {
+          agreementData: {
+            agreementNumber: 'UNKNOWN123',
+            code: 'unknown',
+            payment: { agreementStartDate: '2026-04-16' }
+          }
+        }
+      }
+    }
+
+    await expect(offerAcceptedController.handler(request, h)).rejects.toThrow(
+      'Unsupported agreement code: unknown'
     )
   })
 })

@@ -1,0 +1,44 @@
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+    <div class="govuk-grid-row" role="main">
+      <div class="govuk-grid-column-two-thirds">
+        <div class="govuk-panel govuk-panel--confirmation">
+          <h1 class="govuk-panel__title">
+            {{ panelTitle }}
+          </h1>
+          <div class="govuk-panel__body">
+            The start date for this agreement is<br/>
+            {{ agreement.payment.agreementStartDate | formatDate('d MMMM yyyy') }}
+          </div>
+        </div>
+
+        <div class="govuk-panel__body">
+          <p class="govuk-body">Your agreement number is {{ agreement.agreementNumber }}.</p>
+
+          <p class="govuk-body">You can view:</p>
+          <ul class="govuk-list govuk-list--bullet">
+            <li>your <a href="{{ buildUrl(baseUrl, agreement.agreementNumber) }}" class="govuk-link" rel="noopener noreferrer" target="_blank">agreement document</a></li>
+            <li>the <a href="{{ termsHref }}" class="govuk-link">Capital grants agreements: terms and conditions 2026</a></li>
+          </ul>
+
+          <h2 class="govuk-heading-m">If you need to end your agreement early</h2>
+          <p class="govuk-body">Contact the Rural Payments Agency (RPA) by phone or email.</p>
+          <ul class="govuk-list">
+            <li>Telephone: 03000 200 301</li>
+            <li>Monday to Friday, 8:30am to 5pm (except bank holidays)</li>
+          </ul>
+          <p class="govuk-body">
+            <a href="https://www.gov.uk/call-charges" target="_blank" class="govuk-link">
+              Find out about call charges (opens in new tab)
+            </a>
+          </p>
+          <p class="govuk-body">Email: <a href="mailto:ruralpayments@defra.gov.uk" class="govuk-link">ruralpayments@defra.gov.uk</a></p>
+          <p class="govuk-body">We aim to respond to emails within 10 working days.</p>
+        </div>
+      </div>
+
+
+    </div>
+{% endblock %}
