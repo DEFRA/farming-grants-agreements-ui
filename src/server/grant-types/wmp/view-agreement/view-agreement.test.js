@@ -125,4 +125,128 @@ describe('wmp viewAgreement', () => {
 
     expect(model.agreementNumber).toBe('WMP-ALT-123')
   })
+
+  test('masks draft agreement party details and uses fallback payment item values', () => {
+    const model = viewAgreement.buildModel({
+      agreementData: {
+        ...agreementData,
+        status: 'offered',
+        signatureDate: undefined,
+        agreementNumber: 'WMP-FALLBACK-456',
+        clientRef: undefined,
+        applicant: {},
+        application: {
+          parcel: [
+            {
+              parcelId: 'SD0000-0001',
+              areaHa: 12.3456
+            }
+          ]
+        },
+        payment: {
+          agreementStartDate: '2026-05-07',
+          agreementEndDate: '2027-05-07',
+          agreementTotalPence: undefined,
+          agreementLevelItems: {
+            1: {
+              code: 'PA3',
+              description: 'PA3: Woodland management plan',
+              annualPaymentPence: 157500
+            }
+          }
+        }
+      }
+    })
+
+    expect(model.agreementNumber).toBe('WMP-FALLBACK-456')
+    expect(model.agreementHolderName).toBe('XXXXX')
+    expect(model.applicantName).toBe('XXXXX')
+    expect(model.address).toBe('XXXXX')
+    expect(model.agreementStartDate).toBe('XXXXX')
+    expect(model.agreementEndDate).toBe('XXXXX')
+    expect(model.acceptedOn).toBe('')
+    expect(model.landParcels).toEqual([
+      {
+        parcelId: 'SD0000-0001',
+        areaHa: 12.3456
+      }
+    ])
+    expect(model.capitalItems).toEqual([
+      {
+        code: 'PA3',
+        description: 'PA3: Woodland management plan',
+        quantity: undefined,
+        unit: 'ha',
+        totalPaymentPence: 157500,
+        totalPayment: '£1,575'
+      }
+    ])
+    expect(model.agreementTotalPayment).toBe('')
+    expect(model.isDraftAgreement).toBe(true)
+    expect(model.isAgreementAccepted).toBe(false)
+  })
+
+  test('covers WMP fallback branches for missing ids, payment data and parcel area shape', () => {
+    const model = viewAgreement.buildModel({
+      agreementData: {
+        code: 'woodland',
+        status: 'accepted',
+        identifiers: {},
+        applicant: {
+          business: {
+            address: {}
+          },
+          customer: {}
+        },
+        application: {
+          parcel: [
+            {
+              parcelId: 'SD9999-0001',
+              areaHa: 9.8765
+            }
+          ]
+        },
+        payment: {
+          agreementStartDate: '2026-05-07',
+          agreementEndDate: '2027-05-07',
+          agreementTotalPence: undefined,
+          agreementLevelItems: {
+            1: {
+              code: 'PA3',
+              description: 'PA3: Woodland management plan',
+              unit: undefined,
+              agreementTotalPence: undefined,
+              annualPaymentPence: 25000
+            }
+          }
+        },
+        signatureDate: undefined,
+        agreementNumber: 'WMP-FALLBACK-789'
+      }
+    })
+
+    expect(model.agreementNumber).toBe('WMP-FALLBACK-789')
+    expect(model.agreementHolderName).toBe('')
+    expect(model.applicantName).toBe('')
+    expect(model.address).toBe('')
+    expect(model.sbi).toBe('')
+    expect(model.landParcels).toEqual([
+      {
+        parcelId: 'SD9999-0001',
+        areaHa: 9.8765
+      }
+    ])
+    expect(model.capitalItems).toEqual([
+      {
+        code: 'PA3',
+        description: 'PA3: Woodland management plan',
+        quantity: undefined,
+        unit: 'ha',
+        totalPaymentPence: 25000,
+        totalPayment: '£250'
+      }
+    ])
+    expect(model.agreementTotalPayment).toBe('')
+    expect(model.acceptedOn).toBe('')
+  })
 })
