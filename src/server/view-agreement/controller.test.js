@@ -129,10 +129,12 @@ describe('#viewAgreementController', () => {
 
 // Shared test helper to build request objects for all test scenarios
 function buildRequest({
+  code = 'frps-private-beta',
   status = 'accepted',
   authSource = null,
   mode = undefined,
-  host = 'this-site.uk'
+  host = 'this-site.uk',
+  agreementData = {}
 } = {}) {
   const baseUrl = `https://${host}`
   return {
@@ -148,20 +150,40 @@ function buildRequest({
           auth: { source: authSource }
         }),
         agreementData: {
+          code,
+          agreementNumber: 'TEST123',
+          identifiers: {
+            sbi: '123456789'
+          },
           status,
+          updatedAt: '2026-02-02T00:00:00.000Z',
           payment: {
             agreementStartDate: '2026-01-01',
-            agreementEndDate: '2027-01-01'
+            agreementEndDate: '2027-01-01',
+            parcelItems: {},
+            agreementLevelItems: {},
+            payments: []
+          },
+          application: {
+            parcel: []
           },
           applicant: {
             business: {
+              name: 'Mock Biz',
               address: {
                 line1: 'Line 1',
                 city: 'AnyTown',
                 postalCode: 'AA1 1AA'
               }
+            },
+            customer: {
+              name: {
+                first: 'Pat',
+                last: 'Jones'
+              }
             }
-          }
+          },
+          ...agreementData
         }
       }
     }
@@ -210,7 +232,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.isDraftAgreement).toBe(true)
@@ -236,7 +258,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.isDraftAgreement).toBe(false)
@@ -261,7 +283,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.isDraftAgreement).toBe(false)
@@ -329,7 +351,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -350,7 +372,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -371,7 +393,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -392,7 +414,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -413,7 +435,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -453,7 +475,7 @@ describe('viewAgreementController agreement ended', () => {
     )
   })
 
-  test('renders normal index template when status is accepted', async () => {
+  test('renders FPTT grant-specific template when status is accepted', async () => {
     const { viewAgreementController } = await import('./controller.js')
     const h = createH()
     const request = buildRequest({ status: 'accepted' })
@@ -461,8 +483,71 @@ describe('viewAgreementController agreement ended', () => {
     await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
+    )
+  })
+
+  test('renders WMP grant-specific template when status is accepted', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({
+      code: 'woodland',
+      status: 'accepted',
+      agreementData: {
+        clientRef: 'WMP-20260507133228-24643',
+        signatureDate: '2026-05-07T12:53:16.162Z',
+        applicant: {
+          business: {
+            name: 'Example Farm Ltd',
+            address: {
+              line1: 'Farm House',
+              city: 'York',
+              postalCode: 'YO1 1AA'
+            }
+          },
+          customer: {
+            name: {
+              title: 'Mr',
+              first: 'John',
+              last: 'Doe'
+            }
+          }
+        },
+        application: {
+          parcel: [{ parcelId: 'SD4841-4684', area: { quantity: 25.3874 } }]
+        },
+        actionApplications: [
+          {
+            code: 'WMP1',
+            parcelId: 'SD4841-4684',
+            appliedFor: { quantity: 25.3874 }
+          }
+        ],
+        payment: {
+          agreementStartDate: '2026-05-07',
+          agreementEndDate: '2027-05-07',
+          agreementTotalPence: 157500,
+          agreementLevelItems: {
+            1: {
+              code: 'PA3',
+              description: 'PA3: Woodland management plan',
+              annualPaymentPence: 157500
+            }
+          },
+          parcelItems: {},
+          payments: []
+        }
+      }
+    })
+
+    await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'grant-types/wmp/view-agreement/view-agreement',
+      expect.objectContaining({
+        pageTitle: 'Woodland Management Plan PA3 agreement document'
+      })
     )
   })
 
@@ -510,8 +595,8 @@ describe('viewAgreementController audit events', () => {
       auditEvent: vi.fn(),
       AuditEvent: { AGREEMENT_VIEWED: 'AGREEMENT_VIEWED' }
     }))
-    vi.doMock('#~/server/common/helpers/build-view-agreement-model.js', () => ({
-      buildAgreementViewModel: vi.fn(() => ({}))
+    vi.doMock('#~/server/common/helpers/get-agreement-calculations.js', () => ({
+      getAgreementCalculations: vi.fn(() => ({}))
     }))
     ;({ auditEvent: mockedAuditEvent } = await import(
       '#~/server/common/helpers/audit-event.js'

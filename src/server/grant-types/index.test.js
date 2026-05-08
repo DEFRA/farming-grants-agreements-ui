@@ -11,6 +11,9 @@ describe('#getGrantTypeFor', () => {
     expect(grantType.offerAccepted.template).toBe(
       'grant-types/fptt/offer-accepted/offer-accepted'
     )
+    expect(grantType.viewAgreement.template).toBe(
+      'grant-types/fptt/view-agreement/view-agreement'
+    )
   })
 
   test('returns the WMP grant type for woodland agreements', () => {
@@ -21,6 +24,9 @@ describe('#getGrantTypeFor', () => {
     )
     expect(grantType.offerAccepted.template).toBe(
       'grant-types/wmp/offer-accepted/offer-accepted'
+    )
+    expect(grantType.viewAgreement.template).toBe(
+      'grant-types/wmp/view-agreement/view-agreement'
     )
   })
 
