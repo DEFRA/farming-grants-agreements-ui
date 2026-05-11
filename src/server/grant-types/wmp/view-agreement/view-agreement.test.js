@@ -274,6 +274,89 @@ describe('wmp viewAgreement', () => {
     ])
   })
 
+  test('handles missing collections and invalid numeric fields without rendering fallback values', () => {
+    const emptyModel = viewAgreement.buildModel({
+      agreementData: {
+        code: 'woodland',
+        status: 'accepted',
+        identifiers: {},
+        signatureDate: undefined
+      }
+    })
+
+    expect(emptyModel.agreementNumber).toBe('')
+    expect(emptyModel.landParcels).toEqual([])
+    expect(emptyModel.capitalItems).toEqual([])
+
+    const model = viewAgreement.buildModel({
+      agreementData: {
+        ...agreementData,
+        application: {
+          parcel: [
+            { parcelId: 'SD0000-0001', area: { quantity: null } },
+            { parcelId: 'SD0000-0002', areaHa: 'not-a-number' },
+            { parcelId: 'SD0000-0003', areaHa: ' ' }
+          ]
+        },
+        payment: {
+          ...agreementData.payment,
+          agreementLevelItems: {
+            1: {
+              code: 'WMP1',
+              description: 'Null area item',
+              agreementTotalPence: 12345,
+              quantity: null,
+              unit: 'each'
+            },
+            2: {
+              code: 'WMP2',
+              description: 'Blank area item',
+              annualPaymentPence: 1000,
+              quantity: ' '
+            },
+            3: {
+              code: 'WMP3',
+              description: 'Invalid area item',
+              quantity: 'not-a-number'
+            }
+          }
+        },
+        clientRef: undefined,
+        agreementNumber: 'WMP-FALLBACK-999'
+      }
+    })
+
+    expect(model.agreementNumber).toBe('WMP-FALLBACK-999')
+    expect(model.landParcels).toEqual([
+      { parcelId: 'SD0000-0001', areaHa: '' },
+      { parcelId: 'SD0000-0002', areaHa: '' },
+      { parcelId: 'SD0000-0003', areaHa: '' }
+    ])
+    expect(model.capitalItems).toEqual([
+      expect.objectContaining({
+        code: 'WMP1',
+        quantity: '',
+        unit: 'each',
+        totalPaymentPence: 12345,
+        totalPayment: '£123.45'
+      }),
+      expect.objectContaining({
+        code: 'WMP2',
+        quantity: '',
+        unit: 'ha',
+        totalPaymentPence: 1000,
+        totalPayment: '£10'
+      }),
+      expect.objectContaining({
+        code: 'WMP3',
+        quantity: '',
+        unit: 'ha',
+        totalPaymentPence: 0,
+        totalPayment: '£0'
+      })
+    ])
+  })
+
   test('covers WMP fallback branches for missing ids, payment data and parcel area shape', () => {
     const model = viewAgreement.buildModel({
       agreementData: {
