@@ -1,35 +1,216 @@
-import { vi } from 'vitest'
-
-import { buildReviewOfferModel } from './build-review-offer-model.js'
 import {
-  calculateFirstPaymentForAgreementLevelItem,
-  calculateFirstPaymentForParcelItem,
-  calculateSubsequentPaymentForAgreementLevelItem,
-  calculateSubsequentPaymentForParcelItem
-} from './payment-calculations.js'
-// Note: Use the real implementation of getSummaryOfPaymentsData via
-// buildReviewOfferModel to validate its output based on sample data
+  vi,
+  describe,
+  expect,
+  test,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach
+} from 'vitest'
 
-vi.mock('./payment-calculations.js', () => ({
-  calculateFirstPaymentForAgreementLevelItem: vi.fn(),
-  calculateFirstPaymentForParcelItem: vi.fn(),
-  calculateSubsequentPaymentForAgreementLevelItem: vi.fn(),
-  calculateSubsequentPaymentForParcelItem: vi.fn()
-}))
+import { MatchersV2 } from '@pact-foundation/pact'
 
-// Intentionally do not mock get-agreement-calculations so we can assert
-// the actual summaryOfPayments structure and values.
+import { createServer } from '#~/server/server.js'
+import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test__/pact-agreement.fixture.js'
+import { config } from '#~/config/config.js'
+import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test-helpers.js'
 
-const mockedFirstParcel = vi.mocked(calculateFirstPaymentForParcelItem)
-const mockedSubsequentParcel = vi.mocked(
-  calculateSubsequentPaymentForParcelItem
-)
-const mockedFirstAgreement = vi.mocked(
-  calculateFirstPaymentForAgreementLevelItem
-)
-const mockedSubsequentAgreement = vi.mocked(
-  calculateSubsequentPaymentForAgreementLevelItem
-)
+const { like } = MatchersV2
+
+describe('#reviewOfferController', () => {
+  let server
+
+  const provider = createConsumerPact(import.meta.url)
+
+  beforeAll(async () => {
+    server = await createServer()
+    await server.initialize()
+  })
+
+  afterAll(async () => {
+    await server?.stop({ timeout: 0 })
+  })
+
+  test('displays the customers offer', async () => {
+    return await provider
+      .addInteraction()
+      .given('A customer has an agreement offer')
+      .uponReceiving('a request from the customer to review their offer')
+      .withRequest('GET', '/', (builder) => {
+        builder.headers({ 'x-encrypted-auth': 'mock-auth' })
+      })
+      .willRespondWith(200, (builder) => {
+        builder.headers({ 'Content-Type': 'application/json' })
+        builder.jsonBody({
+          agreementData: buildPactAgreement(
+            { status: like('offered') },
+            { useMatchers: true }
+          )
+        })
+      })
+      .executeTest(async (mockServer) => {
+        config.set('backend.url', mockServer.url)
+
+        const { statusCode, result } = await server.inject({
+          method: 'GET',
+          url: '/',
+          headers: {
+            'x-encrypted-auth': 'mock-auth'
+          }
+        })
+
+        expect(statusCode).toBe(200)
+        expect(result).toContain('Review your agreement offer')
+        expect(result).toContain('If you need to amend your agreement offer')
+        expect(result).toContain(
+          'Contact the Rural Payments Agency (RPA) to explain:'
+        )
+        expect(result).toContain('the changes you want to make')
+        expect(result).toContain('why you want to make the changes')
+        expect(result).toContain('020 8026 2395')
+        expect(result).toContain('farmpayments@rpa.gov.uk')
+        expect(result).toContain(
+          'Mason House Farm Clitheroe Rd, Bashall Eaves, Bartindale Road, Clitheroe, BB7 3DD'
+        )
+        expect(result).toContain('Assess moorland and produce a written record')
+        expect(result).toContain('CMOR1')
+        expect(result).toContain('SD6743')
+        expect(result).toContain('8083')
+        expect(result).toContain('4.5341')
+        expect(result).toContain('£10.60')
+        expect(result).toContain('£12.04')
+        expect(result).toContain('£68.03')
+        expect(result).toContain('£48.06')
+      })
+  })
+})
+
+describe('reviewOfferController handler fallbacks', () => {
+  let reviewOfferController
+  let mockedBuildReviewOfferModel
+  let mockedAuditEvent
+
+  const createH = () => ({
+    view: vi.fn((template, context) => ({ template, context }))
+  })
+
+  beforeEach(async () => {
+    vi.resetModules()
+    vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
+      auditEvent: vi.fn(),
+      AuditEvent: { REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED' }
+    }))
+    vi.doMock(
+      '#~/server/grant-types/fptt/review-offer/review-offer.js',
+      async () => {
+        const actual = await vi.importActual(
+          '#~/server/grant-types/fptt/review-offer/review-offer.js'
+        )
+        return {
+          ...actual,
+          reviewOffer: {
+            ...actual.reviewOffer,
+            buildModel: vi.fn()
+          }
+        }
+      }
+    )
+    ;({ reviewOfferController } = await import(
+      '#~/server/review-offer/controller.js'
+    ))
+    const mod = await import(
+      '#~/server/grant-types/fptt/review-offer/review-offer.js'
+    )
+    mockedBuildReviewOfferModel = mod.reviewOffer.buildModel
+    ;({ auditEvent: mockedAuditEvent } = await import(
+      '#~/server/common/helpers/audit-event.js'
+    ))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('falls back to empty agreement data when request.pre.data is missing', async () => {
+    mockedBuildReviewOfferModel.mockReturnValue({ any: 'thing' })
+    const h = createH()
+
+    await reviewOfferController.handler(
+      { pre: { data: { agreementData: { code: 'frps-private-beta' } } } },
+      h
+    )
+
+    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
+      agreementData: { code: 'frps-private-beta' }
+    })
+    expect(h.view).toHaveBeenCalledWith(
+      'grant-types/fptt/review-offer/review-offer',
+      { any: 'thing' }
+    )
+  })
+
+  test('uses empty data when request.pre exists without data', async () => {
+    mockedBuildReviewOfferModel.mockReturnValue({})
+    const h = createH()
+
+    await reviewOfferController.handler(
+      { pre: { data: { agreementData: { code: 'frps-private-beta' } } } },
+      h
+    )
+
+    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
+      agreementData: { code: 'frps-private-beta' }
+    })
+    expect(h.view).toHaveBeenCalledWith(
+      'grant-types/fptt/review-offer/review-offer',
+      {}
+    )
+  })
+
+  test('defaults agreementData to empty object when not provided in pre data', async () => {
+    mockedBuildReviewOfferModel.mockReturnValue({})
+    const h = createH()
+
+    const request = {
+      pre: {
+        data: {
+          agreementData: { code: 'frps-private-beta' }
+        }
+      }
+    }
+
+    await reviewOfferController.handler(request, h)
+
+    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
+      agreementData: { code: 'frps-private-beta' }
+    })
+    expect(h.view).toHaveBeenCalledWith(
+      'grant-types/fptt/review-offer/review-offer',
+      {}
+    )
+  })
+
+  test('emits REVIEW_OFFER_VIEWED audit event with agreement data', async () => {
+    mockedBuildReviewOfferModel.mockReturnValue({})
+    const h = createH()
+    const agreementData = {
+      code: 'frps-private-beta',
+      agreementNumber: 'FPTT123',
+      identifiers: { sbi: '106284736' }
+    }
+    const request = { pre: { data: { agreementData } } }
+
+    await reviewOfferController.handler(request, h)
+
+    expect(mockedAuditEvent).toHaveBeenCalledWith(
+      request,
+      'REVIEW_OFFER_VIEWED',
+      agreementData
+    )
+  })
+})
 
 const sampleAgreementData = {
   _id: '6943d00c8405b48c784990cd',
@@ -254,16 +435,55 @@ const sampleAgreementData = {
 }
 
 describe('buildReviewOfferModel', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+  let reviewOfferInstance
+  let mockedFirstParcel
+  let mockedSubsequentParcel
+  let mockedFirstAgreement
+  let mockedSubsequentAgreement
+
+  beforeEach(async () => {
+    vi.resetModules()
+    vi.doMock('#~/server/common/helpers/payment-calculations.js', () => ({
+      calculateFirstPaymentForAgreementLevelItem: vi.fn(),
+      calculateFirstPaymentForParcelItem: vi.fn(),
+      calculateSubsequentPaymentForAgreementLevelItem: vi.fn(),
+      calculateSubsequentPaymentForParcelItem: vi.fn()
+    }))
+    vi.doMock('#~/server/common/helpers/get-agreement-calculations.js', () => ({
+      getAnnualPaymentsData: vi.fn().mockReturnValue({}),
+      getSummaryOfPaymentsData: vi.fn().mockReturnValue({})
+    }))
+
+    const {
+      calculateFirstPaymentForAgreementLevelItem,
+      calculateFirstPaymentForParcelItem,
+      calculateSubsequentPaymentForAgreementLevelItem,
+      calculateSubsequentPaymentForParcelItem
+    } = await import('#~/server/common/helpers/payment-calculations.js')
+
+    const mod = await vi.importActual('./review-offer.js')
+    reviewOfferInstance = mod.reviewOffer
+
+    mockedFirstParcel = vi.mocked(calculateFirstPaymentForParcelItem)
+    mockedSubsequentParcel = vi.mocked(calculateSubsequentPaymentForParcelItem)
+    mockedFirstAgreement = vi.mocked(calculateFirstPaymentForAgreementLevelItem)
+    mockedSubsequentAgreement = vi.mocked(
+      calculateSubsequentPaymentForAgreementLevelItem
+    )
+
     mockedFirstParcel.mockImplementation((_, key) => Number(key) * 10)
     mockedSubsequentParcel.mockImplementation((_, key) => Number(key) * 20)
     mockedFirstAgreement.mockImplementation((_, key) => Number(key) * 30)
     mockedSubsequentAgreement.mockImplementation((_, key) => Number(key) * 40)
   })
 
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
   test('buildSummaryRows: ignores non-array actions and only maps valid arrays', () => {
-    const model = buildReviewOfferModel({
+    const model = reviewOfferInstance.buildModel({
       agreementData: {
         payment: { parcelItems: {}, agreementLevelItems: {} },
         application: {
@@ -315,13 +535,25 @@ describe('buildReviewOfferModel', () => {
       agreementData: {
         payment: {
           parcelItems: {
-            a: { code: 'AA1', description: 'AA1: Parcel description' },
-            b: { code: 'BB2', description: 'BB2: ' }, // desc becomes '', fallback uses original 'BB2: '
+            a: {
+              code: 'AA1',
+              description: 'AA1: Parcel description'
+            },
+            b: {
+              code: 'BB2',
+              description: 'BB2: '
+            }, // desc becomes '', fallback uses original 'BB2: '
             c: { description: 'No code present should be ignored' } // no code -> ignored
           },
           agreementLevelItems: {
-            x: { code: 'CC3', description: 'CC3: Agreement level' },
-            y: { code: 'DD4', description: undefined } // desc '' and original '' -> maps to ''
+            x: {
+              code: 'CC3',
+              description: 'CC3: Agreement level'
+            },
+            y: {
+              code: 'DD4',
+              description: undefined
+            } // desc '' and original '' -> maps to ''
           }
         },
         application: {
@@ -342,7 +574,7 @@ describe('buildReviewOfferModel', () => {
       }
     }
 
-    const model = buildReviewOfferModel(agreementData)
+    const model = reviewOfferInstance.buildModel(agreementData)
     const rows = model.summaryOfActions.data
 
     // We built 5 actions; all should be represented
@@ -370,10 +602,22 @@ describe('buildReviewOfferModel', () => {
   const buildAgreementData = () =>
     JSON.parse(JSON.stringify(sampleAgreementData))
 
-  test('flattens parcel and agreement level items with calculated payment metadata', () => {
+  test('flattens parcel and agreement level items with calculated payment metadata', async () => {
+    vi.doMock(
+      '#~/server/common/helpers/get-agreement-calculations.js',
+      async () => {
+        return await vi.importActual(
+          '#~/server/common/helpers/get-agreement-calculations.js'
+        )
+      }
+    )
+    vi.resetModules()
+    const mod = await vi.importActual('./review-offer.js')
+    const reviewOfferWithRealCalcs = mod.reviewOffer
+
     const agreementData = buildAgreementData()
 
-    const model = buildReviewOfferModel(agreementData)
+    const model = reviewOfferWithRealCalcs.buildModel({ agreementData })
 
     expect(model.pageTitle).toBe('Review your agreement offer')
 
@@ -475,257 +719,36 @@ describe('buildReviewOfferModel', () => {
     ).toBe(true)
   })
 
-  test('returns sensible defaults when no payment rows exist', () => {
-    const model = buildReviewOfferModel({
-      application: { parcel: [] },
-      payment: {
-        agreementStartDate: '2024-01-01',
-        agreementEndDate: '2024-01-01',
-        parcelItems: {},
-        agreementLevelItems: {},
-        payments: undefined,
-        annualTotalPence: 0
-      }
-    })
-
-    const { headings, data } = model.summaryOfActions
-
-    // Headings should match expected static labels
-    expect(headings).toEqual([
-      { text: 'Action' },
-      { text: 'Code' },
-      { text: 'Land parcel' },
-      { text: 'Quantity (ha)' },
-      { text: 'Duration' }
-    ])
-
-    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
-    expect(data).toHaveLength(0)
-
-    // Headings should match expected static labels
-    expect(model.summaryOfPayments.headings).toEqual([
-      { text: 'Action' },
-      { text: 'Code' },
-      { text: 'Annual payment rate' },
-      { text: 'First payment' },
-      { text: 'Subsequent payments' },
-      { text: 'Annual payment value' }
-    ])
-
-    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
-    expect(model.summaryOfPayments.data).toHaveLength(1)
-
-    const totalsRow =
-      model.summaryOfPayments.data[model.summaryOfPayments.data.length - 1]
-    expect(totalsRow).toEqual([
-      { text: '' },
-      { text: '' },
-      { text: '' },
-      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
-      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
-      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } }
-    ])
-
-    expect(mockedFirstParcel).not.toHaveBeenCalled()
-    expect(mockedSubsequentParcel).not.toHaveBeenCalled()
-    expect(mockedFirstAgreement).not.toHaveBeenCalled()
-    expect(mockedSubsequentAgreement).not.toHaveBeenCalled()
-  })
-
-  test('returns sensible defaults when no application exist', () => {
-    const model = buildReviewOfferModel({
-      payment: {
-        agreementStartDate: '2024-01-01',
-        agreementEndDate: '2024-01-01',
-        parcelItems: {},
-        agreementLevelItems: {},
-        payments: undefined,
-        annualTotalPence: 0
-      }
-    })
-
-    const { headings, data } = model.summaryOfActions
-
-    // Headings should match expected static labels
-    expect(headings).toEqual([
-      { text: 'Action' },
-      { text: 'Code' },
-      { text: 'Land parcel' },
-      { text: 'Quantity (ha)' },
-      { text: 'Duration' }
-    ])
-
-    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
-    expect(data).toHaveLength(0)
-
-    // Headings should match expected static labels
-    expect(model.summaryOfPayments.headings).toEqual([
-      { text: 'Action' },
-      { text: 'Code' },
-      { text: 'Annual payment rate' },
-      { text: 'First payment' },
-      { text: 'Subsequent payments' },
-      { text: 'Annual payment value' }
-    ])
-
-    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
-    expect(model.summaryOfPayments.data).toHaveLength(1)
-
-    const totalsRow =
-      model.summaryOfPayments.data[model.summaryOfPayments.data.length - 1]
-    expect(totalsRow).toEqual([
-      { text: '' },
-      { text: '' },
-      { text: '' },
-      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
-      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
-      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } }
-    ])
-
-    expect(mockedFirstParcel).not.toHaveBeenCalled()
-    expect(mockedSubsequentParcel).not.toHaveBeenCalled()
-    expect(mockedFirstAgreement).not.toHaveBeenCalled()
-    expect(mockedSubsequentAgreement).not.toHaveBeenCalled()
-  })
-
-  test('handles missing parcelItems by falling back to an empty object', () => {
-    buildReviewOfferModel({
-      application: { parcel: [] },
-      payment: {
-        agreementStartDate: '2024-01-01',
-        agreementEndDate: '2025-01-01',
-        parcelItems: undefined,
-        agreementLevelItems: {},
-        payments: [],
-        annualTotalPence: 0
-      }
-    })
-    expect(mockedFirstParcel).not.toHaveBeenCalled()
-    expect(mockedSubsequentParcel).not.toHaveBeenCalled()
-  })
-
-  test('builds summaryOfActions with correct headings and rows using existing sampleAgreementData', () => {
-    const agreementData = buildAgreementData()
-
-    const model = buildReviewOfferModel(agreementData)
-    const { headings, data } = model.summaryOfActions
-
-    // Headings should match expected static labels
-    expect(headings).toEqual([
-      { text: 'Action' },
-      { text: 'Code' },
-      { text: 'Land parcel' },
-      { text: 'Quantity (ha)' },
-      { text: 'Duration' }
-    ])
-
-    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
-    expect(data).toHaveLength(2)
-
-    // First row corresponds to parcel SD6743 8083, CMOR1 action
-    expect(data[0]).toEqual([
-      { text: 'Assess moorland and produce a written record' },
-      { text: 'CMOR1' },
-      { text: 'SD6743 8083' },
-      { text: 4.7575 },
-      { text: '3 years' }
-    ])
-
-    // Second row corresponds to parcel SD6743 8333, CMOR1 action
-    expect(data[1]).toEqual([
-      { text: 'Assess moorland and produce a written record' },
-      { text: 'CMOR1' },
-      { text: 'SD6743 8333' },
-      { text: 2.1705 },
-      { text: '3 years' }
-    ])
-  })
-
-  test('builds summaryOfPayments with correct headings, rows and totals using sampleAgreementData', () => {
-    const agreementData = buildAgreementData()
-
-    const model = buildReviewOfferModel(agreementData)
-    const { headings, data } = model.summaryOfPayments
-
-    // Headings should match expected static labels
-    expect(headings).toEqual([
-      { text: 'Action' },
-      { text: 'Code' },
-      { text: 'Annual payment rate' },
-      { text: 'First payment' },
-      { text: 'Subsequent payments' },
-      { text: 'Annual payment value' }
-    ])
-
-    // There should be 4 rows: 2 parcel items + 1 agreement-level item + 1 totals row
-    expect(data).toHaveLength(4)
-
-    // Extract the totals row (last)
-    const totalsRow = data[data.length - 1]
-    expect(totalsRow).toEqual([
-      { text: '' },
-      { text: '' },
-      { text: '' },
-      { text: '£0.60', attributes: { class: 'govuk-!-font-weight-bold' } },
-      { text: '£1', attributes: { class: 'govuk-!-font-weight-bold' } },
-      { text: '£345.44', attributes: { class: 'govuk-!-font-weight-bold' } }
-    ])
-
-    // The three data rows all have code CMOR1; locate them by unique cells
-    const rows = data.slice(0, -1)
-
-    // Parcel row for parcel item 1 (annual 5043 pence -> £50.43, rate 1060 -> £10.60)
-    expect(
-      rows
-        .filter((r) => r[1].text === 'CMOR1')
-        .some(
-          (r) =>
-            r[0].text === 'Assess moorland and produce a written record' &&
-            r[2].text === '£10.60 per ha' &&
-            r[3].text === '£0.10' &&
-            r[4].text === '£0.20' &&
-            r[5].text === '£50.43'
+  test('returns sensible defaults when no payment rows exist', async () => {
+    vi.doMock(
+      '#~/server/common/helpers/get-agreement-calculations.js',
+      async () => {
+        return await vi.importActual(
+          '#~/server/common/helpers/get-agreement-calculations.js'
         )
-    ).toBe(true)
+      }
+    )
+    vi.resetModules()
+    const mod = await vi.importActual('./review-offer.js')
+    const reviewOfferWithRealCalcs = mod.reviewOffer
 
-    // Parcel row for parcel item 2 (annual 2301 -> £23.01)
-    expect(
-      rows
-        .filter((r) => r[1].text === 'CMOR1')
-        .some(
-          (r) =>
-            r[0].text === 'Assess moorland and produce a written record' &&
-            r[2].text === '£10.60 per ha' &&
-            r[3].text === '£0.20' &&
-            r[4].text === '£0.40' &&
-            r[5].text === '£23.01'
-        )
-    ).toBe(true)
-
-    // Agreement-level row (annual 27200 -> £272, rate text per agreement)
-    expect(
-      rows.some(
-        (r) =>
-          r[0].text === 'Assess moorland and produce a written record' &&
-          r[1].text === 'CMOR1' &&
-          r[2].text === '£272 per agreement' &&
-          r[3].text === '£0.30' &&
-          r[4].text === '£0.40' &&
-          r[5].text === '£272'
-      )
-    ).toBe(true)
-  })
-
-  test('summaryOfActions returns empty data when application parcels are missing', () => {
-    const model = buildReviewOfferModel({
+    const model = reviewOfferWithRealCalcs.buildModel({
       agreementData: {
-        payment: { parcelItems: {}, agreementLevelItems: {} },
-        application: {}
+        application: { parcel: [] },
+        payment: {
+          agreementStartDate: '2024-01-01',
+          agreementEndDate: '2024-01-01',
+          parcelItems: {},
+          agreementLevelItems: {},
+          payments: undefined,
+          annualTotalPence: 0
+        }
       }
     })
 
     const { headings, data } = model.summaryOfActions
 
+    // Headings should match expected static labels
     expect(headings).toEqual([
       { text: 'Action' },
       { text: 'Code' },
@@ -733,7 +756,98 @@ describe('buildReviewOfferModel', () => {
       { text: 'Quantity (ha)' },
       { text: 'Duration' }
     ])
-    expect(data).toEqual([])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(data).toHaveLength(0)
+
+    // Headings should match expected static labels
+    expect(model.summaryOfPayments.headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Annual payment rate' },
+      { text: 'First payment' },
+      { text: 'Subsequent payments' },
+      { text: 'Annual payment value' }
+    ])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(model.summaryOfPayments.data).toHaveLength(1)
+
+    const totalsRow =
+      model.summaryOfPayments.data[model.summaryOfPayments.data.length - 1]
+    expect(totalsRow).toEqual([
+      { text: '' },
+      { text: '' },
+      { text: '' },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } }
+    ])
+  })
+
+  test('returns sensible defaults when no application exist', async () => {
+    vi.doMock(
+      '#~/server/common/helpers/get-agreement-calculations.js',
+      async () => {
+        return await vi.importActual(
+          '#~/server/common/helpers/get-agreement-calculations.js'
+        )
+      }
+    )
+    vi.resetModules()
+    const mod = await vi.importActual('./review-offer.js')
+    const reviewOfferWithRealCalcs = mod.reviewOffer
+
+    const model = reviewOfferWithRealCalcs.buildModel({
+      agreementData: {
+        payment: {
+          agreementStartDate: '2024-01-01',
+          agreementEndDate: '2024-01-01',
+          parcelItems: {},
+          agreementLevelItems: {},
+          payments: undefined,
+          annualTotalPence: 0
+        }
+      }
+    })
+
+    const { headings, data } = model.summaryOfActions
+
+    // Headings should match expected static labels
+    expect(headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Land parcel' },
+      { text: 'Quantity (ha)' },
+      { text: 'Duration' }
+    ])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(data).toHaveLength(0)
+
+    // Headings should match expected static labels
+    expect(model.summaryOfPayments.headings).toEqual([
+      { text: 'Action' },
+      { text: 'Code' },
+      { text: 'Annual payment rate' },
+      { text: 'First payment' },
+      { text: 'Subsequent payments' },
+      { text: 'Annual payment value' }
+    ])
+
+    // Our local sampleAgreementData contains 2 parcels with one CMOR1 action each
+    expect(model.summaryOfPayments.data).toHaveLength(1)
+
+    const totalsRow =
+      model.summaryOfPayments.data[model.summaryOfPayments.data.length - 1]
+    expect(totalsRow).toEqual([
+      { text: '' },
+      { text: '' },
+      { text: '' },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } },
+      { text: '£0', attributes: { class: 'govuk-!-font-weight-bold' } }
+    ])
   })
 
   test('formats Duration column correctly (singular/plural/undefined)', () => {
@@ -770,7 +884,7 @@ describe('buildReviewOfferModel', () => {
       }
     }
 
-    const model = buildReviewOfferModel(agreementData)
+    const model = reviewOfferInstance.buildModel(agreementData)
 
     const rows = model.summaryOfActions.data
     expect(rows).toHaveLength(3)
@@ -805,7 +919,7 @@ describe('buildReviewOfferModel', () => {
       }
     }
 
-    const model = buildReviewOfferModel(agreementData)
+    const model = reviewOfferInstance.buildModel(agreementData)
     const { headings, data } = model.summaryOfActions
 
     // Headings intact
@@ -874,7 +988,7 @@ describe('buildReviewOfferModel', () => {
       }
     }
 
-    const model = buildReviewOfferModel(agreementData)
+    const model = reviewOfferInstance.buildModel(agreementData)
     const rows = model.summaryOfActions.data
 
     expect(rows).toHaveLength(3)

@@ -1,4 +1,14 @@
-import { vi } from 'vitest'
+import {
+  vi,
+  describe,
+  it,
+  expect,
+  test,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach
+} from 'vitest'
 
 import { MatchersV2 } from '@pact-foundation/pact'
 
@@ -6,6 +16,7 @@ import { createServer } from '#~/server/server.js'
 import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test__/pact-agreement.fixture.js'
 import { config } from '#~/config/config.js'
 import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test-helpers.js'
+import { reviewOffer } from './review-offer.js'
 
 const { like } = MatchersV2
 
@@ -88,11 +99,15 @@ describe('reviewOfferController handler fallbacks', () => {
 
   beforeEach(async () => {
     vi.resetModules()
+    vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
+      auditEvent: vi.fn(),
+      AuditEvent: { REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED' }
+    }))
     vi.doMock(
-      '#~/server/grant-types/fptt/review-offer/review-offer.js',
+      '#~/server/grant-types/wmp/review-offer/review-offer.js',
       async () => {
         const actual = await vi.importActual(
-          '#~/server/grant-types/fptt/review-offer/review-offer.js'
+          '#~/server/grant-types/wmp/review-offer/review-offer.js'
         )
         return {
           ...actual,
@@ -103,13 +118,11 @@ describe('reviewOfferController handler fallbacks', () => {
         }
       }
     )
-    vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
-      auditEvent: vi.fn(),
-      AuditEvent: { REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED' }
-    }))
-    ;({ reviewOfferController } = await import('./controller.js'))
+    ;({ reviewOfferController } = await import(
+      '#~/server/review-offer/controller.js'
+    ))
     const mod = await import(
-      '#~/server/grant-types/fptt/review-offer/review-offer.js'
+      '#~/server/grant-types/wmp/review-offer/review-offer.js'
     )
     mockedBuildReviewOfferModel = mod.reviewOffer.buildModel
     ;({ auditEvent: mockedAuditEvent } = await import(
@@ -127,15 +140,15 @@ describe('reviewOfferController handler fallbacks', () => {
     const h = createH()
 
     await reviewOfferController.handler(
-      { pre: { data: { agreementData: { code: 'frps-private-beta' } } } },
+      { pre: { data: { agreementData: { code: 'woodland' } } } },
       h
     )
 
     expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
-      agreementData: { code: 'frps-private-beta' }
+      agreementData: { code: 'woodland' }
     })
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/review-offer/review-offer',
+      'grant-types/wmp/review-offer/review-offer',
       { any: 'thing' }
     )
   })
@@ -145,15 +158,15 @@ describe('reviewOfferController handler fallbacks', () => {
     const h = createH()
 
     await reviewOfferController.handler(
-      { pre: { data: { agreementData: { code: 'frps-private-beta' } } } },
+      { pre: { data: { agreementData: { code: 'woodland' } } } },
       h
     )
 
     expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
-      agreementData: { code: 'frps-private-beta' }
+      agreementData: { code: 'woodland' }
     })
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/review-offer/review-offer',
+      'grant-types/wmp/review-offer/review-offer',
       {}
     )
   })
@@ -165,7 +178,7 @@ describe('reviewOfferController handler fallbacks', () => {
     const request = {
       pre: {
         data: {
-          agreementData: { code: 'frps-private-beta' }
+          agreementData: { code: 'woodland' }
         }
       }
     }
@@ -173,10 +186,10 @@ describe('reviewOfferController handler fallbacks', () => {
     await reviewOfferController.handler(request, h)
 
     expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
-      agreementData: { code: 'frps-private-beta' }
+      agreementData: { code: 'woodland' }
     })
     expect(h.view).toHaveBeenCalledWith(
-      'grant-types/fptt/review-offer/review-offer',
+      'grant-types/wmp/review-offer/review-offer',
       {}
     )
   })
@@ -185,7 +198,7 @@ describe('reviewOfferController handler fallbacks', () => {
     mockedBuildReviewOfferModel.mockReturnValue({})
     const h = createH()
     const agreementData = {
-      code: 'frps-private-beta',
+      code: 'woodland',
       agreementNumber: 'FPTT123',
       identifiers: { sbi: '106284736' }
     }
@@ -198,5 +211,58 @@ describe('reviewOfferController handler fallbacks', () => {
       'REVIEW_OFFER_VIEWED',
       agreementData
     )
+  })
+})
+
+describe('buildWMPReviewOfferModel', () => {
+  it('should build the WMP review offer model with summary of actions', () => {
+    const agreementData = {
+      payment: {
+        agreementStartDate: '2026-05-08',
+        agreementEndDate: '2027-05-08',
+        frequency: 'OneOff',
+        agreementTotalPence: 157500,
+        annualTotalPence: 157500,
+        parcelItems: {},
+        agreementLevelItems: {
+          1: {
+            code: 'WMP1',
+            description: 'Produce a woodland management plan',
+            version: '1',
+            annualPaymentPence: 157500,
+            _id: '69fdebc95c8d88a1bfc215ce'
+          }
+        }
+      }
+    }
+
+    const result = reviewOffer.buildModel({ agreementData })
+
+    expect(result.pageTitle).toBe('Review your agreement offer')
+    expect(result.summaryOfActions).toBeDefined()
+    expect(result.summaryOfActions.data).toHaveLength(1)
+    expect(result.summaryOfActions.data[0][0].text).toBe(
+      'Produce a woodland management plan'
+    )
+    expect(result.summaryOfActions.data[0][1].text).toBe('WMP1')
+  })
+
+  it('should handle wrapped agreementData', () => {
+    const agreementData = {
+      agreementData: {
+        payment: {
+          agreementLevelItems: {
+            1: {
+              code: 'WMP1',
+              description: 'Produce a woodland management plan'
+            }
+          }
+        }
+      }
+    }
+
+    const result = reviewOffer.buildModel({ agreementData })
+
+    expect(result.summaryOfActions.data[0][1].text).toBe('WMP1')
   })
 })
