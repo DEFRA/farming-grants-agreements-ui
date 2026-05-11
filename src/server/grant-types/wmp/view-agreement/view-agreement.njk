@@ -220,7 +220,7 @@
             {% for parcel in landParcels %}
               <tr class="govuk-table__row" data-test-id="landTableRow{{ loop.index }}">
                 <td class="govuk-table__cell">{{ parcel.parcelId }}</td>
-                <td class="govuk-table__cell">{{ parcel.areaHa | round(4) }}</td>
+                <td class="govuk-table__cell">{{ parcel.areaHa }}</td>
               </tr>
             {% endfor %}
           </tbody>
