@@ -88,17 +88,30 @@ describe('reviewOfferController handler fallbacks', () => {
 
   beforeEach(async () => {
     vi.resetModules()
-    vi.doMock('#~/server/common/helpers/build-review-offer-model.js', () => ({
-      buildReviewOfferModel: vi.fn()
-    }))
+    vi.doMock(
+      '#~/server/grant-types/fptt/review-offer/review-offer.js',
+      async () => {
+        const actual = await vi.importActual(
+          '#~/server/grant-types/fptt/review-offer/review-offer.js'
+        )
+        return {
+          ...actual,
+          reviewOffer: {
+            ...actual.reviewOffer,
+            buildModel: vi.fn()
+          }
+        }
+      }
+    )
     vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
       auditEvent: vi.fn(),
       AuditEvent: { REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED' }
     }))
     ;({ reviewOfferController } = await import('./controller.js'))
-    ;({ buildReviewOfferModel: mockedBuildReviewOfferModel } = await import(
-      '#~/server/common/helpers/build-review-offer-model.js'
-    ))
+    const mod = await import(
+      '#~/server/grant-types/fptt/review-offer/review-offer.js'
+    )
+    mockedBuildReviewOfferModel = mod.reviewOffer.buildModel
     ;({ auditEvent: mockedAuditEvent } = await import(
       '#~/server/common/helpers/audit-event.js'
     ))
@@ -113,14 +126,17 @@ describe('reviewOfferController handler fallbacks', () => {
     mockedBuildReviewOfferModel.mockReturnValue({ any: 'thing' })
     const h = createH()
 
-    await reviewOfferController.handler({}, h)
+    await reviewOfferController.handler(
+      { pre: { data: { agreementData: { code: 'frps-private-beta' } } } },
+      h
+    )
 
-    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({})
+    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
+      agreementData: { code: 'frps-private-beta' }
+    })
     expect(h.view).toHaveBeenCalledWith(
-      'review-offer/index',
-      expect.objectContaining({
-        pageTitle: 'Review your agreement offer'
-      })
+      'grant-types/fptt/review-offer/review-offer',
+      { any: 'thing' }
     )
   })
 
@@ -128,14 +144,17 @@ describe('reviewOfferController handler fallbacks', () => {
     mockedBuildReviewOfferModel.mockReturnValue({})
     const h = createH()
 
-    await reviewOfferController.handler({ pre: {} }, h)
+    await reviewOfferController.handler(
+      { pre: { data: { agreementData: { code: 'frps-private-beta' } } } },
+      h
+    )
 
-    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({})
+    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
+      agreementData: { code: 'frps-private-beta' }
+    })
     expect(h.view).toHaveBeenCalledWith(
-      'review-offer/index',
-      expect.objectContaining({
-        pageTitle: 'Review your agreement offer'
-      })
+      'grant-types/fptt/review-offer/review-offer',
+      {}
     )
   })
 
@@ -146,19 +165,19 @@ describe('reviewOfferController handler fallbacks', () => {
     const request = {
       pre: {
         data: {
-          other: 'value'
+          agreementData: { code: 'frps-private-beta' }
         }
       }
     }
 
     await reviewOfferController.handler(request, h)
 
-    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({})
+    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
+      agreementData: { code: 'frps-private-beta' }
+    })
     expect(h.view).toHaveBeenCalledWith(
-      'review-offer/index',
-      expect.objectContaining({
-        pageTitle: 'Review your agreement offer'
-      })
+      'grant-types/fptt/review-offer/review-offer',
+      {}
     )
   })
 
@@ -166,6 +185,7 @@ describe('reviewOfferController handler fallbacks', () => {
     mockedBuildReviewOfferModel.mockReturnValue({})
     const h = createH()
     const agreementData = {
+      code: 'frps-private-beta',
       agreementNumber: 'FPTT123',
       identifiers: { sbi: '900000005' }
     }
