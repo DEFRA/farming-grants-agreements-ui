@@ -1,4 +1,14 @@
-import { vi } from 'vitest'
+import {
+  vi,
+  describe,
+  it,
+  expect,
+  test,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach
+} from 'vitest'
 
 import { MatchersV2 } from '@pact-foundation/pact'
 
@@ -6,6 +16,7 @@ import { createServer } from '#~/server/server.js'
 import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test__/pact-agreement.fixture.js'
 import { config } from '#~/config/config.js'
 import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test-helpers.js'
+import { reviewOffer } from './review-offer.js'
 
 const { like } = MatchersV2
 
@@ -88,22 +99,32 @@ describe('reviewOfferController handler fallbacks', () => {
 
   beforeEach(async () => {
     vi.resetModules()
-    vi.doMock(
-      '#~/server/common/helpers/build-wmp-review-offer-model.js',
-      () => ({
-        buildWMPReviewOfferModel: vi.fn()
-      })
-    )
     vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
       auditEvent: vi.fn(),
       AuditEvent: { REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED' }
     }))
+    vi.doMock(
+      '#~/server/grant-types/wmp/review-offer/review-offer.js',
+      async () => {
+        const actual = await vi.importActual(
+          '#~/server/grant-types/wmp/review-offer/review-offer.js'
+        )
+        return {
+          ...actual,
+          reviewOffer: {
+            ...actual.reviewOffer,
+            buildModel: vi.fn()
+          }
+        }
+      }
+    )
     ;({ reviewOfferController } = await import(
       '#~/server/review-offer/controller.js'
     ))
-    ;({ buildWMPReviewOfferModel: mockedBuildReviewOfferModel } = await import(
-      '#~/server/common/helpers/build-wmp-review-offer-model.js'
-    ))
+    const mod = await import(
+      '#~/server/grant-types/wmp/review-offer/review-offer.js'
+    )
+    mockedBuildReviewOfferModel = mod.reviewOffer.buildModel
     ;({ auditEvent: mockedAuditEvent } = await import(
       '#~/server/common/helpers/audit-event.js'
     ))
@@ -124,7 +145,7 @@ describe('reviewOfferController handler fallbacks', () => {
     )
 
     expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
-      code: 'woodland'
+      agreementData: { code: 'woodland' }
     })
     expect(h.view).toHaveBeenCalledWith(
       'grant-types/wmp/review-offer/review-offer',
@@ -142,7 +163,7 @@ describe('reviewOfferController handler fallbacks', () => {
     )
 
     expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
-      code: 'woodland'
+      agreementData: { code: 'woodland' }
     })
     expect(h.view).toHaveBeenCalledWith(
       'grant-types/wmp/review-offer/review-offer',
@@ -165,7 +186,7 @@ describe('reviewOfferController handler fallbacks', () => {
     await reviewOfferController.handler(request, h)
 
     expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
-      code: 'woodland'
+      agreementData: { code: 'woodland' }
     })
     expect(h.view).toHaveBeenCalledWith(
       'grant-types/wmp/review-offer/review-offer',
@@ -190,5 +211,58 @@ describe('reviewOfferController handler fallbacks', () => {
       'REVIEW_OFFER_VIEWED',
       agreementData
     )
+  })
+})
+
+describe('buildWMPReviewOfferModel', () => {
+  it('should build the WMP review offer model with summary of actions', () => {
+    const agreementData = {
+      payment: {
+        agreementStartDate: '2026-05-08',
+        agreementEndDate: '2027-05-08',
+        frequency: 'OneOff',
+        agreementTotalPence: 157500,
+        annualTotalPence: 157500,
+        parcelItems: {},
+        agreementLevelItems: {
+          1: {
+            code: 'WMP1',
+            description: 'Produce a woodland management plan',
+            version: '1',
+            annualPaymentPence: 157500,
+            _id: '69fdebc95c8d88a1bfc215ce'
+          }
+        }
+      }
+    }
+
+    const result = reviewOffer.buildModel({ agreementData })
+
+    expect(result.pageTitle).toBe('Review your agreement offer')
+    expect(result.summaryOfActions).toBeDefined()
+    expect(result.summaryOfActions.data).toHaveLength(1)
+    expect(result.summaryOfActions.data[0][0].text).toBe(
+      'Produce a woodland management plan'
+    )
+    expect(result.summaryOfActions.data[0][1].text).toBe('WMP1')
+  })
+
+  it('should handle wrapped agreementData', () => {
+    const agreementData = {
+      agreementData: {
+        payment: {
+          agreementLevelItems: {
+            1: {
+              code: 'WMP1',
+              description: 'Produce a woodland management plan'
+            }
+          }
+        }
+      }
+    }
+
+    const result = reviewOffer.buildModel({ agreementData })
+
+    expect(result.summaryOfActions.data[0][1].text).toBe('WMP1')
   })
 })

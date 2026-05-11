@@ -88,17 +88,30 @@ describe('reviewOfferController handler fallbacks', () => {
 
   beforeEach(async () => {
     vi.resetModules()
-    vi.doMock('#~/server/common/helpers/build-review-offer-model.js', () => ({
-      buildReviewOfferModel: vi.fn()
-    }))
+    vi.doMock(
+      '#~/server/grant-types/fptt/review-offer/review-offer.js',
+      async () => {
+        const actual = await vi.importActual(
+          '#~/server/grant-types/fptt/review-offer/review-offer.js'
+        )
+        return {
+          ...actual,
+          reviewOffer: {
+            ...actual.reviewOffer,
+            buildModel: vi.fn()
+          }
+        }
+      }
+    )
     vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
       auditEvent: vi.fn(),
       AuditEvent: { REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED' }
     }))
     ;({ reviewOfferController } = await import('./controller.js'))
-    ;({ buildReviewOfferModel: mockedBuildReviewOfferModel } = await import(
-      '#~/server/common/helpers/build-review-offer-model.js'
-    ))
+    const mod = await import(
+      '#~/server/grant-types/fptt/review-offer/review-offer.js'
+    )
+    mockedBuildReviewOfferModel = mod.reviewOffer.buildModel
     ;({ auditEvent: mockedAuditEvent } = await import(
       '#~/server/common/helpers/audit-event.js'
     ))
@@ -119,7 +132,7 @@ describe('reviewOfferController handler fallbacks', () => {
     )
 
     expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
-      code: 'frps-private-beta'
+      agreementData: { code: 'frps-private-beta' }
     })
     expect(h.view).toHaveBeenCalledWith(
       'grant-types/fptt/review-offer/review-offer',
@@ -137,7 +150,7 @@ describe('reviewOfferController handler fallbacks', () => {
     )
 
     expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
-      code: 'frps-private-beta'
+      agreementData: { code: 'frps-private-beta' }
     })
     expect(h.view).toHaveBeenCalledWith(
       'grant-types/fptt/review-offer/review-offer',
@@ -160,7 +173,7 @@ describe('reviewOfferController handler fallbacks', () => {
     await reviewOfferController.handler(request, h)
 
     expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
-      code: 'frps-private-beta'
+      agreementData: { code: 'frps-private-beta' }
     })
     expect(h.view).toHaveBeenCalledWith(
       'grant-types/fptt/review-offer/review-offer',
