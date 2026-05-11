@@ -151,7 +151,8 @@ describe('wmp viewAgreement', () => {
             1: {
               code: 'PA3',
               description: 'PA3: Woodland management plan',
-              annualPaymentPence: 157500
+              annualPaymentPence: 157500,
+              quantity: 12.3456
             }
           }
         }
@@ -186,7 +187,7 @@ describe('wmp viewAgreement', () => {
     expect(model.isAgreementAccepted).toBe(false)
   })
 
-  test('uses action application area when a WMP capital item has no quantity', () => {
+  test('does not derive area when a WMP capital item has no quantity', () => {
     const model = viewAgreement.buildModel({
       agreementData: {
         ...agreementData,
@@ -219,7 +220,7 @@ describe('wmp viewAgreement', () => {
       expect.objectContaining({
         code: 'WMP1',
         description: 'Produce a woodland management plan',
-        quantity: 55.3997
+        quantity: ''
       })
     ])
   })
@@ -303,7 +304,8 @@ describe('wmp viewAgreement', () => {
               description: 'PA3: Woodland management plan',
               unit: undefined,
               agreementTotalPence: undefined,
-              annualPaymentPence: 25000
+              annualPaymentPence: 25000,
+              quantity: 9.8765
             }
           }
         },

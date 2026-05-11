@@ -66,61 +66,17 @@ const buildAddress = (address = {}) =>
 
 const mapWmpCapitalItems = (agreementData = {}) => {
   const items = Object.values(agreementData.payment?.agreementLevelItems ?? {})
-  const fallbackParcelArea =
-    items.length === 1 ? sumLandParcelAreas(agreementData) : undefined
 
   return items.map((item) => ({
     code: item.code,
     description: item.description,
-    quantity: formatArea(
-      getCapitalItemQuantity(item, agreementData, fallbackParcelArea)
-    ),
+    quantity: formatArea(item.quantity),
     unit: item.unit ?? 'ha',
     totalPaymentPence: item.agreementTotalPence ?? item.annualPaymentPence ?? 0,
     totalPayment: formatPenceCurrency(
       item.agreementTotalPence ?? item.annualPaymentPence ?? 0
     )
   }))
-}
-
-const getCapitalItemQuantity = (item, agreementData, fallbackParcelArea) => {
-  const itemQuantity = toFiniteNumber(item.quantity)
-
-  if (itemQuantity !== undefined) {
-    return itemQuantity
-  }
-
-  const actionQuantity = sumAppliedForQuantitiesByCode(
-    agreementData.actionApplications,
-    item.code
-  )
-
-  return actionQuantity ?? fallbackParcelArea
-}
-
-const sumAppliedForQuantitiesByCode = (actionApplications = [], code) => {
-  const matchingQuantities = actionApplications
-    .filter((action) => action.code === code)
-    .map((action) => toFiniteNumber(action.appliedFor?.quantity))
-    .filter((quantity) => quantity !== undefined)
-
-  if (matchingQuantities.length === 0) {
-    return undefined
-  }
-
-  return matchingQuantities.reduce((total, quantity) => total + quantity, 0)
-}
-
-const sumLandParcelAreas = (agreementData = {}) => {
-  const parcelAreas = (agreementData.application?.parcel ?? [])
-    .map((parcel) => toFiniteNumber(parcel.area?.quantity ?? parcel.areaHa))
-    .filter((quantity) => quantity !== undefined)
-
-  if (parcelAreas.length === 0) {
-    return undefined
-  }
-
-  return parcelAreas.reduce((total, quantity) => total + quantity, 0)
 }
 
 const toFiniteNumber = (value) => {
