@@ -1,16 +1,17 @@
-import { buildReviewOfferModel } from '#~/server/common/helpers/build-review-offer-model.js'
 import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
+import { getGrantTypeFor } from '#~/server/grant-types/index.js'
 
 export const reviewOfferController = {
   async handler(request, h) {
     const source = request?.pre?.data ?? {}
     const agreementData = source.agreementData || {}
+    const { reviewOffer } = getGrantTypeFor(agreementData)
 
     auditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, agreementData)
 
-    return h.view('review-offer/index', {
-      pageTitle: 'Review your agreement offer',
-      ...buildReviewOfferModel(agreementData)
-    })
+    return h.view(
+      reviewOffer.template,
+      reviewOffer.buildModel({ agreementData })
+    )
   }
 }

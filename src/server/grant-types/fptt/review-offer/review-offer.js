@@ -1,7 +1,7 @@
 import {
   getAnnualPaymentsData,
   getSummaryOfPaymentsData
-} from './get-agreement-calculations.js'
+} from '#~/server/common/helpers/get-agreement-calculations.js'
 
 /**
  * Creates a summary of actions for the agreement
@@ -72,11 +72,16 @@ const buildCodeDescriptions = (payment) => ({
   }, {})
 })
 
-export const buildReviewOfferModel = (agreementData) => {
+const buildReviewOfferModel = (agreementData) => {
   return {
     pageTitle: 'Review your agreement offer',
     ...getSummaryOfActions(agreementData),
     ...getSummaryOfPaymentsData(agreementData),
     ...getAnnualPaymentsData(agreementData)
   }
+}
+
+export const reviewOffer = {
+  template: 'grant-types/fptt/review-offer/review-offer',
+  buildModel: ({ agreementData }) => buildReviewOfferModel(agreementData)
 }
