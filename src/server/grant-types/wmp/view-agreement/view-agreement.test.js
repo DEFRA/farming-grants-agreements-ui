@@ -36,12 +36,14 @@ describe('wmp viewAgreement', () => {
         {
           sheetId: 'SD4841-4684',
           parcelId: 'SD4841-4684',
-          area: { quantity: 25 }
+          area: { quantity: 25 },
+          actions: [{ code: 'PA3', appliedFor: { quantity: 55.4 } }]
         },
         {
           sheetId: 'SD4842-3020',
           parcelId: 'SD4842-3020',
-          area: { quantity: 27.5 }
+          area: { quantity: 27.5 },
+          actions: [{ code: 'PA3', appliedFor: { quantity: 55.4 } }]
         }
       ]
     },
@@ -67,8 +69,7 @@ describe('wmp viewAgreement', () => {
         1: {
           code: 'PA3',
           description: 'PA3: Woodland management plan',
-          annualPaymentPence: 157500,
-          quantity: 55.4
+          annualPaymentPence: 157500
         }
       }
     }
@@ -136,7 +137,13 @@ describe('wmp viewAgreement', () => {
           parcel: [
             {
               parcelId: 'SD0000-0001',
-              areaHa: 12.3456
+              areaHa: 12.3456,
+              actions: [
+                {
+                  code: 'PA3',
+                  appliedFor: { quantity: 12.3456 }
+                }
+              ]
             }
           ]
         },
@@ -148,8 +155,7 @@ describe('wmp viewAgreement', () => {
             1: {
               code: 'PA3',
               description: 'PA3: Woodland management plan',
-              annualPaymentPence: 157500,
-              quantity: 12.3456
+              annualPaymentPence: 157500
             }
           }
         }
@@ -181,22 +187,19 @@ describe('wmp viewAgreement', () => {
     expect(model.isAgreementAccepted).toBe(false)
   })
 
-  test('does not derive area when a WMP capital item has no quantity', () => {
+  test('does not derive area when a WMP capital item has no matching parcel action', () => {
     const model = viewAgreement.buildModel({
       agreementData: {
         ...agreementData,
-        actionApplications: [
-          {
-            code: 'WMP1',
-            parcelId: 'SD4841-4684',
-            appliedFor: { quantity: 25.3874 }
-          },
-          {
-            code: 'WMP1',
-            parcelId: 'SD4842-3020',
-            appliedFor: { quantity: 30.0123 }
-          }
-        ],
+        application: {
+          parcel: [
+            {
+              parcelId: 'SD4841-4684',
+              area: { quantity: 25.3874 },
+              actions: [{ code: 'OTHER', appliedFor: { quantity: 25.3874 } }]
+            }
+          ]
+        },
         payment: {
           ...agreementData.payment,
           agreementLevelItems: {
@@ -219,7 +222,7 @@ describe('wmp viewAgreement', () => {
     ])
   })
 
-  test('formats API Decimal128 parcel areas and leaves missing capital item area blank', () => {
+  test('formats API Decimal128 parcel areas and capital item quantities from parcel actions', () => {
     const model = viewAgreement.buildModel({
       agreementData: {
         ...agreementData,
@@ -227,7 +230,17 @@ describe('wmp viewAgreement', () => {
           parcel: [
             {
               parcelId: 'SD4841-4684',
-              area: { quantity: { $numberDecimal: '25.38745' } }
+              area: { quantity: { $numberDecimal: '25.38745' } },
+              actions: [
+                {
+                  code: 'WMP1',
+                  appliedFor: { quantity: { $numberDecimal: '12.34546' } }
+                },
+                {
+                  code: 'WMP2',
+                  appliedFor: {}
+                }
+              ]
             }
           ]
         },
@@ -259,7 +272,7 @@ describe('wmp viewAgreement', () => {
     expect(model.capitalItems).toEqual([
       expect.objectContaining({
         code: 'WMP1',
-        quantity: ''
+        quantity: 12.3455
       }),
       expect.objectContaining({
         code: 'WMP2',
@@ -297,19 +310,16 @@ describe('wmp viewAgreement', () => {
           agreementLevelItems: {
             1: {
               code: 'WMP1',
-              description: 'Null area item',
-              quantity: null
+              description: 'Null area item'
             },
             2: {
               code: 'WMP2',
               description: 'Blank area item',
-              annualPaymentPence: 1000,
-              quantity: ' '
+              annualPaymentPence: 1000
             },
             3: {
               code: 'WMP3',
-              description: 'Invalid area item',
-              quantity: 'not-a-number'
+              description: 'Invalid area item'
             }
           }
         },
@@ -356,7 +366,8 @@ describe('wmp viewAgreement', () => {
           parcel: [
             {
               parcelId: 'SD9999-0001',
-              areaHa: 9.8765
+              areaHa: 9.8765,
+              actions: [{ code: 'PA3', appliedFor: { quantity: 9.8765 } }]
             }
           ]
         },
@@ -369,7 +380,7 @@ describe('wmp viewAgreement', () => {
               code: 'PA3',
               description: 'PA3: Woodland management plan',
               annualPaymentPence: 25000,
-              quantity: 9.8765
+              quantity: 999
             }
           }
         },

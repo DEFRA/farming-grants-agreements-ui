@@ -66,12 +66,23 @@ const buildAddress = (address = {}) =>
 
 const mapWmpCapitalItems = (agreementData = {}) => {
   const items = Object.values(agreementData.payment?.agreementLevelItems ?? {})
+  const parcels = Array.isArray(agreementData.application?.parcel)
+    ? agreementData.application.parcel
+    : []
 
   return items.map((item) => ({
     code: item.code,
     description: item.description,
-    quantity: formatArea(item.quantity)
+    quantity: formatArea(getCapitalItemQuantity(item, parcels))
   }))
+}
+
+const getCapitalItemQuantity = (item, parcels = []) => {
+  const matchingAction = parcels
+    .flatMap((parcel) => (Array.isArray(parcel.actions) ? parcel.actions : []))
+    .find((action) => action.code === item.code)
+
+  return matchingAction?.appliedFor?.quantity
 }
 
 const toFiniteNumber = (value) => {
