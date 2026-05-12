@@ -65,26 +65,50 @@ const buildAddress = (address = {}) =>
     .join(', ')
 
 const mapWmpCapitalItems = (agreementData = {}) => {
-  return Object.values(agreementData.payment?.agreementLevelItems ?? {}).map(
-    (item) => ({
-      code: item.code,
-      description: item.description,
-      quantity: item.quantity,
-      unit: item.unit ?? 'ha',
-      totalPaymentPence:
-        item.agreementTotalPence ?? item.annualPaymentPence ?? 0,
-      totalPayment: formatPenceCurrency(
-        item.agreementTotalPence ?? item.annualPaymentPence ?? 0
-      )
-    })
-  )
+  const items = Object.values(agreementData.payment?.agreementLevelItems ?? {})
+  const parcels = Array.isArray(agreementData.application?.parcel)
+    ? agreementData.application.parcel
+    : []
+
+  return items.map((item) => ({
+    code: item.code,
+    description: item.description,
+    quantity: formatArea(getCapitalItemQuantity(item, parcels))
+  }))
+}
+
+const getCapitalItemQuantity = (item, parcels = []) => {
+  const matchingAction = parcels
+    .flatMap((parcel) => (Array.isArray(parcel.actions) ? parcel.actions : []))
+    .find((action) => action.code === item.code)
+
+  return matchingAction?.appliedFor?.quantity
+}
+
+const toFiniteNumber = (value) => {
+  if (
+    value === null ||
+    value === undefined ||
+    (typeof value === 'string' && value.trim() === '')
+  ) {
+    return undefined
+  }
+
+  const decimalValue = value.$numberDecimal ?? value
+  const numberValue = Number(decimalValue)
+  return Number.isFinite(numberValue) ? numberValue : undefined
+}
+
+const formatArea = (value) => {
+  const numberValue = toFiniteNumber(value)
+  return numberValue === undefined ? '' : Number(numberValue.toFixed(4))
 }
 
 const mapWmpLandParcels = (agreementData = {}) => {
   const applicationParcels = agreementData.application?.parcel ?? []
   return applicationParcels.map((parcel) => ({
     parcelId: parcel.parcelId,
-    areaHa: parcel.area?.quantity ?? parcel.areaHa
+    areaHa: formatArea(parcel.area?.quantity ?? parcel.areaHa)
   }))
 }
 
