@@ -70,12 +70,7 @@ const mapWmpCapitalItems = (agreementData = {}) => {
   return items.map((item) => ({
     code: item.code,
     description: item.description,
-    quantity: formatArea(item.quantity),
-    unit: item.unit ?? 'ha',
-    totalPaymentPence: item.agreementTotalPence ?? item.annualPaymentPence ?? 0,
-    totalPayment: formatPenceCurrency(
-      item.agreementTotalPence ?? item.annualPaymentPence ?? 0
-    )
+    quantity: formatArea(item.quantity)
   }))
 }
 

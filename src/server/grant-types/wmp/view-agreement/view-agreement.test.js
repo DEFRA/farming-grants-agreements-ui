@@ -99,10 +99,7 @@ describe('wmp viewAgreement', () => {
         {
           code: 'PA3',
           description: 'PA3: Woodland management plan',
-          quantity: 55.4,
-          unit: 'ha',
-          totalPaymentPence: 157500,
-          totalPayment: '£1,575'
+          quantity: 55.4
         }
       ],
       agreementTotalPayment: '£1,575',
@@ -126,7 +123,7 @@ describe('wmp viewAgreement', () => {
     expect(model.agreementNumber).toBe('WMP-ALT-123')
   })
 
-  test('masks draft agreement party details and uses fallback payment item values', () => {
+  test('masks draft agreement party details and maps capital item area', () => {
     const model = viewAgreement.buildModel({
       agreementData: {
         ...agreementData,
@@ -176,10 +173,7 @@ describe('wmp viewAgreement', () => {
       {
         code: 'PA3',
         description: 'PA3: Woodland management plan',
-        quantity: 12.3456,
-        unit: 'ha',
-        totalPaymentPence: 157500,
-        totalPayment: '£1,575'
+        quantity: 12.3456
       }
     ])
     expect(model.agreementTotalPayment).toBe('')
@@ -304,9 +298,7 @@ describe('wmp viewAgreement', () => {
             1: {
               code: 'WMP1',
               description: 'Null area item',
-              agreementTotalPence: 12345,
-              quantity: null,
-              unit: 'each'
+              quantity: null
             },
             2: {
               code: 'WMP2',
@@ -335,24 +327,15 @@ describe('wmp viewAgreement', () => {
     expect(model.capitalItems).toEqual([
       expect.objectContaining({
         code: 'WMP1',
-        quantity: '',
-        unit: 'each',
-        totalPaymentPence: 12345,
-        totalPayment: '£123.45'
+        quantity: ''
       }),
       expect.objectContaining({
         code: 'WMP2',
-        quantity: '',
-        unit: 'ha',
-        totalPaymentPence: 1000,
-        totalPayment: '£10'
+        quantity: ''
       }),
       expect.objectContaining({
         code: 'WMP3',
-        quantity: '',
-        unit: 'ha',
-        totalPaymentPence: 0,
-        totalPayment: '£0'
+        quantity: ''
       })
     ])
   })
@@ -385,8 +368,6 @@ describe('wmp viewAgreement', () => {
             1: {
               code: 'PA3',
               description: 'PA3: Woodland management plan',
-              unit: undefined,
-              agreementTotalPence: undefined,
               annualPaymentPence: 25000,
               quantity: 9.8765
             }
@@ -412,10 +393,7 @@ describe('wmp viewAgreement', () => {
       {
         code: 'PA3',
         description: 'PA3: Woodland management plan',
-        quantity: 9.8765,
-        unit: 'ha',
-        totalPaymentPence: 25000,
-        totalPayment: '£250'
+        quantity: 9.8765
       }
     ])
     expect(model.agreementTotalPayment).toBe('')
