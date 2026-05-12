@@ -245,6 +245,7 @@ describe('buildWMPReviewOfferModel', () => {
       'Produce a woodland management plan'
     )
     expect(result.summaryOfActions.data[0][1].text).toBe('WMP1')
+    expect(result.summaryOfActions.data[0][2].text).toBe('£1,575')
   })
 
   it('should handle wrapped agreementData', () => {
@@ -262,7 +263,34 @@ describe('buildWMPReviewOfferModel', () => {
     }
 
     const result = reviewOffer.buildModel({ agreementData })
-
     expect(result.summaryOfActions.data[0][1].text).toBe('WMP1')
+  })
+
+  it('should handle missing payment or agreementLevelItems gracefully', () => {
+    const emptyResult = reviewOffer.buildModel({ agreementData: {} })
+    expect(emptyResult.summaryOfActions.data).toEqual([])
+
+    const noItemsResult = reviewOffer.buildModel({
+      agreementData: { payment: {} }
+    })
+    expect(noItemsResult.summaryOfActions.data).toEqual([])
+  })
+
+  it('should handle multiple agreement level items', () => {
+    const agreementData = {
+      payment: {
+        agreementTotalPence: 10000,
+        agreementLevelItems: {
+          1: { code: 'A1', description: 'Desc 1' },
+          2: { code: 'A2', description: 'Desc 2' }
+        }
+      }
+    }
+    const result = reviewOffer.buildModel({ agreementData })
+    expect(result.summaryOfActions.data).toHaveLength(2)
+    expect(result.summaryOfActions.data[0][1].text).toBe('A1')
+    expect(result.summaryOfActions.data[1][1].text).toBe('A2')
+    expect(result.summaryOfActions.data[0][2].text).toBe('£100')
+    expect(result.summaryOfActions.data[1][2].text).toBe('£100')
   })
 })

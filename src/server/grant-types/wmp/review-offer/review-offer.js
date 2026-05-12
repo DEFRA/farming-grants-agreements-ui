@@ -1,3 +1,5 @@
+import { formatPenceCurrency } from '#~/config/nunjucks/filters/format-currency.js'
+
 const buildPaymentActionDetails = (payment) => {
   return Object.values(payment?.agreementLevelItems || {}).map((item) => ({
     code: item.code,
@@ -18,7 +20,7 @@ const getSummaryOfWMPActions = (agreementData) => {
   const data = actionDetails.map((item) => [
     { text: item.description },
     { text: item.code },
-    { text: 'XXX' }
+    { text: formatPenceCurrency(payment.agreementTotalPence) }
   ])
 
   return { summaryOfActions: { headings, data } }
