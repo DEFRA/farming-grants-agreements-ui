@@ -36,12 +36,14 @@ describe('wmp viewAgreement', () => {
         {
           sheetId: 'SD4841-4684',
           parcelId: 'SD4841-4684',
-          area: { quantity: 25 }
+          area: { quantity: 25 },
+          actions: [{ code: 'PA3', appliedFor: { quantity: 55.4 } }]
         },
         {
           sheetId: 'SD4842-3020',
           parcelId: 'SD4842-3020',
-          area: { quantity: 27.5 }
+          area: { quantity: 27.5 },
+          actions: [{ code: 'PA3', appliedFor: { quantity: 55.4 } }]
         }
       ]
     },
@@ -67,8 +69,7 @@ describe('wmp viewAgreement', () => {
         1: {
           code: 'PA3',
           description: 'PA3: Woodland management plan',
-          annualPaymentPence: 157500,
-          quantity: 55.4
+          annualPaymentPence: 157500
         }
       }
     }
@@ -99,10 +100,7 @@ describe('wmp viewAgreement', () => {
         {
           code: 'PA3',
           description: 'PA3: Woodland management plan',
-          quantity: 55.4,
-          unit: 'ha',
-          totalPaymentPence: 157500,
-          totalPayment: '£1,575'
+          quantity: 55.4
         }
       ],
       agreementTotalPayment: '£1,575',
@@ -126,7 +124,7 @@ describe('wmp viewAgreement', () => {
     expect(model.agreementNumber).toBe('WMP-ALT-123')
   })
 
-  test('masks draft agreement party details and uses fallback payment item values', () => {
+  test('masks draft agreement party details and maps capital item area', () => {
     const model = viewAgreement.buildModel({
       agreementData: {
         ...agreementData,
@@ -139,7 +137,13 @@ describe('wmp viewAgreement', () => {
           parcel: [
             {
               parcelId: 'SD0000-0001',
-              areaHa: 12.3456
+              areaHa: 12.3456,
+              actions: [
+                {
+                  code: 'PA3',
+                  appliedFor: { quantity: 12.3456 }
+                }
+              ]
             }
           ]
         },
@@ -175,15 +179,175 @@ describe('wmp viewAgreement', () => {
       {
         code: 'PA3',
         description: 'PA3: Woodland management plan',
-        quantity: undefined,
-        unit: 'ha',
-        totalPaymentPence: 157500,
-        totalPayment: '£1,575'
+        quantity: 12.3456
       }
     ])
     expect(model.agreementTotalPayment).toBe('')
     expect(model.isDraftAgreement).toBe(true)
     expect(model.isAgreementAccepted).toBe(false)
+  })
+
+  test('does not derive area when a WMP capital item has no matching parcel action', () => {
+    const model = viewAgreement.buildModel({
+      agreementData: {
+        ...agreementData,
+        application: {
+          parcel: [
+            {
+              parcelId: 'SD4841-4684',
+              area: { quantity: 25.3874 },
+              actions: [{ code: 'OTHER', appliedFor: { quantity: 25.3874 } }]
+            }
+          ]
+        },
+        payment: {
+          ...agreementData.payment,
+          agreementLevelItems: {
+            1: {
+              code: 'WMP1',
+              description: 'Produce a woodland management plan',
+              annualPaymentPence: 157500
+            }
+          }
+        }
+      }
+    })
+
+    expect(model.capitalItems).toEqual([
+      expect.objectContaining({
+        code: 'WMP1',
+        description: 'Produce a woodland management plan',
+        quantity: ''
+      })
+    ])
+  })
+
+  test('formats API Decimal128 parcel areas and capital item quantities from parcel actions', () => {
+    const model = viewAgreement.buildModel({
+      agreementData: {
+        ...agreementData,
+        application: {
+          parcel: [
+            {
+              parcelId: 'SD4841-4684',
+              area: { quantity: { $numberDecimal: '25.38745' } },
+              actions: [
+                {
+                  code: 'WMP1',
+                  appliedFor: { quantity: { $numberDecimal: '12.34546' } }
+                },
+                {
+                  code: 'WMP2',
+                  appliedFor: {}
+                }
+              ]
+            }
+          ]
+        },
+        actionApplications: [],
+        payment: {
+          ...agreementData.payment,
+          agreementLevelItems: {
+            1: {
+              code: 'WMP1',
+              description: 'Produce a woodland management plan',
+              annualPaymentPence: 157500
+            },
+            2: {
+              code: 'WMP2',
+              description: 'Another woodland item',
+              annualPaymentPence: 1000
+            }
+          }
+        }
+      }
+    })
+
+    expect(model.landParcels).toEqual([
+      {
+        parcelId: 'SD4841-4684',
+        areaHa: 25.3875
+      }
+    ])
+    expect(model.capitalItems).toEqual([
+      expect.objectContaining({
+        code: 'WMP1',
+        quantity: 12.3455
+      }),
+      expect.objectContaining({
+        code: 'WMP2',
+        quantity: ''
+      })
+    ])
+  })
+
+  test('handles missing collections and invalid numeric fields without rendering fallback values', () => {
+    const emptyModel = viewAgreement.buildModel({
+      agreementData: {
+        code: 'woodland',
+        status: 'accepted',
+        identifiers: {},
+        signatureDate: undefined
+      }
+    })
+
+    expect(emptyModel.agreementNumber).toBe('')
+    expect(emptyModel.landParcels).toEqual([])
+    expect(emptyModel.capitalItems).toEqual([])
+
+    const model = viewAgreement.buildModel({
+      agreementData: {
+        ...agreementData,
+        application: {
+          parcel: [
+            { parcelId: 'SD0000-0001', area: { quantity: null } },
+            { parcelId: 'SD0000-0002', areaHa: 'not-a-number' },
+            { parcelId: 'SD0000-0003', areaHa: ' ' }
+          ]
+        },
+        payment: {
+          ...agreementData.payment,
+          agreementLevelItems: {
+            1: {
+              code: 'WMP1',
+              description: 'Null area item'
+            },
+            2: {
+              code: 'WMP2',
+              description: 'Blank area item',
+              annualPaymentPence: 1000
+            },
+            3: {
+              code: 'WMP3',
+              description: 'Invalid area item'
+            }
+          }
+        },
+        clientRef: undefined,
+        agreementNumber: 'WMP-FALLBACK-999'
+      }
+    })
+
+    expect(model.agreementNumber).toBe('WMP-FALLBACK-999')
+    expect(model.landParcels).toEqual([
+      { parcelId: 'SD0000-0001', areaHa: '' },
+      { parcelId: 'SD0000-0002', areaHa: '' },
+      { parcelId: 'SD0000-0003', areaHa: '' }
+    ])
+    expect(model.capitalItems).toEqual([
+      expect.objectContaining({
+        code: 'WMP1',
+        quantity: ''
+      }),
+      expect.objectContaining({
+        code: 'WMP2',
+        quantity: ''
+      }),
+      expect.objectContaining({
+        code: 'WMP3',
+        quantity: ''
+      })
+    ])
   })
 
   test('covers WMP fallback branches for missing ids, payment data and parcel area shape', () => {
@@ -202,7 +366,8 @@ describe('wmp viewAgreement', () => {
           parcel: [
             {
               parcelId: 'SD9999-0001',
-              areaHa: 9.8765
+              areaHa: 9.8765,
+              actions: [{ code: 'PA3', appliedFor: { quantity: 9.8765 } }]
             }
           ]
         },
@@ -214,9 +379,8 @@ describe('wmp viewAgreement', () => {
             1: {
               code: 'PA3',
               description: 'PA3: Woodland management plan',
-              unit: undefined,
-              agreementTotalPence: undefined,
-              annualPaymentPence: 25000
+              annualPaymentPence: 25000,
+              quantity: 999
             }
           }
         },
@@ -240,10 +404,7 @@ describe('wmp viewAgreement', () => {
       {
         code: 'PA3',
         description: 'PA3: Woodland management plan',
-        quantity: undefined,
-        unit: 'ha',
-        totalPaymentPence: 25000,
-        totalPayment: '£250'
+        quantity: 9.8765
       }
     ])
     expect(model.agreementTotalPayment).toBe('')
