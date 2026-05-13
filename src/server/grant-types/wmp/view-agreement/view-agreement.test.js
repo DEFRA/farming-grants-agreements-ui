@@ -86,7 +86,7 @@ describe('wmp viewAgreement', () => {
       pageTitle: 'Woodland Management Plan PA3 agreement document',
       agreementTitle: 'Woodland Management Plan PA3 agreement document',
       agreementNumber: 'WMP-20260507133228-24643',
-      agreementHolderName: 'Example Farm Ltd',
+      agreementHolderName: 'Mr John Doe',
       applicantName: 'Mr John Doe',
       address: 'Farm House, Village Lane, Village Lane, York, YO1 1AA',
       sbi: '106284736',
@@ -163,9 +163,11 @@ describe('wmp viewAgreement', () => {
     })
 
     expect(model.agreementNumber).toBe('WMP-FALLBACK-456')
-    expect(model.agreementHolderName).toBe('XXXXX')
-    expect(model.applicantName).toBe('XXXXX')
-    expect(model.address).toBe('XXXXX')
+    // Party/address details are no longer masked on draft agreements;
+    // they fall back to empty strings when the applicant is missing.
+    expect(model.agreementHolderName).toBe('')
+    expect(model.applicantName).toBe('')
+    expect(model.address).toBe('')
     expect(model.agreementStartDate).toBe('XXXXX')
     expect(model.agreementEndDate).toBe('XXXXX')
     expect(model.acceptedOn).toBe('')

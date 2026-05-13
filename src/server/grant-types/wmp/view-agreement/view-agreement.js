@@ -3,7 +3,6 @@ import {
   formatAgreementDate,
   formatApplicantName,
   getAgreementStatusFlags,
-  maskIfRequired,
   shouldMaskAgreementPartyDetails
 } from '#~/server/grant-types/shared/view-agreement.js'
 
@@ -21,13 +20,18 @@ export const viewAgreement = {
     const capitalItems = mapWmpCapitalItems(agreementData)
     const payment = agreementData.payment ?? {}
 
+    // Agreement holder, applicant name and address represent the
+    // person/business the agreement is for and are required even on draft
+    // documents (matches SFI behaviour), so they are not masked.
+    const customerName = formatApplicantName(customer)
+
     return {
       pageTitle: WMP_AGREEMENT_TITLE,
       agreementTitle: WMP_AGREEMENT_TITLE,
       agreementNumber: getAgreementNumber(agreementData),
-      agreementHolderName: maskIfRequired(business.name, shouldMask),
-      applicantName: maskIfRequired(formatApplicantName(customer), shouldMask),
-      address: maskIfRequired(buildAddress(address), shouldMask),
+      agreementHolderName: customerName || business.name || '',
+      applicantName: customerName,
+      address: buildAddress(address),
       sbi: agreementData.identifiers?.sbi ?? '',
       agreementStartDate: formatAgreementDate(
         payment.agreementStartDate,
