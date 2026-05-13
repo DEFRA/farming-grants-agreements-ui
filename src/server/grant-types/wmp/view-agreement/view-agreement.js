@@ -13,26 +13,14 @@ export const viewAgreement = {
   buildModel: ({ agreementData }) => {
     const statusFlags = getAgreementStatusFlags(agreementData)
     const shouldMask = shouldMaskAgreementPartyDetails(statusFlags)
-    const applicant = agreementData.applicant ?? {}
-    const business = applicant.business ?? {}
-    const customer = applicant.customer ?? {}
-    const address = business.address ?? {}
-    const capitalItems = mapWmpCapitalItems(agreementData)
+    const partyDetails = buildPartyDetails(agreementData)
     const payment = agreementData.payment ?? {}
-
-    // Agreement holder, applicant name and address represent the
-    // person/business the agreement is for and are required even on draft
-    // documents (matches SFI behaviour), so they are not masked.
-    const customerName = formatApplicantName(customer)
 
     return {
       pageTitle: WMP_AGREEMENT_TITLE,
       agreementTitle: WMP_AGREEMENT_TITLE,
       agreementNumber: getAgreementNumber(agreementData),
-      agreementHolderName: customerName || business.name || '',
-      applicantName: customerName,
-      businessName: business.name ?? '',
-      address: buildAddress(address),
+      ...partyDetails,
       sbi: agreementData.identifiers?.sbi ?? '',
       agreementStartDate: formatAgreementDate(
         payment.agreementStartDate,
@@ -43,17 +31,36 @@ export const viewAgreement = {
         shouldMask
       ),
       landParcels: mapWmpLandParcels(agreementData),
-      capitalItems,
-      agreementTotalPayment: formatPenceCurrency(
-        agreementData.payment?.agreementTotalPence
-      ),
-      acceptedOn: statusFlags.isAgreementAccepted
-        ? formatAgreementDate(agreementData.signatureDate, false)
-        : '',
+      capitalItems: mapWmpCapitalItems(agreementData),
+      agreementTotalPayment: formatPenceCurrency(payment.agreementTotalPence),
+      acceptedOn: getAcceptedOn(agreementData, statusFlags),
       ...statusFlags
     }
   }
 }
+
+// Agreement holder, applicant name and address represent the
+// person/business the agreement is for and are required even on draft
+// documents (matches SFI behaviour), so they are not masked.
+const buildPartyDetails = (agreementData) => {
+  const applicant = agreementData.applicant ?? {}
+  const business = applicant.business ?? {}
+  const customer = applicant.customer ?? {}
+  const customerName = formatApplicantName(customer)
+  const businessName = business.name ?? ''
+
+  return {
+    agreementHolderName: customerName || businessName,
+    applicantName: customerName,
+    businessName,
+    address: buildAddress(business.address ?? {})
+  }
+}
+
+const getAcceptedOn = (agreementData, statusFlags) =>
+  statusFlags.isAgreementAccepted
+    ? formatAgreementDate(agreementData.signatureDate, false)
+    : ''
 
 const buildAddress = (address = {}) =>
   [
