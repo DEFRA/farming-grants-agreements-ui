@@ -31,6 +31,7 @@ export const viewAgreement = {
       agreementNumber: getAgreementNumber(agreementData),
       agreementHolderName: customerName || business.name || '',
       applicantName: customerName,
+      businessName: business.name ?? '',
       address: buildAddress(address),
       sbi: agreementData.identifiers?.sbi ?? '',
       agreementStartDate: formatAgreementDate(

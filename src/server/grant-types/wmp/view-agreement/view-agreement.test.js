@@ -88,6 +88,7 @@ describe('wmp viewAgreement', () => {
       agreementNumber: 'WMP-20260507133228-24643',
       agreementHolderName: 'Mr John Doe',
       applicantName: 'Mr John Doe',
+      businessName: 'Example Farm Ltd',
       address: 'Farm House, Village Lane, Village Lane, York, YO1 1AA',
       sbi: '106284736',
       agreementStartDate: '7 May 2026',
@@ -167,6 +168,7 @@ describe('wmp viewAgreement', () => {
     // they fall back to empty strings when the applicant is missing.
     expect(model.agreementHolderName).toBe('')
     expect(model.applicantName).toBe('')
+    expect(model.businessName).toBe('')
     expect(model.address).toBe('')
     expect(model.agreementStartDate).toBe('XXXXX')
     expect(model.agreementEndDate).toBe('XXXXX')
