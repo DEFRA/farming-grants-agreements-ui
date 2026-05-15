@@ -2,6 +2,7 @@ import { viewAgreement } from './view-agreement.js'
 
 describe('wmp viewAgreement', () => {
   const agreementData = {
+    agreementNumber: 'WMP123456789',
     clientRef: 'WMP-20260507133228-24643',
     code: 'woodland',
     status: 'accepted',
@@ -85,7 +86,7 @@ describe('wmp viewAgreement', () => {
     expect(viewAgreement.buildModel({ agreementData })).toEqual({
       pageTitle: 'Woodland Management Plan PA3 agreement document',
       agreementTitle: 'Woodland Management Plan PA3 agreement document',
-      agreementNumber: 'WMP-20260507133228-24643',
+      agreementNumber: 'WMP123456789',
       agreementHolderName: 'Example Farm Ltd',
       applicantName: 'Mr John Doe',
       businessName: 'Example Farm Ltd',
@@ -114,10 +115,11 @@ describe('wmp viewAgreement', () => {
     })
   })
 
-  test('falls back to clientRef when reference number is missing', () => {
+  test('falls back to clientRef when agreementNumber is missing', () => {
     const model = viewAgreement.buildModel({
       agreementData: {
         ...agreementData,
+        agreementNumber: undefined,
         clientRef: 'WMP-ALT-123'
       }
     })
