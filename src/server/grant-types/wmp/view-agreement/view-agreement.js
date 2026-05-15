@@ -50,7 +50,9 @@ const buildPartyDetails = (agreementData) => {
   const businessName = business.name ?? ''
 
   return {
-    agreementHolderName: customerName || businessName,
+    // Agreement holder is the business/organisation entering into the agreement
+    // with the RPA (confirmed by product), matching FPTT behaviour.
+    agreementHolderName: businessName,
     applicantName: customerName,
     businessName,
     address: buildAddress(business.address ?? {})

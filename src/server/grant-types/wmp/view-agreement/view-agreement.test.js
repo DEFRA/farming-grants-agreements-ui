@@ -87,7 +87,7 @@ describe('wmp viewAgreement', () => {
       pageTitle: 'Woodland Management Plan PA3 agreement document',
       agreementTitle: 'Woodland Management Plan PA3 agreement document',
       agreementNumber: 'WMP123456789',
-      agreementHolderName: 'Mr John Doe',
+      agreementHolderName: 'Example Farm Ltd',
       applicantName: 'Mr John Doe',
       businessName: 'Example Farm Ltd',
       address: 'Farm House, Village Lane, Village Lane, York, YO1 1AA',
