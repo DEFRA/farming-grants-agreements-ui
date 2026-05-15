@@ -127,4 +127,4 @@ const mapWmpLandParcels = (agreementData = {}) => {
 }
 
 const getAgreementNumber = (agreementData = {}) =>
-  agreementData.clientRef || agreementData.agreementNumber || ''
+  agreementData.agreementNumber || agreementData.clientRef || ''
