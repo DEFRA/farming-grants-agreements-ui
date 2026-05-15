@@ -3,7 +3,6 @@ import {
   formatAgreementDate,
   formatApplicantName,
   getAgreementStatusFlags,
-  maskIfRequired,
   shouldMaskAgreementPartyDetails
 } from '#~/server/grant-types/shared/view-agreement.js'
 
@@ -14,20 +13,14 @@ export const viewAgreement = {
   buildModel: ({ agreementData }) => {
     const statusFlags = getAgreementStatusFlags(agreementData)
     const shouldMask = shouldMaskAgreementPartyDetails(statusFlags)
-    const applicant = agreementData.applicant ?? {}
-    const business = applicant.business ?? {}
-    const customer = applicant.customer ?? {}
-    const address = business.address ?? {}
-    const capitalItems = mapWmpCapitalItems(agreementData)
+    const partyDetails = buildPartyDetails(agreementData)
     const payment = agreementData.payment ?? {}
 
     return {
       pageTitle: WMP_AGREEMENT_TITLE,
       agreementTitle: WMP_AGREEMENT_TITLE,
       agreementNumber: getAgreementNumber(agreementData),
-      agreementHolderName: maskIfRequired(business.name, shouldMask),
-      applicantName: maskIfRequired(formatApplicantName(customer), shouldMask),
-      address: maskIfRequired(buildAddress(address), shouldMask),
+      ...partyDetails,
       sbi: agreementData.identifiers?.sbi ?? '',
       agreementStartDate: formatAgreementDate(
         payment.agreementStartDate,
@@ -38,17 +31,38 @@ export const viewAgreement = {
         shouldMask
       ),
       landParcels: mapWmpLandParcels(agreementData),
-      capitalItems,
-      agreementTotalPayment: formatPenceCurrency(
-        agreementData.payment?.agreementTotalPence
-      ),
-      acceptedOn: statusFlags.isAgreementAccepted
-        ? formatAgreementDate(agreementData.signatureDate, false)
-        : '',
+      capitalItems: mapWmpCapitalItems(agreementData),
+      agreementTotalPayment: formatPenceCurrency(payment.agreementTotalPence),
+      acceptedOn: getAcceptedOn(agreementData, statusFlags),
       ...statusFlags
     }
   }
 }
+
+// Agreement holder, applicant name and address represent the
+// person/business the agreement is for and are required even on draft
+// documents (matches SFI behaviour), so they are not masked.
+const buildPartyDetails = (agreementData) => {
+  const applicant = agreementData.applicant ?? {}
+  const business = applicant.business ?? {}
+  const customer = applicant.customer ?? {}
+  const customerName = formatApplicantName(customer)
+  const businessName = business.name ?? ''
+
+  return {
+    // Agreement holder is the business/organisation entering into the agreement
+    // with the RPA (confirmed by product), matching FPTT behaviour.
+    agreementHolderName: businessName,
+    applicantName: customerName,
+    businessName,
+    address: buildAddress(business.address ?? {})
+  }
+}
+
+const getAcceptedOn = (agreementData, statusFlags) =>
+  statusFlags.isAgreementAccepted
+    ? formatAgreementDate(agreementData.signatureDate, false)
+    : ''
 
 const buildAddress = (address = {}) =>
   [

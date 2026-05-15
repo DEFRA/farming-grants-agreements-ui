@@ -88,6 +88,7 @@ describe('wmp viewAgreement', () => {
       agreementNumber: 'WMP-EXAMPLE-001',
       agreementHolderName: 'Example Farm Ltd',
       applicantName: 'Mr John Doe',
+      businessName: 'Example Farm Ltd',
       address: '5 Example Lane, Example Lane, Example Lane, Exampleton, ZZ99 5ZZ',
       sbi: '900000005',
       agreementStartDate: '7 May 2026',
@@ -163,9 +164,12 @@ describe('wmp viewAgreement', () => {
     })
 
     expect(model.agreementNumber).toBe('WMP-FALLBACK-456')
-    expect(model.agreementHolderName).toBe('XXXXX')
-    expect(model.applicantName).toBe('XXXXX')
-    expect(model.address).toBe('XXXXX')
+    // Party/address details are no longer masked on draft agreements;
+    // they fall back to empty strings when the applicant is missing.
+    expect(model.agreementHolderName).toBe('')
+    expect(model.applicantName).toBe('')
+    expect(model.businessName).toBe('')
+    expect(model.address).toBe('')
     expect(model.agreementStartDate).toBe('XXXXX')
     expect(model.agreementEndDate).toBe('XXXXX')
     expect(model.acceptedOn).toBe('')
