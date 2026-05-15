@@ -50,9 +50,7 @@ const buildPartyDetails = (agreementData) => {
   const businessName = business.name ?? ''
 
   return {
-    // Agreement holder is the business/organisation entering into the agreement
-    // with the RPA (confirmed by product), matching FPTT behaviour.
-    agreementHolderName: businessName,
+    agreementHolderName: customerName || businessName,
     applicantName: customerName,
     businessName,
     address: buildAddress(business.address ?? {})
@@ -127,4 +125,4 @@ const mapWmpLandParcels = (agreementData = {}) => {
 }
 
 const getAgreementNumber = (agreementData = {}) =>
-  agreementData.clientRef || agreementData.agreementNumber || ''
+  agreementData.agreementNumber || agreementData.clientRef || ''
