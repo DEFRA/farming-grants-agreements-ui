@@ -122,7 +122,7 @@
       </noscript>
 
       <div class="govuk-grid-column-three-quarters">
-        <h2 id="intro" class="govuk-heading-l">1. Introduction and overview</h2>
+        <h2 id="intro" class="govuk-heading-l" data-test-id="introSubHeader">1. Introduction and overview</h2>
 
         <p class="govuk-body">
           This is the Countryside Stewardship Woodland Management Plan Agreement
@@ -194,7 +194,7 @@
           period.
         </p>
 
-        <h2 id="parties" class="govuk-heading-l">2. Parties to the agreement</h2>
+        <h2 id="parties" class="govuk-heading-l" data-test-id="partiesSubHeader">2. Parties to the agreement</h2>
 
         <p class="govuk-body">This Agreement is between:</p>
 
@@ -205,7 +205,7 @@
           1DF ("us", "we", "our").
         </p>
 
-        <h2 id="land" class="govuk-heading-l">3. Land covered by the agreement</h2>
+        <h2 id="land" class="govuk-heading-l" data-test-id="landSubHeader">3. Land covered by the agreement</h2>
 
         <p class="govuk-body">The "Agreement Land" comprises the following land parcels.</p>
 
@@ -219,8 +219,8 @@
           <tbody class="govuk-table__body">
             {% for parcel in landParcels %}
               <tr class="govuk-table__row" data-test-id="landTableRow{{ loop.index }}">
-                <td class="govuk-table__cell">{{ parcel.parcelId }}</td>
-                <td class="govuk-table__cell">{{ parcel.areaHa }}</td>
+                <td class="govuk-table__cell" data-test-id="landTableCell{{ loop.index }}_0">{{ parcel.parcelId }}</td>
+                <td class="govuk-table__cell" data-test-id="landTableCell{{ loop.index }}_1">{{ parcel.areaHa }}</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -230,7 +230,7 @@
           The Terms and Conditions contain separate obligations in relation to the "Agreement Land".
         </p>
 
-        <h2 id="items" class="govuk-heading-l">4. Summary of capital items</h2>
+        <h2 id="items" class="govuk-heading-l" data-test-id="actionsSubHeader">4. Summary of capital items</h2>
 
         <p class="govuk-body">
           The following is a summary of the Capital Items which the Agreement Holder is required to deliver under the agreement:
@@ -285,7 +285,7 @@
           (available on request or via the Forestry Commission website).
         </p>
 
-        <h2 id="payment" class="govuk-heading-l">5. Payments</h2>
+        <h2 id="payment" class="govuk-heading-l" data-test-id="paymentSubHeader">5. Payments</h2>
 
         <p class="govuk-body">
           The following table sets out the anticipated total payments which, subject
@@ -320,7 +320,7 @@
           </tbody>
         </table>
 
-        <h2 id="schedule" class="govuk-heading-l">6. Agreement duration</h2>
+        <h2 id="schedule" class="govuk-heading-l" data-test-id="scheduleSubHeader">6. Agreement duration</h2>
 
         <p class="govuk-body">
           The Agreement will commence on the Agreement Start Date and end on
@@ -339,7 +339,7 @@
           <dd>{{ agreementEndDate }}</dd>
         </dl>
 
-        <h2 id="signature" class="govuk-heading-l">7. Electronic signature</h2>
+        <h2 id="signature" class="govuk-heading-l" data-test-id="signatureSubHeader">7. Electronic signature</h2>
 
         <p class="govuk-body">
           The Agreement comprising this Agreement Document, the Terms and
@@ -347,7 +347,7 @@
           {% if acceptedOn %} on {{ acceptedOn }}{% endif %}
         </p>
 
-        <h2 id="protection" class="govuk-heading-l">8. Data protection</h2>
+        <h2 id="protection" class="govuk-heading-l" data-test-id="protectionSubHeader">8. Data protection</h2>
 
         <p class="govuk-body">
           The Department for Environment, Food and Rural Affairs (Defra) is the data
