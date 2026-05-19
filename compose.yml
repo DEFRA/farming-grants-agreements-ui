@@ -1,3 +1,7 @@
+include:
+  - path: ./compose/farming-grants-agreements-ui.yml
+    project_directory: .
+
 services:
   redis:
     image: redis:7.2.3-alpine3.18
@@ -9,27 +13,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-    networks:
-      - cdp-tenant
-
-  ##############################################################################
-  # UI
-  ##############################################################################
-  farming-grants-agreements-ui:
-    build: ./
-    ports:
-      - '127.0.0.1:3000:3000'
-    depends_on:
-      redis:
-        condition: service_healthy
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
-    environment:
-      PORT: 3000
-      NODE_ENV: ${NODE_ENV:-development}
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      USE_SINGLE_INSTANCE_CACHE: ${USE_SINGLE_INSTANCE_CACHE:-true}
-      BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:3555}
     networks:
       - cdp-tenant
 
