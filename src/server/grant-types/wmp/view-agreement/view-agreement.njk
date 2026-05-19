@@ -248,9 +248,21 @@
           <tbody class="govuk-table__body">
             {% for item in capitalItems %}
               <tr class="govuk-table__row" data-test-id="capitalItemsTableRow{{ loop.index }}">
-                <td class="govuk-table__cell">{{ item.code }}</td>
-                <td class="govuk-table__cell">{{ item.description }}</td>
-                <td class="govuk-table__cell">{{ item.quantity }}</td>
+                <td
+                  class="govuk-table__cell"
+                  data-test-id="capitalItemsTableCell{{ loop.index }}_0">
+                  {{ item.code }}
+                </td>
+                <td
+                  class="govuk-table__cell"
+                  data-test-id="capitalItemsTableCell{{ loop.index }}_1">
+                  {{ item.description }}
+                </td>
+                <td
+                  class="govuk-table__cell"
+                  data-test-id="capitalItemsTableCell{{ loop.index }}_2">
+                  {{ item.quantity }}
+                </td>
               </tr>
             {% endfor %}
           </tbody>

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { viewAgreement } from './view-agreement.js'
 
 describe('wmp viewAgreement', () => {
@@ -79,6 +81,23 @@ describe('wmp viewAgreement', () => {
   test('exposes the WMP view-agreement template path', () => {
     expect(viewAgreement.template).toBe(
       'grant-types/wmp/view-agreement/view-agreement'
+    )
+  })
+
+  test('adds data-test-id attributes to capital item table cells', () => {
+    const template = readFileSync(
+      'src/server/grant-types/wmp/view-agreement/view-agreement.njk',
+      'utf8'
+    )
+
+    expect(template).toContain(
+      'data-test-id="capitalItemsTableCell{{ loop.index }}_0"'
+    )
+    expect(template).toContain(
+      'data-test-id="capitalItemsTableCell{{ loop.index }}_1"'
+    )
+    expect(template).toContain(
+      'data-test-id="capitalItemsTableCell{{ loop.index }}_2"'
     )
   })
 
