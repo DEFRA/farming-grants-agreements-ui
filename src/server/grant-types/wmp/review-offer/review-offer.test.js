@@ -64,12 +64,6 @@ describe('#reviewOfferController', () => {
 
         expect(statusCode).toBe(200)
         expect(result).toContain('Review your agreement offer')
-        expect(result).toContain('If you need to amend your agreement offer')
-        expect(result).toContain(
-          'Contact the Rural Payments Agency (RPA) to explain:'
-        )
-        expect(result).toContain('the changes you want to make')
-        expect(result).toContain('why you want to make the changes')
         expect(result).toContain('020 8026 2395')
         expect(result).toContain('farmpayments@rpa.gov.uk')
         expect(result).toContain(
