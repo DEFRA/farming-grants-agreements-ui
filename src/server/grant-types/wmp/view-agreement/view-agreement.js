@@ -6,8 +6,6 @@ import {
   shouldMaskAgreementPartyDetails
 } from '#~/server/grant-types/shared/view-agreement.js'
 
-const WMP_AGREEMENT_TITLE = 'Woodland Management Plan PA3 agreement document'
-
 export const viewAgreement = {
   template: 'grant-types/wmp/view-agreement/view-agreement',
   buildModel: ({ agreementData }) => {
@@ -15,10 +13,11 @@ export const viewAgreement = {
     const shouldMask = shouldMaskAgreementPartyDetails(statusFlags)
     const partyDetails = buildPartyDetails(agreementData)
     const payment = agreementData.payment ?? {}
+    const agreementName = getAgreementName(agreementData)
 
     return {
-      pageTitle: WMP_AGREEMENT_TITLE,
-      agreementTitle: WMP_AGREEMENT_TITLE,
+      pageTitle: 'Woodland Management Plan PA3 agreement document',
+      agreementName,
       agreementNumber: getAgreementNumber(agreementData),
       ...partyDetails,
       sbi: agreementData.identifiers?.sbi ?? '',
@@ -34,7 +33,11 @@ export const viewAgreement = {
       capitalItems: mapWmpCapitalItems(agreementData),
       agreementTotalPayment: formatPenceCurrency(payment.agreementTotalPence),
       acceptedOn: getAcceptedOn(agreementData, statusFlags),
-      ...statusFlags
+      isDraftAgreement: statusFlags.isDraftAgreement,
+      isAgreementAccepted: statusFlags.isAgreementAccepted,
+      isWithdrawnAgreement: statusFlags.isWithdrawnAgreement,
+      isCancelledAgreement: statusFlags.isCancelledAgreement,
+      isTerminatedAgreement: statusFlags.isTerminatedAgreement
     }
   }
 }
@@ -128,3 +131,6 @@ const mapWmpLandParcels = (agreementData = {}) => {
 
 const getAgreementNumber = (agreementData = {}) =>
   agreementData.agreementNumber || agreementData.clientRef || ''
+
+const getAgreementName = (agreementData = {}) =>
+  agreementData.agreementName || 'Woodland Management Plan PA3'
