@@ -5,6 +5,7 @@ import { viewAgreement } from './view-agreement.js'
 describe('wmp viewAgreement', () => {
   const agreementData = {
     agreementNumber: 'WMP123456789',
+    agreementName: 'Test Woodland Name WMP',
     clientRef: 'WMP-20260507133228-24643',
     code: 'woodland',
     status: 'accepted',
@@ -104,7 +105,7 @@ describe('wmp viewAgreement', () => {
   test('builds the view model from the accepted WMP agreement payload', () => {
     expect(viewAgreement.buildModel({ agreementData })).toEqual({
       pageTitle: 'Woodland Management Plan PA3 agreement document',
-      agreementTitle: 'Woodland Management Plan PA3 agreement document',
+      agreementName: 'Test Woodland Name WMP',
       agreementNumber: 'WMP123456789',
       agreementHolderName: 'Example Farm Ltd',
       applicantName: 'Mr John Doe',
@@ -144,6 +145,17 @@ describe('wmp viewAgreement', () => {
     })
 
     expect(model.agreementNumber).toBe('WMP-ALT-123')
+  })
+
+  test('falls back to the default WMP agreement name when agreementName is missing', () => {
+    const model = viewAgreement.buildModel({
+      agreementData: {
+        ...agreementData,
+        agreementName: undefined
+      }
+    })
+
+    expect(model.agreementName).toBe('Woodland Management Plan PA3')
   })
 
   test('masks draft agreement party details and maps capital item area', () => {

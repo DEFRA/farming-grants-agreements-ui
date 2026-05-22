@@ -495,6 +495,7 @@ describe('viewAgreementController agreement ended', () => {
       code: 'woodland',
       status: 'accepted',
       agreementData: {
+        agreementName: 'Test Woodland Name WMP',
         clientRef: 'WMP-20260507133228-24643',
         signatureDate: '2026-05-07T12:53:16.162Z',
         applicant: {
@@ -546,7 +547,8 @@ describe('viewAgreementController agreement ended', () => {
     expect(h.view).toHaveBeenCalledWith(
       'grant-types/wmp/view-agreement/view-agreement',
       expect.objectContaining({
-        pageTitle: 'Woodland Management Plan PA3 agreement document'
+        pageTitle: 'Woodland Management Plan PA3 agreement document',
+        agreementName: 'Test Woodland Name WMP'
       })
     )
   })
