@@ -133,8 +133,17 @@
     }) }}
   </form>
 
-  {% set section = {
-    message: "Contact the Rural Payments Agency (RPA) to update your offer."
-  } %}
-  {% include "partials/help/update.njk" %}
+  <details class="govuk-details">
+    <summary class="govuk-details__summary">
+      <span class="govuk-details__summary-text">If you need to make an update</span>
+    </summary>
+
+    <div class="govuk-details__text">
+      <p class="govuk-body">
+        Contact the Rural Payments Agency (RPA) if you have a query.
+      </p>
+
+      {% include "partials/help/wmp-rpa-contact-details.njk" %}
+    </div>
+  </details>
 {% endblock %}

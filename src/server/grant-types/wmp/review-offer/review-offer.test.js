@@ -64,8 +64,6 @@ describe('#reviewOfferController', () => {
 
         expect(statusCode).toBe(200)
         expect(result).toContain('Review your agreement offer')
-        expect(result).toContain('020 8026 2395')
-        expect(result).toContain('farmpayments@rpa.gov.uk')
         expect(result).toContain(
           'Mason House Farm Clitheroe Rd, Bashall Eaves, Bartindale Road, Clitheroe, BB7 3DD'
         )
