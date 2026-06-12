@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, test, vi } from 'vitest'
 import { offerAccepted } from './offer-accepted.js'
 
@@ -23,6 +24,15 @@ describe('fptt offerAccepted', () => {
     expect(offerAccepted.template).toBe(
       'grant-types/fptt/offer-accepted/offer-accepted'
     )
+  })
+
+  test('does not render a nested main landmark', () => {
+    const template = readFileSync(
+      new URL('./offer-accepted.njk', import.meta.url),
+      'utf8'
+    )
+
+    expect(template).not.toContain('role="main"')
   })
 
   test('builds the view model with payment date and consent details', () => {
