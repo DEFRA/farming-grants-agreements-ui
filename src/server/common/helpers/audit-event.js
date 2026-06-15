@@ -4,6 +4,16 @@ import { config } from '#~/config/config.js'
 
 const snsClient = new SNSClient({})
 
+/**
+ * Maps the app's `cdpEnvironment` value to the FCP Audit schema's environment
+ * vocabulary (e.g. `dev` -> `cdp-dev`). `local` is unchanged; all other values
+ * gain a `cdp-` prefix.
+ * @param {string} cdpEnvironment
+ * @returns {string}
+ */
+const mapEnvironment = (cdpEnvironment) =>
+  cdpEnvironment === 'local' ? 'local' : `cdp-${cdpEnvironment}`
+
 export const AuditEvent = Object.freeze({
   REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED',
   REVIEW_OFFER_CONTINUED: 'REVIEW_OFFER_CONTINUED',
@@ -66,7 +76,7 @@ const buildAuditPayload = (
   sessionid: request.auth?.credentials?.sessionId,
   correlationid: agreementData.correlationId,
   datetime: new Date().toISOString(),
-  environment: config.get('cdpEnvironment'),
+  environment: mapEnvironment(config.get('cdpEnvironment')),
   version: '0.1.0',
   application: 'Grants',
   component: config.get('serviceName'),
@@ -101,7 +111,7 @@ const buildAuditPayload = (
       {
         entity: 'agreement',
         action: eventActions[event],
-        id: agreementData.agreementNumber ?? request.params?.agreementId
+        entityid: agreementData.agreementNumber ?? request.params?.agreementId
       }
     ],
     status,
