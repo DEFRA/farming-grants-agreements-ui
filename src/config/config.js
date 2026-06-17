@@ -266,6 +266,22 @@ export const config = convict({
       env: 'BACKEND_TIMEOUT'
     }
   },
+  gasBackend: {
+    url: {
+      doc: 'The fg-gas-backend base URL',
+      format: String,
+      default: 'http://localhost:3102',
+      env: 'GAS_BACKEND_URL'
+    },
+    authToken: {
+      doc: 'Bearer token used to authenticate with fg-gas-backend',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'GAS_API_AUTH_TOKEN',
+      sensitive: true
+    }
+  },
   snsTopicArnAudit: {
     doc: 'SNS Topic ARN for audit events',
     format: String,

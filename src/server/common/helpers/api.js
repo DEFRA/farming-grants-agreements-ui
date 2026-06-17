@@ -7,7 +7,11 @@ export const apiRequest = async ({
   agreementId,
   method = 'GET',
   auth,
-  body
+  body,
+  backend = 'legacy',
+  actionName,
+  currentAgreement,
+  page
 }) => {
   const controller = new AbortController()
   const timeoutId = setTimeout(
@@ -16,18 +20,32 @@ export const apiRequest = async ({
   )
 
   let response
+  const gasAuthToken = config.get('gasBackend.authToken')
+
   try {
-    response = await fetch(`${config.get('backend.url')}/${agreementId}`, {
-      method,
-      headers: {
-        ...(method.toUpperCase() === 'GET'
-          ? {}
-          : { 'Content-Type': 'application/json' }),
-        'x-encrypted-auth': auth
-      },
-      ...(body ? { body: JSON.stringify(body) } : {}),
-      signal: controller.signal
-    })
+    response = await fetch(
+      buildBackendUrl({
+        agreementId,
+        actionName,
+        backend,
+        currentAgreement,
+        page
+      }),
+      {
+        method,
+        headers: {
+          ...(method.toUpperCase() === 'GET'
+            ? {}
+            : { 'Content-Type': 'application/json' }),
+          ...(backend === 'gas' && gasAuthToken
+            ? { Authorization: `Bearer ${gasAuthToken}` }
+            : {}),
+          'x-encrypted-auth': auth
+        },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+        signal: controller.signal
+      }
+    )
   } finally {
     clearTimeout(timeoutId)
   }
@@ -66,4 +84,39 @@ export const apiRequest = async ({
   }
 
   return response.json()
+}
+
+const buildBackendUrl = ({
+  agreementId,
+  actionName,
+  backend,
+  currentAgreement,
+  page
+}) => {
+  if (backend === 'gas') {
+    if (currentAgreement) {
+      const url = new URL(
+        'agreements/current',
+        `${config.get('gasBackend.url')}/`
+      )
+      url.searchParams.set('code', currentAgreement.code)
+      url.searchParams.set('clientRef', currentAgreement.clientRef)
+      url.searchParams.set('sbi', currentAgreement.sbi)
+
+      return url.toString()
+    }
+
+    const url = new URL(
+      `agreements/${agreementId}${actionName ? `/actions/${actionName}` : ''}`,
+      `${config.get('gasBackend.url')}/`
+    )
+
+    if (page) {
+      url.searchParams.set('page', page)
+    }
+
+    return url.toString()
+  }
+
+  return `${config.get('backend.url')}/${agreementId}`
 }

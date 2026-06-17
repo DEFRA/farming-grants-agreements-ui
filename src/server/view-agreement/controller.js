@@ -1,10 +1,16 @@
 import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
 import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
+import { configDrivenAgreementController } from '#~/server/config-driven-agreement/controller.js'
 import { getGrantTypeFor } from '#~/server/grant-types/index.js'
 
 export const viewAgreementController = {
   async handler(request, h) {
-    const { agreementData, auth } = request.pre?.data || {}
+    const data = request.pre?.data || {}
+    const { agreementData, auth } = data
+
+    if (data.source === 'config') {
+      return configDrivenAgreementController.handler(request, h)
+    }
 
     if (
       agreementData?.status === 'offered' &&

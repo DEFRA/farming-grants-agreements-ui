@@ -38,7 +38,7 @@ export function context(request) {
       const webpackAssetPath = webpackManifest?.[asset]
       return path.join(baseUrl, assetPath, webpackAssetPath ?? asset)
     },
-    agreement: request.pre?.data?.agreementData,
+    agreement: request.pre?.data?.agreementData ?? request.pre?.data?.agreement,
     cdpEnvironment: config.get('cdpEnvironment'),
     cspNonce: getContentSecurityPolicyNonce(request),
     buildUrl(...args) {

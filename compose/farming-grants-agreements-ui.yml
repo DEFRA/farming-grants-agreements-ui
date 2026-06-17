@@ -14,5 +14,7 @@ services:
       REDIS_HOST: ${REDIS_HOST:-redis}
       USE_SINGLE_INSTANCE_CACHE: ${USE_SINGLE_INSTANCE_CACHE:-true}
       BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:3555}
+      GAS_BACKEND_URL: ${GAS_BACKEND_URL:-http://gas:3102}
+      GAS_API_AUTH_TOKEN: ${GAS_API_AUTH_TOKEN:-f081263c-6876-4d40-936f-ebdf63b5e893}
     networks:
       - cdp-tenant

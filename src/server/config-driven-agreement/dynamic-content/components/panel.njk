@@ -1,0 +1,22 @@
+{% macro defraPanel(params, renderDefraComponent) %}
+  {%- set title = params.title or '' %}
+  {%- set text = params.text or '' %}
+  {%- set items = params.items or [] %}
+  {%- set classes = params.classes or '' %}
+  {%- set id = params.id or '' %}
+
+  <div{% if id %} id="{{ id }}"{% endif %} class="govuk-panel govuk-panel--confirmation{% if classes %} {{ classes }}{% endif %}">
+    <h1 class="govuk-panel__title">
+      {{ title | escape }}
+    </h1>
+    <div class="govuk-panel__body">
+      {%- if items.length > 0 -%}
+        {%- for item in items -%}
+          {{ renderDefraComponent(item) }}
+        {%- endfor -%}
+      {%- else -%}
+        {{ text | escape }}
+      {%- endif -%}
+    </div>
+  </div>
+{% endmacro %}

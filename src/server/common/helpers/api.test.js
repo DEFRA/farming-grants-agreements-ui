@@ -8,6 +8,8 @@ import {
   vi
 } from 'vitest'
 
+import { config } from '#~/config/config.js'
+
 import { apiRequest } from './api.js'
 
 const originalFetch = globalThis.fetch
@@ -26,6 +28,7 @@ describe('apiRequest error handling', () => {
     agreementId: 'FPTT123',
     auth: 'mock-auth-token'
   }
+  const originalGasAuthToken = config.get('gasBackend.authToken')
 
   beforeEach(() => {
     globalThis.fetch = vi.fn()
@@ -33,6 +36,7 @@ describe('apiRequest error handling', () => {
 
   afterEach(() => {
     vi.clearAllMocks()
+    config.set('gasBackend.authToken', originalGasAuthToken)
   })
 
   afterAll(() => {
@@ -122,5 +126,77 @@ describe('apiRequest error handling', () => {
     const error = await apiRequest(baseRequest).catch((err) => err)
 
     expect(error).toBe(networkError)
+  })
+
+  test('sends GAS bearer token only when proxying to GAS', async () => {
+    config.set('gasBackend.authToken', 'gas-service-token')
+    globalThis.fetch.mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ agreement: {} })
+    })
+
+    await apiRequest({
+      agreementId: 'PMF123',
+      backend: 'gas',
+      auth: 'encrypted-user-auth'
+    })
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/agreements/PMF123'),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer gas-service-token',
+          'x-encrypted-auth': 'encrypted-user-auth'
+        })
+      })
+    )
+  })
+
+  test('builds the GAS current agreement URL with source identity query parameters', async () => {
+    config.set('gasBackend.url', 'http://gas:3102')
+    config.set('gasBackend.authToken', 'gas-service-token')
+    globalThis.fetch.mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ source: 'config' })
+    })
+
+    await apiRequest({
+      backend: 'gas',
+      auth: 'encrypted-user-auth',
+      currentAgreement: {
+        code: 'pigs-might-fly',
+        clientRef: '4c6-6tf-k8n',
+        sbi: '106284736'
+      }
+    })
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'http://gas:3102/agreements/current?code=pigs-might-fly&clientRef=4c6-6tf-k8n&sbi=106284736',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer gas-service-token',
+          'x-encrypted-auth': 'encrypted-user-auth'
+        })
+      })
+    )
+  })
+
+  test('does not send GAS bearer token to the legacy agreements API', async () => {
+    config.set('gasBackend.authToken', 'gas-service-token')
+    globalThis.fetch.mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ agreementData: {} })
+    })
+
+    await apiRequest(baseRequest)
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.not.objectContaining({
+          Authorization: 'Bearer gas-service-token'
+        })
+      })
+    )
   })
 })
