@@ -88,9 +88,15 @@ describe('auditEvent', () => {
     }))
     vi.doMock('#~/config/config.js', () => ({
       config: {
-        get: vi.fn((key) =>
-          key === 'snsTopicArnAudit' ? TEST_TOPIC_ARN : undefined
-        )
+        get: vi.fn((key) => {
+          if (key === 'snsTopicArnAudit') {
+            return TEST_TOPIC_ARN
+          }
+          if (key === 'cdpEnvironment') {
+            return 'test'
+          }
+          return undefined
+        })
       }
     }))
     ;({ auditEvent, AuditEvent } = await import('./audit-event.js'))
@@ -128,6 +134,44 @@ describe('auditEvent', () => {
     expect(mockSend).not.toHaveBeenCalled()
   })
 
+  test('does not prefix the environment when running locally', async () => {
+    vi.resetModules()
+    vi.doMock('@aws-sdk/client-sns', () => ({
+      SNSClient: function SNSClient() {},
+      PublishCommand: function PublishCommand(params) {
+        this.TopicArn = params.TopicArn
+        this.Message = params.Message
+      }
+    }))
+    vi.doMock('#~/config/config.js', () => ({
+      config: {
+        get: vi.fn((key) => {
+          if (key === 'snsTopicArnAudit') {
+            return TEST_TOPIC_ARN
+          }
+          if (key === 'cdpEnvironment') {
+            return 'local'
+          }
+          return undefined
+        })
+      }
+    }))
+    const { auditEvent: localAuditEvent, AuditEvent: LocalAuditEvent } =
+      await import('./audit-event.js')
+
+    localAuditEvent(
+      createRequest(),
+      LocalAuditEvent.REVIEW_OFFER_VIEWED,
+      { identifiers: {} },
+      'success',
+      { send: mockSend }
+    )
+
+    await Promise.resolve()
+    const command = mockSend.mock.calls[0][0]
+    expect(JSON.parse(command.Message).environment).toBe('local')
+  })
+
   test('publishes to the configured SNS topic ARN', async () => {
     callAuditEvent(createRequest(), AuditEvent.REVIEW_OFFER_VIEWED, {
       identifiers: {}
@@ -159,6 +203,7 @@ describe('auditEvent', () => {
       sessionid: 'session-abc',
       correlationid: 'corr-xyz',
       datetime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+      environment: 'cdp-test',
       ip: '10.0.0.1'
     })
   })
@@ -197,7 +242,7 @@ describe('auditEvent', () => {
     expect(payload.audit.accounts).toEqual({ sbi: '123', frn: 'FRN1' })
     expect(payload.audit.accounts).not.toHaveProperty('crn')
     expect(payload.audit.entities).toEqual([
-      { entity: 'agreement', action: 'read', id: 'FPTT987' }
+      { entity: 'agreement', action: 'read', entityid: 'FPTT987' }
     ])
   })
 
@@ -223,7 +268,7 @@ describe('auditEvent', () => {
 
     await Promise.resolve()
     const payload = getPublishedPayload()
-    expect(payload.audit.entities[0].id).toBe('AGR123')
+    expect(payload.audit.entities[0].entityid).toBe('AGR123')
   })
 
   test('passes failure status through', async () => {
