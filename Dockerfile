@@ -15,7 +15,7 @@ EXPOSE ${PORT} ${PORT_DEBUG}
 
 COPY --chown=node:node --chmod=755 package*.json ./
 COPY --chown=node:node --chmod=755 .npmrc ./
-RUN npm install
+RUN npm ci
 COPY --chown=node:node --chmod=755 . .
 RUN npm run build:frontend
 
