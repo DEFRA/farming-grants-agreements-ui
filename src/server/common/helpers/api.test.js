@@ -10,6 +10,11 @@ import {
 
 import { apiRequest } from './api.js'
 
+vi.mock('./jwt-auth.js', () => ({
+  extractJwtPayload: vi.fn(),
+  validateJwtAuthentication: vi.fn()
+}))
+
 const originalFetch = globalThis.fetch
 
 const createErrorResponse = (overrides = {}) => ({

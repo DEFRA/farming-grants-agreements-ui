@@ -2,12 +2,15 @@ import Boom from '@hapi/boom'
 
 import { config } from '#~/config/config.js'
 import { statusCodes } from '#~/server/common/constants/status-codes.js'
+import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
 
 export const apiRequest = async ({
   agreementId,
   method = 'GET',
   auth,
-  body
+  body,
+  queryParams,
+  actionName
 }) => {
   const controller = new AbortController()
   const timeoutId = setTimeout(
@@ -15,15 +18,56 @@ export const apiRequest = async ({
     config.get('backend.timeout')
   )
 
+  let url
+  const headers = {
+    'x-encrypted-auth': auth
+  }
+
+  const jwtPayload = auth ? extractJwtPayload(auth, console) : null
+  const allowedGrantCodes = config.get('gasBackend.allowedGrantCodes')
+  const backend = allowedGrantCodes.includes(jwtPayload?.grantCode) ? 'gas' : 'legacy'
+
+  if (backend === 'gas') {
+    const gasUrl = config.get('gasBackend.url')
+    const gasAuthToken = config.get('gasBackend.authToken')
+
+    if (gasAuthToken) {
+      headers.Authorization = `Bearer ${gasAuthToken}`
+    }
+
+    if (method.toUpperCase() === 'GET') {
+      const searchParams = new URLSearchParams(queryParams)
+
+      if (jwtPayload?.grantCode) {
+        searchParams.set('code', jwtPayload.grantCode)
+      }
+
+      if (jwtPayload?.clientRef) {
+        searchParams.set('clientRef', jwtPayload.clientRef)
+      }
+
+      if (jwtPayload?.sbi) {
+        searchParams.set('sbi', jwtPayload.sbi)
+      }
+
+      url = `${gasUrl}/agreements/current?${searchParams.toString()}`
+    } else {
+      url = `${gasUrl}/agreements/${agreementId}/actions/${actionName}`
+    }
+  } else {
+    url = `${config.get('backend.url')}/${agreementId}`
+  }
+
   let response
   try {
-    response = await fetch(`${config.get('backend.url')}/${agreementId}`, {
+    console.log(`**************** Sending ${method} request to ${url}`)
+    response = await fetch(url, {
       method,
       headers: {
         ...(method.toUpperCase() === 'GET'
           ? {}
           : { 'Content-Type': 'application/json' }),
-        'x-encrypted-auth': auth
+        ...headers
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
       signal: controller.signal
