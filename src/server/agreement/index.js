@@ -6,14 +6,20 @@ const getAgreementData = async (request) => {
   const { agreementId = '' } = request.params
   const action = request?.payload?.action
   const method = action === 'accept-offer' ? 'POST' : 'GET'
+  const authData = request.auth.credentials?.authData
 
-  return apiRequest({
-    agreementId,
-    method,
-    auth:
-      request.headers['x-encrypted-auth'] || request.query['x-encrypted-auth'],
-    body: method === 'POST' ? request.payload : undefined
-  })
+  return {
+    ...(await apiRequest({
+      agreementId,
+      method,
+      auth:
+        authData?.authToken ||
+        request.headers['x-encrypted-auth'] ||
+        request.query['x-encrypted-auth'],
+      body: method === 'POST' ? request.payload : undefined
+    })),
+    auth: authData
+  }
 }
 
 /**

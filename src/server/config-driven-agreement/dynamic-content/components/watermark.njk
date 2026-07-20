@@ -1,0 +1,8 @@
+{% macro defraWatermark(params) %}
+  {%- set text = params.text or '' %}
+  {%- set header = params.header or text + ' Agreement' %}
+  {%- set classes = params.classes or '' %}
+
+  <div class="print-watermark{% if classes %} {{ classes }}{% endif %}" aria-hidden="true">{{ text | escape }}</div>
+  <div class="print-watermark-header" aria-hidden="true">{{ header | escape }}</div>
+{% endmacro %}

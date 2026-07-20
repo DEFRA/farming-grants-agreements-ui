@@ -277,14 +277,14 @@ export const config = convict({
       doc: 'The GAS backend API auth token',
       format: String,
       nullable: true,
-      default: null,
+      default: '345be806-0777-45b7-b1e8-8e0e8376df73',
       env: 'GAS_API_AUTH_TOKEN',
       sensitive: true
     },
     allowedGrantCodes: {
       doc: 'List of grant codes allowed to use the GAS backend',
       format: Array,
-      default: ['PMF'],
+      default: ['pigs-might-fly'],
       env: 'GAS_ALLOWED_GRANT_CODES'
     }
   },

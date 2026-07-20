@@ -128,4 +128,121 @@ describe('apiRequest error handling', () => {
 
     expect(error).toBe(networkError)
   })
+
+  test('constructs gas backend URL correctly for GET', async () => {
+    const { extractJwtPayload } = await import('./jwt-auth.js')
+    extractJwtPayload.mockReturnValue({
+      grantCode: 'GAS001',
+      clientRef: 'REF123',
+      sbi: '123456789'
+    })
+
+    const mockConfig = (await import('#~/config/config.js')).config
+    const originalGet = mockConfig.get
+    mockConfig.get = vi.fn((key) => {
+      if (key === 'gasBackend.allowedGrantCodes') return ['GAS001']
+      if (key === 'gasBackend.url') return 'http://gas-api'
+      if (key === 'gasBackend.authToken') return 'gas-token'
+      return originalGet.call(mockConfig, key)
+    })
+
+    const backendResponse = {
+      ok: true,
+      json: vi.fn().mockResolvedValue({ data: 'gas-data' })
+    }
+    globalThis.fetch.mockResolvedValue(backendResponse)
+
+    const result = await apiRequest({
+      ...baseRequest,
+      queryParams: { existing: 'param' }
+    })
+
+    expect(result).toEqual({ data: 'gas-data', source: 'gas' })
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('http://gas-api/agreements/current?'),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer gas-token',
+          'x-encrypted-auth': 'mock-auth-token'
+        })
+      })
+    )
+
+    const url = globalThis.fetch.mock.calls[0][0]
+    const searchParams = new URLSearchParams(url.split('?')[1])
+    expect(searchParams.get('existing')).toBe('param')
+    expect(searchParams.get('code')).toBe('GAS001')
+    expect(searchParams.get('clientRef')).toBe('REF123')
+    expect(searchParams.get('sbi')).toBe('123456789')
+
+    mockConfig.get = originalGet
+  })
+
+  test('constructs gas backend URL correctly for POST', async () => {
+    const { extractJwtPayload } = await import('./jwt-auth.js')
+    extractJwtPayload.mockReturnValue({ grantCode: 'GAS001' })
+
+    const mockConfig = (await import('#~/config/config.js')).config
+    const originalGet = mockConfig.get
+    mockConfig.get = vi.fn((key) => {
+      if (key === 'gasBackend.allowedGrantCodes') return ['GAS001']
+      if (key === 'gasBackend.url') return 'http://gas-api'
+      return originalGet.call(mockConfig, key)
+    })
+
+    const backendResponse = {
+      ok: true,
+      json: vi.fn().mockResolvedValue({ data: 'gas-post-data' })
+    }
+    globalThis.fetch.mockResolvedValue(backendResponse)
+
+    const result = await apiRequest({
+      ...baseRequest,
+      method: 'POST',
+      body: { action: 'test' },
+      actionName: 'submit'
+    })
+
+    expect(result).toEqual({ data: 'gas-post-data', source: 'gas' })
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'http://gas-api/agreements/FPTT123/actions/submit',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ action: 'test' })
+      })
+    )
+
+    mockConfig.get = originalGet
+  })
+
+  test('constructs legacy backend URL correctly', async () => {
+    const { extractJwtPayload } = await import('./jwt-auth.js')
+    extractJwtPayload.mockReturnValue({ grantCode: 'LEGACY001' })
+
+    const mockConfig = (await import('#~/config/config.js')).config
+    const originalGet = mockConfig.get
+    mockConfig.get = vi.fn((key) => {
+      if (key === 'gasBackend.allowedGrantCodes') return ['GAS001']
+      if (key === 'backend.url') return 'http://legacy-api'
+      return originalGet.call(mockConfig, key)
+    })
+
+    const backendResponse = {
+      ok: true,
+      json: vi.fn().mockResolvedValue({ data: 'legacy-data' })
+    }
+    globalThis.fetch.mockResolvedValue(backendResponse)
+
+    const result = await apiRequest(baseRequest)
+
+    expect(result).toEqual({ data: 'legacy-data', source: 'legacy' })
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'http://legacy-api/FPTT123',
+      expect.any(Object)
+    )
+
+    mockConfig.get = originalGet
+  })
 })
