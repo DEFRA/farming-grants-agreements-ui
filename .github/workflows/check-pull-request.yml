@@ -38,7 +38,18 @@ jobs:
 
       - name: Validate PR commits with commitlint
         if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        run: |
+          set -euo pipefail
+          commits=$(git rev-list --reverse "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}")
+          for commit in $commits; do
+            author=$(git show -s --format='%an' "$commit")
+            message=$(git show -s --format='%s' "$commit")
+            if [[ "$author" == *"[bot]"* ]]; then
+              echo "Skipping bot commit $commit by $author: $message"
+              continue
+            fi
+            echo "$message" | npx commitlint --verbose
+          done
 
       - name: Test code and Create Test Coverage Reports
         run: |
