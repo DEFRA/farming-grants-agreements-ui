@@ -1,8 +1,15 @@
 import { agreementController } from './controller.js'
 import { createServer } from '#~/server/server.js'
 import * as getControllerByActionModule from '#~/server/common/helpers/get-controller-by-action.js'
+import { configDrivenAgreementController } from '#~/server/config-driven-agreement/controller.js'
 import { statusCodes } from '#~/server/common/constants/status-codes.js'
 import { config } from '#~/config/config.js'
+
+vi.mock('#~/server/config-driven-agreement/controller.js', () => ({
+  configDrivenAgreementController: {
+    handler: vi.fn()
+  }
+}))
 
 describe('#agreementController', () => {
   let server
@@ -312,6 +319,110 @@ describe('#agreementController', () => {
   })
 
   describe('handler', () => {
+    test('delegates to configDrivenAgreementController when source is gas', () => {
+      const mockRequest = {
+        log: vi.fn(),
+        pre: {
+          data: {
+            source: 'gas'
+          }
+        }
+      }
+      const mockH = {}
+      const expectedResponse = { some: 'response' }
+      configDrivenAgreementController.handler.mockReturnValue(expectedResponse)
+
+      const result = agreementController.handler(mockRequest, mockH)
+
+      expect(mockRequest.log).toHaveBeenCalledWith(
+        ['info', 'agreement'],
+        '************** Delegating to config-driven agreement controller'
+      )
+      expect(configDrivenAgreementController.handler).toHaveBeenCalledWith(
+        mockRequest,
+        mockH
+      )
+      expect(result).toBe(expectedResponse)
+    })
+
+    test('does not delegate to configDrivenAgreementController when source is legacy', () => {
+      const action = 'review-offer'
+      const mockRequest = {
+        log: vi.fn(),
+        payload: { action },
+        pre: {
+          data: {
+            source: 'legacy',
+            agreementData: { status: 'offered' }
+          }
+        }
+      }
+      const mockH = {}
+      const expectedResponse = { some: 'response' }
+      const mockActionController = {
+        handler: vi.fn().mockReturnValue(expectedResponse)
+      }
+      const chooseController = vi.fn().mockReturnValue(mockActionController)
+      const getControllerSpy = vi
+        .spyOn(getControllerByActionModule, 'getControllerByAction')
+        .mockReturnValue(chooseController)
+
+      const result = agreementController.handler(mockRequest, mockH)
+
+      expect(mockRequest.log).not.toHaveBeenCalledWith(
+        ['info', 'agreement'],
+        '************** Delegating to config-driven agreement controller'
+      )
+      expect(configDrivenAgreementController.handler).not.toHaveBeenCalled()
+      expect(result).toBe(expectedResponse)
+
+      getControllerSpy.mockRestore()
+    })
+
+    test('does not delegate to configDrivenAgreementController when pre data is missing', () => {
+      const mockRequest = {
+        log: vi.fn(),
+        pre: {}
+      }
+      const mockH = {}
+
+      // Should fail later when trying to access status
+      expect(() => agreementController.handler(mockRequest, mockH)).toThrow()
+      expect(configDrivenAgreementController.handler).not.toHaveBeenCalled()
+    })
+
+    test('delegates to the chosen controller handler', () => {
+      const action = 'review-offer'
+      const request = {
+        payload: { action },
+        pre: {
+          data: {
+            agreementData: {
+              status: 'offered'
+            }
+          }
+        }
+      }
+      const mockH = {}
+      const expectedResponse = { some: 'response' }
+      const mockActionController = {
+        handler: vi.fn().mockReturnValue(expectedResponse)
+      }
+      const chooseController = vi.fn().mockReturnValue(mockActionController)
+      const getControllerSpy = vi
+        .spyOn(getControllerByActionModule, 'getControllerByAction')
+        .mockReturnValue(chooseController)
+
+      const result = agreementController.handler(request, mockH)
+
+      expect(getControllerSpy).toHaveBeenCalledWith('offered')
+      expect(chooseController).toHaveBeenCalledWith(action)
+      expect(mockActionController.handler).toHaveBeenCalledWith(request, mockH)
+      expect(result).toBe(expectedResponse)
+
+      getControllerSpy.mockRestore()
+    })
+
     test('throws when pre handler data is missing entirely', () => {
       const request = {
         payload: { action: 'any-action' }
