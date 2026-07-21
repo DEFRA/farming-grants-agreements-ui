@@ -47,14 +47,7 @@ const buildConfigDrivenAgreementModel = (renderModel = {}, baseUrl = '/') => {
 
 export const configDrivenAgreementController = {
   handler(request, h) {
-    // const { agreementData } = request.pre?.data || {}
     const renderModel = request.pre?.data
-
-    // request.log(['info', 'agreement'], `************** Rendering config-driven agreementData ${JSON.stringify(agreementData)}`)
-    request.log(
-      ['info', 'agreement'],
-      `************** Rendering config-driven renderModel ${JSON.stringify(renderModel)}`
-    )
 
     return h.view(
       'config-driven-agreement/page',

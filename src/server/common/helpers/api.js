@@ -3,10 +3,15 @@ import Boom from '@hapi/boom'
 import { config } from '#~/config/config.js'
 import { statusCodes } from '#~/server/common/constants/status-codes.js'
 import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
+import { createLogger } from '#~/server/common/helpers/logging/logger.js'
+
+export const GAS = 'gas'
+const LEGACY = 'legacy'
+const logger = createLogger()
 
 const getBackend = (jwtPayload) => {
   const allowedGrantCodes = config.get('gasBackend.allowedGrantCodes')
-  return allowedGrantCodes.includes(jwtPayload?.grantCode) ? 'gas' : 'legacy'
+  return allowedGrantCodes.includes(jwtPayload?.grantCode) ? GAS : LEGACY
 }
 
 const buildUrl = ({
@@ -17,7 +22,7 @@ const buildUrl = ({
   actionName,
   jwtPayload
 }) => {
-  if (backend === 'gas') {
+  if (backend === GAS) {
     const gasUrl = config.get('gasBackend.url')
     if (method.toUpperCase() === 'GET') {
       const searchParams = new URLSearchParams(queryParams)
@@ -42,7 +47,7 @@ const getHeaders = ({ backend, auth, method }) => {
     })
   }
 
-  if (backend === 'gas') {
+  if (backend === GAS) {
     const gasAuthToken = config.get('gasBackend.authToken')
     if (gasAuthToken) {
       headers.Authorization = `Bearer ${gasAuthToken}`
@@ -96,7 +101,7 @@ export const apiRequest = async ({
     config.get('backend.timeout')
   )
 
-  const jwtPayload = auth ? extractJwtPayload(auth, console) : null
+  const jwtPayload = auth ? extractJwtPayload(auth, logger) : null
   const backend = getBackend(jwtPayload)
   const url = buildUrl({
     backend,
@@ -109,7 +114,7 @@ export const apiRequest = async ({
   const headers = getHeaders({ backend, auth, method })
 
   try {
-    console.log(`**************** Sending ${method} request to ${url}`)
+    logger.info(`Sending ${method} request to '${backend}' service: ${url}`)
     const response = await fetch(url, {
       method,
       headers,

@@ -334,10 +334,6 @@ describe('#agreementController', () => {
 
       const result = agreementController.handler(mockRequest, mockH)
 
-      expect(mockRequest.log).toHaveBeenCalledWith(
-        ['info', 'agreement'],
-        '************** Delegating to config-driven agreement controller'
-      )
       expect(configDrivenAgreementController.handler).toHaveBeenCalledWith(
         mockRequest,
         mockH
