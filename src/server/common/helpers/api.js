@@ -23,9 +23,9 @@ const buildUrl = ({
       const searchParams = new URLSearchParams(queryParams)
       const { grantCode, clientRef, sbi } = jwtPayload || {}
 
-      if (grantCode) searchParams.set('code', grantCode)
-      if (clientRef) searchParams.set('clientRef', clientRef)
-      if (sbi) searchParams.set('sbi', sbi)
+      searchParams.set('code', grantCode)
+      searchParams.set('clientRef', clientRef)
+      searchParams.set('sbi', sbi)
 
       return `${gasUrl}/agreements/current?${searchParams.toString()}`
     }
