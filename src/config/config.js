@@ -277,7 +277,7 @@ export const config = convict({
       doc: 'The GAS backend API auth token',
       format: String,
       nullable: true,
-      default: '345be806-0777-45b7-b1e8-8e0e8376df73',
+      default: '',
       env: 'GAS_API_AUTH_TOKEN',
       sensitive: true
     },
