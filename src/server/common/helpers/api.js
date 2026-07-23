@@ -24,15 +24,18 @@ const buildUrl = ({
 }) => {
   if (backend === GAS) {
     const gasUrl = config.get('gasBackend.url')
+    const { grantCode, clientRef, sbi } = jwtPayload || {}
+    const searchParams = new URLSearchParams(queryParams)
+    searchParams.set('code', grantCode)
+    searchParams.set('clientRef', clientRef)
+    searchParams.set('sbi', sbi)
+
     if (method.toUpperCase() === 'GET') {
-      const searchParams = new URLSearchParams(queryParams)
-      const { grantCode, clientRef, sbi } = jwtPayload || {}
-
-      searchParams.set('code', grantCode)
-      searchParams.set('clientRef', clientRef)
-      searchParams.set('sbi', sbi)
-
-      return `${gasUrl}/agreements/current?${searchParams.toString()}`
+      if (agreementId) {
+        return `${gasUrl}/agreements/${agreementId}?${searchParams.toString()}`
+      } else {
+        return `${gasUrl}/agreements/current?${searchParams.toString()}`
+      }
     }
     return `${gasUrl}/agreements/${agreementId}/actions/${actionName}`
   }
@@ -127,6 +130,9 @@ export const apiRequest = async ({
     }
 
     const data = await response.json()
+    logger.info(
+      `Received response ${JSON.stringify(data)} from '${backend}' service`
+    )
     return { ...data, source: backend }
   } finally {
     clearTimeout(timeoutId)
