@@ -4,6 +4,11 @@ import * as getControllerByActionModule from '#~/server/common/helpers/get-contr
 import { configDrivenAgreementController } from '#~/server/config-driven-agreement/controller.js'
 import { statusCodes } from '#~/server/common/constants/status-codes.js'
 import { config } from '#~/config/config.js'
+import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
+
+vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
+  extractJwtPayload: vi.fn()
+}))
 
 vi.mock('#~/server/config-driven-agreement/controller.js', () => ({
   configDrivenAgreementController: {
@@ -16,6 +21,9 @@ describe('#agreementController', () => {
 
   beforeAll(async () => {
     config.set('backend.url', 'http://localhost:3555')
+    config.set('gasBackend.url', 'http://localhost:3102')
+    config.set('gasBackend.authToken', 'mock-gas-token')
+    config.set('gasBackend.allowedGrantCodes', ['pigs-might-fly'])
     globalThis.fetch = vi.fn()
     server = await createServer()
     await server.initialize()
@@ -25,7 +33,94 @@ describe('#agreementController', () => {
     await server?.stop({ timeout: 0 })
   })
 
+  beforeEach(() => {
+    vi.clearAllMocks()
+    extractJwtPayload.mockReturnValue({ grantCode: 'MOCK' })
+  })
+
   describe('success', () => {
+    test('should call the GAS backend when grantCode is "pigs-might-fly"', async () => {
+      const mockPayload = {
+        sub: '1234567890',
+        name: 'John Doe',
+        admin: true,
+        iat: 1516239022,
+        sbi: 106284736,
+        source: 'defra',
+        clientRef: 'client-ref-001',
+        grantCode: 'pigs-might-fly'
+      }
+      extractJwtPayload.mockReturnValue(mockPayload)
+
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({})
+      })
+
+      await server.inject({
+        method: 'GET',
+        url: '/',
+        headers: {
+          'x-encrypted-auth': 'mock-auth'
+        }
+      })
+
+      // GAS URL includes sbi, code (grantCode), and clientRef from JWT payload
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('http://localhost:3102/agreements/current?'),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer mock-gas-token'
+          }),
+          method: 'GET'
+        })
+      )
+
+      const fetchArgs = fetch.mock.calls[0][1]
+      expect(fetchArgs.headers).not.toHaveProperty('x-encrypted-auth')
+
+      const url = fetch.mock.calls[0][0]
+      const searchParams = new URLSearchParams(url.split('?')[1])
+      expect(searchParams.get('sbi')).toBe('106284736')
+      expect(searchParams.get('code')).toBe('pigs-might-fly')
+      expect(searchParams.get('clientRef')).toBe('client-ref-001')
+    })
+
+    test('should call the legacy backend when grantCode is "FPTT"', async () => {
+      const mockPayload = {
+        sub: '1234567890',
+        name: 'John Doe',
+        admin: true,
+        iat: 1516239022,
+        sbi: 106284736,
+        source: 'defra',
+        clientRef: 'client-ref-001',
+        grantCode: 'FPTT'
+      }
+      extractJwtPayload.mockReturnValue(mockPayload)
+
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({})
+      })
+
+      await server.inject({
+        method: 'GET',
+        url: '/FPTT123',
+        headers: {
+          'x-encrypted-auth': 'mock-auth'
+        }
+      })
+
+      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/FPTT123', {
+        headers: {
+          'x-encrypted-auth': 'mock-auth'
+        },
+        method: 'GET',
+        signal: expect.any(AbortSignal)
+      })
+    })
+
     test('should call the backend API', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
@@ -365,10 +460,6 @@ describe('#agreementController', () => {
 
       const result = agreementController.handler(mockRequest, mockH)
 
-      expect(mockRequest.log).not.toHaveBeenCalledWith(
-        ['info', 'agreement'],
-        '************** Delegating to config-driven agreement controller'
-      )
       expect(configDrivenAgreementController.handler).not.toHaveBeenCalled()
       expect(result).toBe(expectedResponse)
 

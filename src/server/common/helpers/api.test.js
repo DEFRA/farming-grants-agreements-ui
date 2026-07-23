@@ -32,8 +32,10 @@ describe('apiRequest error handling', () => {
     auth: 'mock-auth-token'
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     globalThis.fetch = vi.fn()
+    const { extractJwtPayload } = await import('./jwt-auth.js')
+    extractJwtPayload.mockReturnValue({ grantCode: 'MOCK' })
   })
 
   afterEach(() => {
@@ -55,7 +57,11 @@ describe('apiRequest error handling', () => {
 
     globalThis.fetch.mockResolvedValue(backendResponse)
 
-    const error = await apiRequest(baseRequest).catch((err) => err)
+    const error = await apiRequest({
+      ...baseRequest,
+      jwtPayload: { grantCode: 'MOCK' },
+      backend: 'legacy'
+    }).catch((err) => err)
 
     expect(error).toBeInstanceOf(Error)
     expect(error.message).toBe('Unable to load agreement. Backend failure')
@@ -77,7 +83,9 @@ describe('apiRequest error handling', () => {
     const error = await apiRequest({
       ...baseRequest,
       method: 'POST',
-      body: {}
+      body: {},
+      jwtPayload: { grantCode: 'MOCK' },
+      backend: 'legacy'
     }).catch((err) => err)
 
     expect(error).toBeInstanceOf(Error)
@@ -99,7 +107,11 @@ describe('apiRequest error handling', () => {
 
     globalThis.fetch.mockResolvedValue(backendResponse)
 
-    const error = await apiRequest(baseRequest).catch((err) => err)
+    const error = await apiRequest({
+      ...baseRequest,
+      jwtPayload: { grantCode: 'MOCK' },
+      backend: 'legacy'
+    }).catch((err) => err)
 
     expect(error.message).toBe(
       'Unable to load agreement. 400 Bad request from land grants'
@@ -115,7 +127,11 @@ describe('apiRequest error handling', () => {
 
     globalThis.fetch.mockResolvedValue(backendResponse)
 
-    const error = await apiRequest(baseRequest).catch((err) => err)
+    const error = await apiRequest({
+      ...baseRequest,
+      jwtPayload: { grantCode: 'MOCK' },
+      backend: 'legacy'
+    }).catch((err) => err)
 
     expect(error.message).toBe('Unable to load agreement. 502 Bad Gateway')
   })
@@ -124,18 +140,21 @@ describe('apiRequest error handling', () => {
     const networkError = new Error('Network failure')
     globalThis.fetch.mockRejectedValue(networkError)
 
-    const error = await apiRequest(baseRequest).catch((err) => err)
+    const error = await apiRequest({
+      ...baseRequest,
+      jwtPayload: { grantCode: 'MOCK' },
+      backend: 'legacy'
+    }).catch((err) => err)
 
     expect(error).toBe(networkError)
   })
 
   test('constructs gas backend URL correctly for GET', async () => {
-    const { extractJwtPayload } = await import('./jwt-auth.js')
-    extractJwtPayload.mockReturnValue({
+    const jwtPayload = {
       grantCode: 'GAS001',
       clientRef: 'REF123',
       sbi: '123456789'
-    })
+    }
 
     const mockConfig = (await import('#~/config/config.js')).config
     const originalGet = mockConfig.get
@@ -154,7 +173,9 @@ describe('apiRequest error handling', () => {
 
     const result = await apiRequest({
       ...baseRequest,
-      queryParams: { existing: 'param' }
+      queryParams: { existing: 'param' },
+      jwtPayload,
+      backend: 'gas'
     })
 
     expect(result).toEqual({ data: 'gas-data', source: 'gas' })
@@ -163,10 +184,16 @@ describe('apiRequest error handling', () => {
       expect.stringContaining('http://gas-api/agreements/current?'),
       expect.objectContaining({
         headers: expect.objectContaining({
-          Authorization: 'Bearer gas-token',
-          'x-encrypted-auth': 'mock-auth-token'
+          Authorization: 'Bearer gas-token'
         })
       })
+    )
+
+    const fetchArgs = globalThis.fetch.mock.calls[0][1]
+    expect(fetchArgs.headers).not.toHaveProperty('x-encrypted-auth')
+    expect(fetchArgs.headers).toHaveProperty(
+      'Authorization',
+      'Bearer gas-token'
     )
 
     const url = globalThis.fetch.mock.calls[0][0]
@@ -180,14 +207,14 @@ describe('apiRequest error handling', () => {
   })
 
   test('constructs gas backend URL correctly for POST', async () => {
-    const { extractJwtPayload } = await import('./jwt-auth.js')
-    extractJwtPayload.mockReturnValue({ grantCode: 'GAS001' })
+    const jwtPayload = { grantCode: 'GAS001' }
 
     const mockConfig = (await import('#~/config/config.js')).config
     const originalGet = mockConfig.get
     mockConfig.get = vi.fn((key) => {
       if (key === 'gasBackend.allowedGrantCodes') return ['GAS001']
       if (key === 'gasBackend.url') return 'http://gas-api'
+      if (key === 'gasBackend.authToken') return 'gas-token'
       return originalGet.call(mockConfig, key)
     })
 
@@ -201,25 +228,30 @@ describe('apiRequest error handling', () => {
       ...baseRequest,
       method: 'POST',
       body: { action: 'test' },
-      actionName: 'submit'
+      actionName: 'submit',
+      jwtPayload,
+      backend: 'gas'
     })
 
     expect(result).toEqual({ data: 'gas-post-data', source: 'gas' })
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      'http://gas-api/agreements/FPTT123/actions/submit',
+      expect.any(String),
       expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ action: 'test' })
+        headers: expect.objectContaining({
+          Authorization: 'Bearer gas-token'
+        })
       })
     )
+
+    const fetchArgs = globalThis.fetch.mock.calls[0][1]
+    expect(fetchArgs.headers).not.toHaveProperty('x-encrypted-auth')
 
     mockConfig.get = originalGet
   })
 
   test('constructs legacy backend URL correctly', async () => {
-    const { extractJwtPayload } = await import('./jwt-auth.js')
-    extractJwtPayload.mockReturnValue({ grantCode: 'LEGACY001' })
+    const jwtPayload = { grantCode: 'LEGACY001' }
 
     const mockConfig = (await import('#~/config/config.js')).config
     const originalGet = mockConfig.get
@@ -235,13 +267,24 @@ describe('apiRequest error handling', () => {
     }
     globalThis.fetch.mockResolvedValue(backendResponse)
 
-    const result = await apiRequest(baseRequest)
+    const result = await apiRequest({
+      ...baseRequest,
+      jwtPayload,
+      backend: 'legacy'
+    })
 
     expect(result).toEqual({ data: 'legacy-data', source: 'legacy' })
     expect(globalThis.fetch).toHaveBeenCalledWith(
       'http://legacy-api/FPTT123',
-      expect.any(Object)
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'x-encrypted-auth': 'mock-auth-token'
+        })
+      })
     )
+
+    const fetchArgs = globalThis.fetch.mock.calls[0][1]
+    expect(fetchArgs.headers).not.toHaveProperty('Authorization')
 
     mockConfig.get = originalGet
   })

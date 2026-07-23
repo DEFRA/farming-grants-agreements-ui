@@ -277,7 +277,7 @@ export const config = convict({
       doc: 'The GAS backend API auth token',
       format: String,
       nullable: true,
-      default: '',
+      default: null,
       env: 'GAS_API_AUTH_TOKEN',
       sensitive: true
     },
@@ -291,7 +291,8 @@ export const config = convict({
   jwtSecret: {
     doc: 'JWT Secret',
     format: String,
-    default: 'default-agreements-jwt-secret',
+    nullable: true,
+    default: null,
     env: 'AGREEMENTS_JWT_SECRET'
   },
   snsTopicArnAudit: {
