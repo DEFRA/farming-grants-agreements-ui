@@ -2,14 +2,13 @@ import Boom from '@hapi/boom'
 
 import { config } from '#~/config/config.js'
 import { statusCodes } from '#~/server/common/constants/status-codes.js'
-import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
 import { createLogger } from '#~/server/common/helpers/logging/logger.js'
 
 export const GAS = 'gas'
 const LEGACY = 'legacy'
 const logger = createLogger()
 
-const getBackend = (jwtPayload) => {
+export const getBackend = (jwtPayload) => {
   const allowedGrantCodes = config.get('gasBackend.allowedGrantCodes')
   return allowedGrantCodes.includes(jwtPayload?.grantCode) ? GAS : LEGACY
 }
@@ -41,8 +40,8 @@ const buildUrl = ({
 
 const getHeaders = ({ backend, auth, method }) => {
   const headers = {
-    'x-encrypted-auth': auth,
-    ...(method.toUpperCase() !== 'GET' && {
+    ...(backend === LEGACY && { 'x-encrypted-auth': auth }),
+    ...(method.toUpperCase() === 'POST' && {
       'Content-Type': 'application/json'
     })
   }
@@ -93,7 +92,9 @@ export const apiRequest = async ({
   auth,
   body,
   queryParams,
-  actionName
+  actionName,
+  backend,
+  jwtPayload
 }) => {
   const controller = new AbortController()
   const timeoutId = setTimeout(
@@ -101,8 +102,12 @@ export const apiRequest = async ({
     config.get('backend.timeout')
   )
 
-  const jwtPayload = auth ? extractJwtPayload(auth, logger) : null
-  const backend = getBackend(jwtPayload)
+  if (!jwtPayload) {
+    throw Boom.unauthorized(
+      'Your account is not authorised to view/accept this offer agreement'
+    )
+  }
+
   const url = buildUrl({
     backend,
     agreementId,

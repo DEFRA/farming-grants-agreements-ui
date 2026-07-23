@@ -4,6 +4,10 @@ import { createServer } from '#~/server/server.js'
 import { statusCodes } from '#~/server/common/constants/status-codes.js'
 import { errorHandler } from './errors.js'
 
+vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
+  extractJwtPayload: vi.fn(() => ({ grantCode: 'ANY' }))
+}))
+
 describe('#errors', () => {
   let server
 
