@@ -1,0 +1,17 @@
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
+
+{% macro defraNotificationBanner(params, renderDefraComponent) %}
+  {%- set title = params.title or '' %}
+  {%- set items = params.items or [] %}
+  {%- set html = '' %}
+
+  {% if title %}
+    {%- set html = html + '<h2 class="govuk-notification-banner__heading">' + (title | escape) + '</h2>' %}
+  {% endif %}
+
+  {% for item in items %}
+    {%- set html = html + renderDefraComponent(item) %}
+  {% endfor %}
+
+  {{ govukNotificationBanner({ html: html }) }}
+{% endmacro %}
