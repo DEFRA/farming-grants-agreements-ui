@@ -22,7 +22,7 @@ const getAgreementData = async (request) => {
 
   const backend = getBackend(jwtPayload)
 
-  return await apiRequest({
+  return apiRequest({
     agreementId,
     method,
     auth: authToken,
