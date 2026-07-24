@@ -9,7 +9,10 @@ const getAgreementData = async (request) => {
   const action = request?.payload?.action
   const method = action === 'accept-offer' ? 'POST' : 'GET'
 
-  const jwtPayload = extractJwtPayload(request.headers['x-encrypted-auth'])
+  const authToken =
+    request.headers['x-encrypted-auth'] || request.query['x-encrypted-auth']
+
+  const jwtPayload = extractJwtPayload(authToken)
 
   if (!jwtPayload) {
     throw Boom.unauthorized(
@@ -19,18 +22,14 @@ const getAgreementData = async (request) => {
 
   const backend = getBackend(jwtPayload)
 
-  return {
-    ...(await apiRequest({
-      agreementId,
-      method,
-      auth:
-        request.headers['x-encrypted-auth'] ||
-        request.query['x-encrypted-auth'],
-      body: method === 'POST' ? request.payload : undefined,
-      backend,
-      jwtPayload
-    }))
-  }
+  return await apiRequest({
+    agreementId,
+    method,
+    auth: authToken,
+    body: method === 'POST' ? request.payload : undefined,
+    backend,
+    jwtPayload
+  })
 }
 
 /**

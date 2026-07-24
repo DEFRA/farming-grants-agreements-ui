@@ -93,7 +93,7 @@ export const apiRequest = async ({
   body,
   queryParams,
   actionName,
-  backend,
+  backend = LEGACY,
   jwtPayload
 }) => {
   const controller = new AbortController()
@@ -102,23 +102,17 @@ export const apiRequest = async ({
     config.get('backend.timeout')
   )
 
-  if (!jwtPayload) {
-    throw Boom.unauthorized(
-      'Your account is not authorised to view/accept this offer agreement'
-    )
-  }
-
-  const url = buildUrl({
-    backend,
-    agreementId,
-    method,
-    queryParams,
-    actionName,
-    jwtPayload
-  })
-  const headers = getHeaders({ backend, auth, method })
-
   try {
+    const url = buildUrl({
+      backend,
+      agreementId,
+      method,
+      queryParams,
+      actionName,
+      jwtPayload
+    })
+    const headers = getHeaders({ backend, auth, method })
+
     logger.info(`Sending ${method} request to '${backend}' service: ${url}`)
     const response = await fetch(url, {
       method,

@@ -288,4 +288,22 @@ describe('apiRequest error handling', () => {
 
     mockConfig.get = originalGet
   })
+
+  test('clears timeout even if buildUrl fails', async () => {
+    vi.spyOn(global, 'setTimeout')
+    vi.spyOn(global, 'clearTimeout')
+
+    // buildUrl will fail if backend is GAS and jwtPayload is missing
+    const error = await apiRequest({
+      ...baseRequest,
+      backend: 'gas',
+      jwtPayload: null
+    }).catch((err) => err)
+
+    expect(error).toBeDefined()
+    expect(setTimeout).toHaveBeenCalled()
+    expect(clearTimeout).toHaveBeenCalled()
+
+    vi.restoreAllMocks()
+  })
 })
