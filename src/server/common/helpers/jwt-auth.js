@@ -1,14 +1,16 @@
 import { config } from '#~/config/config.js'
 import Jwt from '@hapi/jwt'
+import { createLogger } from '#~/server/common/helpers/logging/logger.js'
+
+const logger = createLogger()
 
 /**
  * Validates and verifies a JWT token against a secret to extract the payload
  * which will have the 'sbi' and 'source' data
  * @param {string} authToken - The JWT token to verify and decode
- * @param {object} logger - Logger instance for error reporting
  * @returns {payload|null} The JWT payload object from the token or null if invalid/missing
  */
-const extractJwtPayload = (authToken, logger) => {
+const extractJwtPayload = (authToken) => {
   if (!authToken || authToken.trim() === '') {
     logger.error('No JWT token provided')
     return null

@@ -1,21 +1,48 @@
 import { extractJwtPayload } from './jwt-auth.js'
 import Jwt from '@hapi/jwt'
 import { config } from '#~/config/config.js'
+import { createLogger } from '#~/server/common/helpers/logging/logger.js'
 
 vi.mock('@hapi/jwt')
-vi.mock('#~/config/config.js')
-
-describe('jwt-auth', () => {
+vi.mock('#~/config/config.js', () => ({
+  config: {
+    get: vi.fn((key) => {
+      if (key === 'featureFlags.isJwtEnabled') return true
+      if (key === 'jwtSecret') return 'mock-jwt-secret'
+      if (key === 'log') {
+        return { enabled: true, level: 'info', redact: [], format: 'ecs' }
+      }
+      if (key === 'serviceName') return 'test-service'
+      if (key === 'serviceVersion') return '1.0.0'
+      return null
+    }),
+    validate: vi.fn()
+  }
+}))
+vi.mock('#~/server/common/helpers/logging/logger.js', () => {
   const mockLogger = {
     error: vi.fn(),
     info: vi.fn(),
     warn: vi.fn()
   }
+  return {
+    createLogger: vi.fn(() => mockLogger),
+    mockLogger // Exported for easy access if needed, but we'll use vi.mocked(createLogger)().error etc.
+  }
+})
+
+describe('jwt-auth', () => {
+  const getMockLogger = () => vi.mocked(createLogger)()
 
   const setupMockConfig = (isJwtEnabled = true) => {
-    config.get = vi.fn((key) => {
+    config.get.mockImplementation((key) => {
       if (key === 'featureFlags.isJwtEnabled') return isJwtEnabled
       if (key === 'jwtSecret') return 'mock-jwt-secret'
+      if (key === 'log') {
+        return { enabled: true, level: 'info', redact: [], format: 'ecs' }
+      }
+      if (key === 'serviceName') return 'test-service'
+      if (key === 'serviceVersion') return '1.0.0'
       return null
     })
   }
@@ -50,15 +77,19 @@ describe('jwt-auth', () => {
 
   describe('extractJwtPayload', () => {
     test('should return null if no token is provided', () => {
-      const result = extractJwtPayload('', mockLogger)
+      const result = extractJwtPayload('')
       expect(result).toBeNull()
-      expect(mockLogger.error).toHaveBeenCalledWith('No JWT token provided')
+      expect(getMockLogger().error).toHaveBeenCalledWith(
+        'No JWT token provided'
+      )
     })
 
     test('should return null if token is whitespace only', () => {
-      const result = extractJwtPayload('   ', mockLogger)
+      const result = extractJwtPayload('   ')
       expect(result).toBeNull()
-      expect(mockLogger.error).toHaveBeenCalledWith('No JWT token provided')
+      expect(getMockLogger().error).toHaveBeenCalledWith(
+        'No JWT token provided'
+      )
     })
 
     test('should successfully decode and verify a valid token', () => {
@@ -70,7 +101,7 @@ describe('jwt-auth', () => {
       }
       setupMockJwt(mockPayload)
 
-      const result = extractJwtPayload('eyJ.valid.token', mockLogger)
+      const result = extractJwtPayload('eyJ.valid.token')
 
       expect(result).toEqual(mockPayload)
       expect(Jwt.token.decode).toHaveBeenCalledWith('eyJ.valid.token')
@@ -78,17 +109,17 @@ describe('jwt-auth', () => {
         key: 'mock-jwt-secret',
         algorithms: ['HS256']
       })
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(getMockLogger().info).toHaveBeenCalledWith(
         expect.objectContaining({ isJwtFormat: true }),
         'Attempting to decode JWT token'
       )
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(getMockLogger().info).toHaveBeenCalledWith(
         'JWT token decoded successfully, attempting verification'
       )
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(getMockLogger().info).toHaveBeenCalledWith(
         'JWT token verified successfully'
       )
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(getMockLogger().info).toHaveBeenCalledWith(
         expect.objectContaining({ hasSbi: true, hasSource: true }),
         'JWT payload extracted'
       )
@@ -98,10 +129,10 @@ describe('jwt-auth', () => {
       const mockError = new Error('Decode error')
       setupMockJwt(null, mockError)
 
-      const result = extractJwtPayload('eyJ.invalid.token', mockLogger)
+      const result = extractJwtPayload('eyJ.invalid.token')
 
       expect(result).toBeNull()
-      expect(mockLogger.error).toHaveBeenCalledWith(
+      expect(getMockLogger().error).toHaveBeenCalledWith(
         mockError,
         'Invalid JWT token provided: Decode error'
       )
@@ -114,10 +145,10 @@ describe('jwt-auth', () => {
         throw mockError
       })
 
-      const result = extractJwtPayload('eyJ.invalid.token', mockLogger)
+      const result = extractJwtPayload('eyJ.invalid.token')
 
       expect(result).toBeNull()
-      expect(mockLogger.error).toHaveBeenCalledWith(
+      expect(getMockLogger().error).toHaveBeenCalledWith(
         mockError,
         'Invalid JWT token provided: Verify error'
       )
@@ -127,10 +158,10 @@ describe('jwt-auth', () => {
       const mockPayload = { sbi: '123456' } // missing source, grantCode, clientRef
       setupMockJwt(mockPayload)
 
-      const result = extractJwtPayload('eyJ.partial.token', mockLogger)
+      const result = extractJwtPayload('eyJ.partial.token')
 
       expect(result).toEqual(mockPayload)
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(getMockLogger().info).toHaveBeenCalledWith(
         {
           hasSbi: true,
           hasSource: false,
