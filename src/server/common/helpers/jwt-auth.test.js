@@ -121,7 +121,7 @@ describe('jwt-auth', () => {
       )
       expect(getMockLogger().info).toHaveBeenCalledWith(
         expect.objectContaining({ hasSbi: true, hasSource: true }),
-        'JWT payload extracted'
+        `JWT payload extracted the data ${JSON.stringify(mockPayload)}`
       )
     })
 
@@ -169,7 +169,7 @@ describe('jwt-auth', () => {
           clientRef: undefined,
           grantCode: undefined
         },
-        'JWT payload extracted'
+        `JWT payload extracted the data ${JSON.stringify(mockPayload)}`
       )
     })
   })
