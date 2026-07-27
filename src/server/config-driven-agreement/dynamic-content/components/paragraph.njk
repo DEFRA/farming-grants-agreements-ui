@@ -1,0 +1,16 @@
+{% macro defraParagraph(params, renderDefraComponent) %}
+  {%- set items = params.items or [] %}
+  {%- set value = params.text or '' %}
+  {%- set classes = params.classes or 'govuk-body' %}
+  {%- set id = params.id or '' %}
+
+  <p{% if id %} id="{{ id }}"{% endif %}{% if classes %} class="{{ classes }}"{% endif %}>
+    {%- if items.length > 0 -%}
+      {%- for item in items -%}
+        {{ renderDefraComponent(item) }}
+      {%- endfor -%}
+    {%- else -%}
+      {{ value | escape }}
+    {%- endif -%}
+  </p>
+{% endmacro %}

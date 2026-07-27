@@ -7,6 +7,10 @@ import { config } from '#~/config/config.js'
 import * as apiModule from '#~/server/common/helpers/api.js'
 import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test-helpers.js'
 
+vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
+  extractJwtPayload: vi.fn(() => ({ grantCode: 'MOCK' }))
+}))
+
 const { like } = MatchersV2
 
 describe('#acceptOfferController', () => {
@@ -339,7 +343,9 @@ describe('#acceptOfferController', () => {
             agreementId: '',
             method: 'POST',
             auth: 'mock-auth',
-            body: { action: 'accept-offer' }
+            body: { action: 'accept-offer' },
+            backend: 'legacy',
+            jwtPayload: { grantCode: 'MOCK' }
           })
 
           // Verify redirect to base URL
@@ -403,7 +409,9 @@ describe('#acceptOfferController', () => {
             agreementId: '',
             method: 'POST',
             auth: 'query-auth',
-            body: { action: 'accept-offer' }
+            body: { action: 'accept-offer' },
+            backend: 'legacy',
+            jwtPayload: { grantCode: 'MOCK' }
           })
 
           // Verify redirect to base URL with query string preserved

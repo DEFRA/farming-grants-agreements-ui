@@ -1,0 +1,13 @@
+{% macro defraOrderedList(params, renderDefraComponent) %}
+  {%- set items = params.items or [] %}
+  {%- set classes = params.classes or 'govuk-list govuk-list--number' %}
+  {%- set id = params.id or '' %}
+
+  <ol{% if id %} id="{{ id }}"{% endif %} class="{{ classes }}">
+    {% for item in items %}
+      <li>
+        {{ renderDefraComponent(item) }}
+      </li>
+    {% endfor %}
+  </ol>
+{% endmacro %}

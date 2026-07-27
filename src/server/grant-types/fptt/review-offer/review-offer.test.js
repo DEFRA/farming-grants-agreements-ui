@@ -16,6 +16,10 @@ import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test_
 import { config } from '#~/config/config.js'
 import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test-helpers.js'
 
+vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
+  extractJwtPayload: vi.fn(() => ({ grantCode: 'FPTT' }))
+}))
+
 const { like } = MatchersV2
 
 describe('#reviewOfferController', () => {

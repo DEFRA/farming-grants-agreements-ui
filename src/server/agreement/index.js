@@ -1,5 +1,7 @@
+import Boom from '@hapi/boom'
 import { agreementController } from './controller.js'
-import { apiRequest } from '#~/server/common/helpers/api.js'
+import { apiRequest, getBackend } from '#~/server/common/helpers/api.js'
+import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
 import { viewAgreementController } from '#~/server/view-agreement/controller.js'
 
 const getAgreementData = async (request) => {
@@ -7,12 +9,26 @@ const getAgreementData = async (request) => {
   const action = request?.payload?.action
   const method = action === 'accept-offer' ? 'POST' : 'GET'
 
+  const authToken =
+    request.headers['x-encrypted-auth'] || request.query['x-encrypted-auth']
+
+  const jwtPayload = extractJwtPayload(authToken)
+
+  if (!jwtPayload) {
+    throw Boom.unauthorized(
+      'Your account is not authorised to view/accept this offer agreement'
+    )
+  }
+
+  const backend = getBackend(jwtPayload)
+
   return apiRequest({
     agreementId,
     method,
-    auth:
-      request.headers['x-encrypted-auth'] || request.query['x-encrypted-auth'],
-    body: method === 'POST' ? request.payload : undefined
+    auth: authToken,
+    body: method === 'POST' ? request.payload : undefined,
+    backend,
+    jwtPayload
   })
 }
 

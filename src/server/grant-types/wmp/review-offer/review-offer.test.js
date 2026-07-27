@@ -18,6 +18,10 @@ import { config } from '#~/config/config.js'
 import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test-helpers.js'
 import { reviewOffer } from './review-offer.js'
 
+vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
+  extractJwtPayload: vi.fn(() => ({ grantCode: 'WMP' }))
+}))
+
 const { like } = MatchersV2
 
 describe('#reviewOfferController', () => {

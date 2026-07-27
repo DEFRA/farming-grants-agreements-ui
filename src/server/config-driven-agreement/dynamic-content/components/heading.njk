@@ -1,0 +1,21 @@
+{% macro defraHeading(params) %}
+  {%- set text = params.text or '' %}
+  {%- set level = (params.level | int) or 1 %}
+  {%- set classes = params.classes or '' %}
+  {%- set id = params.id or '' %}
+
+  {%- if level < 1 or level > 6 %}{% set level = 1 %}{% endif %}
+
+  {%- set defaultClasses = [
+    "govuk-heading-xl",
+    "govuk-heading-l",
+    "govuk-heading-m",
+    "govuk-heading-s",
+    "govuk-heading-s",
+    "govuk-heading-s"
+  ] %}
+
+  <h{{ level }}{% if id %} id="{{ id }}"{% endif %} class="{{ defaultClasses[level-1] }} {% if classes %} {{ classes }}{% endif %}">
+    {{ text | escape }}
+  </h{{ level }}>
+{% endmacro %}
