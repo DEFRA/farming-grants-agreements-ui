@@ -48,6 +48,7 @@ const getHeaders = ({ backend, auth, method }) => {
 
   if (backend === GAS) {
     const gasAuthToken = config.get('gasBackend.authToken')
+    logger.info(`Using GAS auth token: ${gasAuthToken}`)
     if (gasAuthToken) {
       headers.Authorization = `Bearer ${gasAuthToken}`
     }

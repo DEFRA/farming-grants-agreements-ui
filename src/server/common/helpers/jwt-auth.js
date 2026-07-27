@@ -28,6 +28,10 @@ const extractJwtPayload = (authToken) => {
     const decoded = Jwt.token.decode(authToken)
     logger.info('JWT token decoded successfully, attempting verification')
 
+    logger.info(
+      `verifying the decoded token with secret: ${config.get('jwtSecret')}`
+    )
+
     // Verify the token against the secret
     Jwt.token.verify(decoded, {
       key: config.get('jwtSecret'),
