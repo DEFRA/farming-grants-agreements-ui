@@ -1,0 +1,43 @@
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% macro defraSummaryList(params, renderDefraComponent) %}
+  {%- set rows = params.rows or [] %}
+
+  {% set summaryRows = [] %}
+  {% for row in rows %}
+    {# Handle label - can be string or array of components #}
+    {% if row.label is string %}
+      {% set labelField = { text: row.label } %}
+    {% else %}
+      {%- set labelHtml = "" %}
+      {% for labelItem in row.label %}
+        {%- set labelHtml = labelHtml + renderDefraComponent(labelItem) %}
+      {% endfor %}
+      {% set labelField = { html: labelHtml } %}
+    {% endif %}
+
+    {# Handle text - can be string or array of components #}
+    {% if row.text is string or row.text is number %}
+      {% set valueField = { text: row.text } %}
+    {% else %}
+      {%- set textHtml = "" %}
+      {% for textItem in row.text %}
+        {%- set textHtml = textHtml + renderDefraComponent(textItem) %}
+      {% endfor %}
+      {% set valueField = { html: textHtml } %}
+    {% endif %}
+
+    {%
+      set summaryRow = {
+        key: labelField,
+        value: valueField
+      }
+    %}
+    {% set summaryRows = (summaryRows.push(summaryRow), summaryRows) %}
+  {% endfor %}
+
+   {% if params.title %}
+     <h2 class="govuk-heading-m">{{ params.title | escape }}</h2>
+   {% endif %}
+   {{ govukSummaryList({ rows: summaryRows }) }}
+{% endmacro %}

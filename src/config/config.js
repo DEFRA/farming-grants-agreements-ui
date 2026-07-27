@@ -266,6 +266,35 @@ export const config = convict({
       env: 'BACKEND_TIMEOUT'
     }
   },
+  gasBackend: {
+    url: {
+      doc: 'The GAS backend base URL',
+      format: String,
+      default: 'http://localhost:3102',
+      env: 'GAS_BACKEND_URL'
+    },
+    authToken: {
+      doc: 'The GAS backend API auth token',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'GAS_API_AUTH_TOKEN',
+      sensitive: true
+    },
+    allowedGrantCodes: {
+      doc: 'List of grant codes allowed to use the GAS backend',
+      format: Array,
+      default: ['pigs-might-fly'],
+      env: 'GAS_ALLOWED_GRANT_CODES'
+    }
+  },
+  jwtSecret: {
+    doc: 'JWT Secret',
+    format: String,
+    nullable: true,
+    default: null,
+    env: 'AGREEMENTS_JWT_SECRET'
+  },
   snsTopicArnAudit: {
     doc: 'SNS Topic ARN for audit events',
     format: String,

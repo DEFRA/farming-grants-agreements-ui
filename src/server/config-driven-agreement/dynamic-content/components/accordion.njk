@@ -1,0 +1,39 @@
+{% macro defraAccordion(params, renderDefraComponent) -%}
+  {%- set items = params.items or [] %}
+  {%- set id = params.id or 'accordion-default' %}
+  {%- set classes = params.classes or '' %}
+  {%- set rememberExpanded = params.rememberExpanded %}
+
+  <div class="govuk-accordion{% if classes %} {{ classes }}{% endif %}" data-module="govuk-accordion" id="{{ id }}"{% if rememberExpanded !== undefined %} data-remember-expanded="{{ rememberExpanded }}"{% endif %}>
+    {% for item in items %}
+      {%- set heading = item.heading or [] %}
+      {%- set summary = item.summary or [] %}
+      {%- set expanded = item.expanded or false %}
+      {%- set content = item.content or [] %}
+
+      <div class="govuk-accordion__section{% if expanded %} govuk-accordion__section--expanded{% endif %}">
+        <div class="govuk-accordion__section-header">
+          <h2 class="govuk-accordion__section-heading">
+            <span class="govuk-accordion__section-button" id="{{ id }}-heading-{{ loop.index }}">
+              {% for headingItem in heading %}
+                {{ renderDefraComponent(headingItem) }}
+              {% endfor %}
+            </span>
+          </h2>
+          {% if summary.length > 0 %}
+            <div class="govuk-accordion__section-summary govuk-body" id="{{ id }}-summary-{{ loop.index }}">
+              {% for summaryItem in summary %}
+                {{ renderDefraComponent(summaryItem) }}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        <div id="{{ id }}-content-{{ loop.index }}" class="govuk-accordion__section-content" role="region" aria-labelledby="{{ id }}-heading-{{ loop.index }}">
+          {% for contentItem in content %}
+            {{ renderDefraComponent(contentItem) }}
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{%- endmacro %}

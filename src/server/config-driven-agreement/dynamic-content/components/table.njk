@@ -1,0 +1,84 @@
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "./heading.njk" import defraHeading %}
+
+{% macro defraTable(params, renderDefraComponent) %}
+  {%- set rows = params.rows or [] %}
+  {%- set firstCellIsHeader = params.firstCellIsHeader or false %}
+  {%- set head = params.head or null %}
+  {%- set title = params.title or null %}
+  {%- set caption = params.caption or null %}
+  {%- set captionClasses = params.captionClasses or null %}
+
+  {# Transform head data using DEFRA component renderer if provided, otherwise extract from first row #}
+  {% set tableHead = [] %}
+  {% if head %}
+    {% for headItem in head %}
+      {% if headItem.component %}
+        {# Head item is a dynamic component #}
+        {# Create component with its own classes, but separate from header classes #}
+        {%
+          set componentWithClasses = {
+            component: headItem.component,
+            text: headItem.text,
+            html: headItem.html,
+            colour: headItem.colour,
+            url: headItem.url,
+            target: headItem.target,
+            classes: headItem.classes
+          }
+        %}
+        {% set headContent = renderDefraComponent(componentWithClasses) %}
+
+        {# Build header cell with header-specific classes #}
+        {% set headerCell = { html: headContent } %}
+        {% if headItem.headerClasses or headItem.format or headItem.colspan or headItem.rowspan or headItem.attributes %}
+          {%
+            set headerCell = {
+              html: headContent,
+              classes: headItem.headerClasses,
+              format: headItem.format,
+              colspan: headItem.colspan,
+              rowspan: headItem.rowspan,
+              attributes: headItem.attributes
+            }
+          %}
+        {% endif %}
+      {% else %}
+        {# Head item is a plain GDS head object #}
+        {% set headerCell = headItem %}
+      {% endif %}
+      {% set tableHead = (tableHead.push(headerCell), tableHead) %}
+    {% endfor %}
+    {% elseif rows.length > 0 %}
+    {% for columnData in rows[0] %}
+      {% set headerCell = { text: columnData.label } %}
+      {% set tableHead = (tableHead.push(headerCell), tableHead) %}
+    {% endfor %}
+  {% endif %}
+
+  {# Transform rows data using DEFRA component renderer #}
+  {% set tableRows = [] %}
+  {% for row in rows %}
+    {% set tableRow = [] %}
+    {% for columnData in row %}
+      {% set cellContent = renderDefraComponent(columnData) %}
+      {% set tableCell = { html: cellContent } %}
+      {% set tableRow = (tableRow.push(tableCell), tableRow) %}
+    {% endfor %}
+    {% set tableRows = (tableRows.push(tableRow), tableRows) %}
+  {% endfor %}
+
+  {% if not caption and title %}
+    {{ defraHeading({ text: title, level: 3 }) }}
+  {% endif %}
+
+  {{
+    govukTable({
+      caption: caption,
+      captionClasses: captionClasses,
+      head: tableHead,
+      rows: tableRows,
+      firstCellIsHeader: firstCellIsHeader
+    })
+  }}
+{% endmacro %}

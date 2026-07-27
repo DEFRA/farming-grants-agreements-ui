@@ -1,0 +1,57 @@
+{% from "./text.njk" import defraText %}
+{% from "./paragraph.njk" import defraParagraph %}
+{% from "./url.njk" import defraUrl %}
+{% from "./status.njk" import defraStatus %}
+{% from "./heading.njk" import defraHeading %}
+{% from "./summary-list.njk" import defraSummaryList %}
+{% from "./unordered-list.njk" import defraUnorderedList %}
+{% from "./ordered-list.njk" import defraOrderedList %}
+{% from "./table.njk" import defraTable %}
+{% from "./container.njk" import defraContainer %}
+{% from "./details.njk" import defraDetails %}
+{% from "./accordion.njk" import defraAccordion %}
+{% from "./line-break.njk" import defraLineBreak %}
+{% from "./warning-text.njk" import defraWarningText %}
+{% from "./notification-banner.njk" import defraNotificationBanner %}
+{% from "./watermark.njk" import defraWatermark %}
+{% from "./panel.njk" import defraPanel %}
+
+{% macro renderDefraComponent(params) %}
+  {%- set component = params.component or 'text' %}
+
+  {% if component == "text" %}
+    {{ defraText(params) }}
+  {% elif component == "paragraph" %}
+    {{ defraParagraph(params, renderDefraComponent) }}
+  {% elif component == "url" %}
+    {{ defraUrl(params) }}
+  {% elif component == "status" %}
+    {{ defraStatus(params) }}
+  {% elif component == "heading" %}
+    {{ defraHeading(params) }}
+  {% elif component == "summary-list" %}
+    {{ defraSummaryList(params, renderDefraComponent) }}
+  {% elif component == "unordered-list" %}
+    {{ defraUnorderedList(params, renderDefraComponent) }}
+  {% elif component == "ordered-list" %}
+    {{ defraOrderedList(params, renderDefraComponent) }}
+  {% elif component == "table" %}
+    {{ defraTable(params, renderDefraComponent) }}
+  {% elif component == "container" %}
+    {{ defraContainer(params, renderDefraComponent) }}
+  {% elif component == "details" %}
+    {{ defraDetails(params, renderDefraComponent) }}
+  {% elif component == "accordion" %}
+    {{ defraAccordion(params, renderDefraComponent) }}
+  {% elif component == "line-break" %}
+    {{ defraLineBreak(params) }}
+  {% elif component == "warning-text" %}
+    {{ defraWarningText(params) }}
+  {% elif component == "notification-banner" %}
+    {{ defraNotificationBanner(params, renderDefraComponent) }}
+  {% elif component == "watermark" %}
+    {{ defraWatermark(params) }}
+  {% elif component == "panel" %}
+    {{ defraPanel(params, renderDefraComponent) }}
+  {% endif %}
+{% endmacro %}

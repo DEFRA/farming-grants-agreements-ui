@@ -1,0 +1,6 @@
+{% macro defraText(params) %}
+  {%- set value = params.text or '' %}
+  {%- set classes = params.classes or '' %}
+
+  <span{% if classes %} class="{{ classes }}"{% endif %}>{{ value | escape }}</span>
+{% endmacro %}

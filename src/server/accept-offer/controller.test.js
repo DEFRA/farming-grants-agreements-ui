@@ -1,10 +1,13 @@
-import { MatchersV2 } from '@pact-foundation/pact'
-import { vi } from 'vitest'
-
 import { createServer } from '#~/server/server.js'
 import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test__/pact-agreement.fixture.js'
 import { config } from '#~/config/config.js'
 import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test-helpers.js'
+import { MatchersV2 } from '@pact-foundation/pact'
+import { vi } from 'vitest'
+
+vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
+  extractJwtPayload: vi.fn(() => ({ grantCode: 'MOCK' }))
+}))
 
 const { like } = MatchersV2
 
@@ -84,7 +87,8 @@ describe('acceptOfferController handler', () => {
       AuditEvent: { REVIEW_OFFER_CONTINUED: 'REVIEW_OFFER_CONTINUED' }
     }))
     vi.doMock('#~/server/common/helpers/api.js', () => ({
-      apiRequest: vi.fn()
+      apiRequest: vi.fn(),
+      getBackend: vi.fn(() => 'legacy')
     }))
     ;({ acceptOfferController } = await import('./controller.js'))
     ;({ auditEvent: mockedAuditEvent } = await import(
@@ -216,7 +220,8 @@ describe('validateAcceptOfferController handler', () => {
       }
     }))
     vi.doMock('#~/server/common/helpers/api.js', () => ({
-      apiRequest: vi.fn()
+      apiRequest: vi.fn(),
+      getBackend: vi.fn(() => 'legacy')
     }))
     ;({ validateAcceptOfferController } = await import('./controller.js'))
     ;({ auditEvent: mockedAuditEvent } = await import(

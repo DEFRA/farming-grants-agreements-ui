@@ -1,0 +1,7 @@
+{% from "./components/render-component.njk" import renderDefraComponent %}
+
+{% if params and params.length > 0 %}
+  {% for el in params %}
+    {{ renderDefraComponent(el) }}
+  {% endfor %}
+{% endif %}

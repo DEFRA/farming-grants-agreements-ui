@@ -1,0 +1,54 @@
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+
+{% macro defraStatus(params) %}
+  {%- set value = params.text or '' %}
+  {%- set classesMap = params.classesMap or {} %}
+  {%- set themeMap = params.themeMap or {} %}
+  {%- set labelsMap = params.labelsMap or {} %}
+  {%- set colour = params.colour or '' %}
+  {%- set theme = params.theme or '' %}
+  {%- set additionalClasses = params.classes or '' %}
+  {%- set attributes = params.attributes or {} %}
+
+  {%-
+    set themeClasses = {
+      "NONE": "govuk-tag--none",
+      "NEUTRAL": "govuk-tag--grey",
+      "INFO": "govuk-tag--blue",
+      "NOTICE": "govuk-tag--yellow",
+      "ERROR": "govuk-tag--red",
+      "WARN": "govuk-tag--orange",
+      "SUCCESS": "govuk-tag--green"
+    }
+  %}
+
+  {%- if theme and themeClasses[theme] %}
+    {%- set baseClasses = themeClasses[theme] %}
+  {%- elif themeMap[value] and themeClasses[themeMap[value]] %}
+    {%- set baseClasses = themeClasses[themeMap[value]] %}
+  {%- elif themeMap[value] %}
+    {%- set theme = 'NONE' %}
+    {%- set baseClasses = themeClasses['NONE'] %}
+  {%- elif classesMap[value] %}
+    {%- set baseClasses = classesMap[value] %}
+  {%- elif colour %}
+    {%- set baseClasses = 'govuk-tag--' + colour %}
+  {%- else %}
+    {%- set baseClasses = themeClasses['NEUTRAL'] %}
+  {%- endif %}
+
+  {%- set allClasses = baseClasses + (" " + additionalClasses if additionalClasses else "") %}
+  {%- set displayText = labelsMap[value] or (value | capitalize) %}
+
+  {%- if theme == 'NONE' %}
+    <span class="{{ themeClasses['NONE'] }}">{{ displayText }}</span>
+  {%- else %}
+    {{
+      govukTag({
+        text: displayText,
+        classes: allClasses,
+        attributes: attributes
+      })
+    }}
+  {%- endif %}
+{% endmacro %}

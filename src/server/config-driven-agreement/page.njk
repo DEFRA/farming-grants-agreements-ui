@@ -1,0 +1,59 @@
+{% set bodyClasses = "config-driven-agreement-page" ~ (" view-agreement-has-watermark" if hasWatermark else "") %}
+{% set mainClasses = "" %}
+
+{% extends "layouts/page.njk" %}
+
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "config-driven-agreement/dynamic-content/macro.njk" import dynamicContent %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="{{ 'govuk-grid-column-full' if layout == 'document' else 'govuk-grid-column-two-thirds' }}">
+      {% if errors.length %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: errors
+        }) }}
+      {% endif %}
+
+      {{ dynamicContent(components) }}
+
+      {% for action in actions %}
+        {% if action.href %}
+          {{ govukButton({
+            text: action.text,
+            href: action.href,
+            classes: action.classes
+          }) }}
+        {% else %}
+          <form method="{{ action.method or 'POST' }}" action="{{ action.action }}">
+            {% for field in action.fields %}
+              <input type="hidden" name="{{ field.name }}" value="{{ field.value }}">
+            {% endfor %}
+
+            {% if action.checkbox %}
+              {{ govukCheckboxes({
+                name: action.checkbox.name,
+                errorMessage: action.checkbox.errorMessage,
+                items: [{
+                  value: action.checkbox.value,
+                  text: action.checkbox.text,
+                  checked: action.checkbox.checked
+                }]
+              }) }}
+            {% endif %}
+
+            {{ govukButton({
+              text: action.text,
+              name: action.name,
+              value: action.value,
+              classes: action.classes
+            }) }}
+          </form>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
