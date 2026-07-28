@@ -10,6 +10,12 @@ vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
   extractJwtPayload: vi.fn(() => ({ grantCode: 'MOCK' }))
 }))
 
+vi.mock('#~/server/config-driven-agreement/controller.js', () => ({
+  configDrivenAgreementController: {
+    handler: vi.fn()
+  }
+}))
+
 const { like } = MatchersV2
 
 describe('#viewAgreementController', () => {
@@ -635,5 +641,47 @@ describe('viewAgreementController audit events', () => {
     await viewAgreementController.handler(request, h)
 
     expect(mockedAuditEvent).not.toHaveBeenCalled()
+  })
+})
+
+describe('viewAgreementController GAS delegation', () => {
+  test('delegates to configDrivenAgreementController when source is GAS', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const { configDrivenAgreementController } = await import(
+      '#~/server/config-driven-agreement/controller.js'
+    )
+
+    const h = createH()
+    const request = {
+      pre: {
+        data: {
+          source: 'gas'
+        }
+      }
+    }
+
+    const expectedResponse = { some: 'response' }
+    configDrivenAgreementController.handler.mockReturnValue(expectedResponse)
+
+    const result = await viewAgreementController.handler(request, h)
+
+    expect(configDrivenAgreementController.handler).toHaveBeenCalledWith(
+      request,
+      h
+    )
+    expect(result).toBe(expectedResponse)
+  })
+
+  test('destructures data when pre.data is present but not GAS', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({
+      code: 'frps-private-beta',
+      status: 'accepted'
+    })
+    request.pre.data.source = 'legacy'
+
+    await viewAgreementController.handler(request, h)
+    expect(h.view).toHaveBeenCalled()
   })
 })

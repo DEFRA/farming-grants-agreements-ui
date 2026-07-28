@@ -24,6 +24,10 @@ const buildUrl = ({
   if (backend === GAS) {
     const gasUrl = config.get('gasBackend.url')
     if (method.toUpperCase() === 'GET') {
+      if (agreementId) {
+        return `${gasUrl}/agreements/${agreementId}`
+      }
+
       const searchParams = new URLSearchParams(queryParams)
       const { grantCode, clientRef, sbi } = jwtPayload || {}
 
