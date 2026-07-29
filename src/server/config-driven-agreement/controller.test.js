@@ -127,6 +127,17 @@ describe('configDrivenAgreementController', () => {
       {
         component: 'checkboxes',
         name: 'confirm',
+        items: [
+          {
+            value: 'confirmed',
+            text: 'Confirm',
+            attributes: { 'data-test onclick': 'alert(1)' }
+          }
+        ]
+      },
+      {
+        component: 'checkboxes',
+        name: 'confirm',
         attributes: 'onclick="alert(1)"',
         items: [{ value: 'confirmed', text: 'Confirm' }]
       },

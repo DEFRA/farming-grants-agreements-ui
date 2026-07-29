@@ -53,6 +53,11 @@ const assertSupportedComponents = (components, request) => {
   throw Boom.badGateway('Unsupported agreement component')
 }
 
+const safeAttributeNamePattern = /^[a-z_:][a-z\d:._-]*$/i
+
+const isUnsafeAttributeName = (name) =>
+  !safeAttributeNamePattern.test(name) || /^on/i.test(name)
+
 const hasUnsafeAttributes = (attributes) => {
   if (
     !attributes ||
@@ -62,7 +67,7 @@ const hasUnsafeAttributes = (attributes) => {
     return true
   }
 
-  return Object.keys(attributes).some((name) => /^on/i.test(name.trim()))
+  return Object.keys(attributes).some(isUnsafeAttributeName)
 }
 
 const isUnsafeCheckboxProperty = ([name, value]) =>
