@@ -6,7 +6,7 @@ import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
 
 const absoluteUrlPattern = /^[a-z][a-z\d+.-]*:/i
 const gasActionPathPattern =
-  /^\/agreements(\/[^/?#\\\s]+\/actions\/[^/?#\\\s]+)$/
+  /^\/agreements\/([a-z\d_-]+)\/actions\/([a-z\d_-]+)$/i
 const supportedComponents = new Set([
   'accordion',
   'checkboxes',
@@ -60,11 +60,6 @@ const buildProxiedPath = (baseUrl, value) => {
     return value
   }
 
-  const gasActionPath = value.match(gasActionPathPattern)
-  if (gasActionPath) {
-    return path.posix.join(baseUrl, gasActionPath[1])
-  }
-
   if (
     baseUrl !== '/' &&
     (value === baseUrl || value.startsWith(`${baseUrl}/`))
@@ -76,11 +71,13 @@ const buildProxiedPath = (baseUrl, value) => {
 }
 
 const buildActionHref = (baseUrl, href) => {
-  if (gasActionPathPattern.test(href)) {
-    return buildProxiedPath(baseUrl, href)
+  const match = href.match(gasActionPathPattern)
+  if (!match) {
+    throw Boom.badGateway('Unsupported agreement action URL')
   }
 
-  throw Boom.badGateway('Unsupported agreement action URL')
+  const [, agreementNumber, actionName] = match
+  return path.posix.join(baseUrl, agreementNumber, 'actions', actionName)
 }
 
 const buildActions = (actions = [], baseUrl = '/') =>

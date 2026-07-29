@@ -205,6 +205,40 @@ describe('configDrivenAgreementController', () => {
       expect(mockH.view).not.toHaveBeenCalled()
     })
 
+    it.each([
+      '/agreements/../actions/accept',
+      '/agreements/%2e%2e/actions/accept'
+    ])('rejects an action path containing a traversal segment: %s', (href) => {
+      mockRequest.pre.data = {
+        actions: [{ href, text: 'Accept' }]
+      }
+
+      expect(() =>
+        configDrivenAgreementController.handler(mockRequest, mockH)
+      ).toThrow('Unsupported agreement action URL')
+      expect(mockH.view).not.toHaveBeenCalled()
+    })
+
+    it('does not apply GAS href translation to a POST form target', () => {
+      vi.mocked(baseUrlHelper.getBaseUrl).mockReturnValue('/agreement')
+      mockRequest.pre.data = {
+        actions: [
+          {
+            action: '/agreements/PMF123/actions/accept',
+            method: 'POST',
+            text: 'Accept agreement'
+          }
+        ]
+      }
+
+      configDrivenAgreementController.handler(mockRequest, mockH)
+
+      const model = mockH.view.mock.calls[0][1]
+      expect(model.actions[0].action).toBe(
+        '/agreement/agreements/PMF123/actions/accept'
+      )
+    })
+
     it('should handle undefined values in buildProxiedPath gracefully', () => {
       mockRequest.pre.data = {
         actions: [{ text: 'No href' }]
