@@ -6,6 +6,16 @@ const absoluteUrlPattern = /^[a-z][a-z\d+.-]*:/i
 const gasActionPathPattern =
   /^\/agreements\/([a-z\d_-]+)\/actions\/([a-z\d_-]+)$/i
 
+const joinBasePath = (baseUrl, ...segments) => {
+  if (!absoluteUrlPattern.test(baseUrl)) {
+    return path.posix.join(baseUrl, ...segments)
+  }
+
+  const url = new URL(baseUrl)
+  url.pathname = path.posix.join(url.pathname, ...segments)
+  return url.toString()
+}
+
 const buildProxiedPath = (baseUrl, value) => {
   if (!value || absoluteUrlPattern.test(value) || value.startsWith('#')) {
     return value
@@ -18,7 +28,7 @@ const buildProxiedPath = (baseUrl, value) => {
     return value
   }
 
-  return path.posix.join(baseUrl, value)
+  return joinBasePath(baseUrl, value)
 }
 
 const buildActionHref = (baseUrl, href) => {
@@ -29,7 +39,7 @@ const buildActionHref = (baseUrl, href) => {
   }
 
   const [, agreementNumber, actionName] = match
-  return path.posix.join(baseUrl, agreementNumber, 'actions', actionName)
+  return joinBasePath(baseUrl, agreementNumber, 'actions', actionName)
 }
 
 const translateActionPaths = (actions = [], baseUrl = '/') =>

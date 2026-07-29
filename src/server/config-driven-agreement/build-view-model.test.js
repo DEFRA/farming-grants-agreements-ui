@@ -68,6 +68,24 @@ describe('buildViewModel', () => {
     expect(model.actions[0].href).toBe('/agreement/PMF123/actions/accept')
   })
 
+  it('preserves an absolute Agreements UI base URL', () => {
+    const model = buildViewModel(
+      {
+        actions: [
+          {
+            href: '/agreements/PMF123/actions/accept',
+            text: 'Accept agreement'
+          }
+        ]
+      },
+      'https://example.com/api'
+    )
+
+    expect(model.actions[0].href).toBe(
+      'https://example.com/api/PMF123/actions/accept'
+    )
+  })
+
   it.each([
     'https://example.com/external',
     '/agreements/PMF123/actions/accept?confirmation=true',
@@ -105,5 +123,24 @@ describe('buildViewModel', () => {
     )
 
     expect(model.actions[0].action).toBe(expected)
+  })
+
+  it('preserves an absolute base URL for a legacy action target', () => {
+    const model = buildViewModel(
+      {
+        actions: [
+          {
+            action: '/agreements/PMF123/actions/accept',
+            method: 'POST',
+            text: 'Accept'
+          }
+        ]
+      },
+      'https://example.com/api'
+    )
+
+    expect(model.actions[0].action).toBe(
+      'https://example.com/api/agreements/PMF123/actions/accept'
+    )
   })
 })
