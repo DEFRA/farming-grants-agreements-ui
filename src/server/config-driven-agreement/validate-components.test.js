@@ -62,6 +62,21 @@ describe('validateComponents', () => {
     expect(logger.error).not.toHaveBeenCalled()
   })
 
+  it.each(['', null, false, 0])(
+    'rejects an invalid supplied component type: %j',
+    (componentType) => {
+      const logger = { error: vi.fn() }
+
+      expect(() =>
+        validateComponents([{ component: componentType }], logger)
+      ).toThrow('Unsupported agreement component')
+      expect(logger.error).toHaveBeenCalledWith(
+        { componentType },
+        'Unsupported agreement component'
+      )
+    }
+  )
+
   it.each([
     {
       component: 'checkboxes',

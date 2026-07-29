@@ -54,18 +54,23 @@ const findUnsupportedComponent = (value) => {
     return undefined
   }
 
-  if (value.component && !supportedComponents.has(value.component)) {
-    return value.component
+  if (
+    Object.hasOwn(value, 'component') &&
+    !supportedComponents.has(value.component)
+  ) {
+    return { componentType: value.component }
   }
 
   return Object.values(value).map(findUnsupportedComponent).find(Boolean)
 }
 
 const assertSupportedComponents = (components, logger) => {
-  const componentType = findUnsupportedComponent(components)
-  if (!componentType) {
+  const unsupportedComponent = findUnsupportedComponent(components)
+  if (!unsupportedComponent) {
     return
   }
+
+  const { componentType } = unsupportedComponent
 
   if (process.env.NODE_ENV !== 'production') {
     logger?.error({ componentType }, 'Unsupported agreement component')
