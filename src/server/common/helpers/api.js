@@ -28,7 +28,8 @@ const buildUrl = ({
 
       if (agreementId) {
         const queryString = searchParams.toString()
-        return `${gasUrl}/agreements/${agreementId}${queryString ? `?${queryString}` : ''}`
+        const agreementUrl = `${gasUrl}/agreements/${agreementId}`
+        return queryString ? `${agreementUrl}?${queryString}` : agreementUrl
       }
 
       const { grantCode, clientRef, sbi } = jwtPayload || {}
@@ -100,7 +101,8 @@ export const apiRequest = async ({
   queryParams,
   actionName,
   backend = LEGACY,
-  jwtPayload
+  jwtPayload,
+  addBackendSource = true
 }) => {
   const controller = new AbortController()
   const timeoutId = setTimeout(
@@ -132,7 +134,7 @@ export const apiRequest = async ({
     }
 
     const data = await response.json()
-    return { ...data, source: backend }
+    return addBackendSource ? { ...data, source: backend } : data
   } finally {
     clearTimeout(timeoutId)
   }

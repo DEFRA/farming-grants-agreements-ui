@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
 import { agreementController } from './controller.js'
-import { apiRequest, getBackend } from '#~/server/common/helpers/api.js'
+import { apiRequest, GAS, getBackend } from '#~/server/common/helpers/api.js'
 import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
 import { viewAgreementController } from '#~/server/view-agreement/controller.js'
 
@@ -21,6 +21,9 @@ const getAgreementData = async (request) => {
   }
 
   const backend = getBackend(jwtPayload)
+  const isPublicGasAgreement = backend === GAS && Boolean(agreementId)
+
+  request.app.agreementBackend = backend
 
   return apiRequest({
     agreementId,
@@ -29,7 +32,9 @@ const getAgreementData = async (request) => {
     body: method === 'POST' ? request.payload : undefined,
     backend,
     jwtPayload,
-    queryParams: request.params.mode === 'print' ? { mode: 'print' } : undefined
+    queryParams:
+      request.params.mode === 'print' ? { mode: 'print' } : undefined,
+    addBackendSource: !isPublicGasAgreement
   })
 }
 

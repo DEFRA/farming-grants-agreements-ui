@@ -97,7 +97,8 @@ describe('#agreementController', () => {
         components: [{ component: 'paragraph', text: 'From GAS' }],
         actions: [{ href: '/gas-provided-action', text: 'GAS action' }],
         availableActions: ['gas-only-action'],
-        readOnly: false
+        readOnly: false,
+        source: 'gas-page-model-source'
       }
       extractJwtPayload.mockReturnValue({
         source: 'entra',
@@ -132,7 +133,7 @@ describe('#agreementController', () => {
       expect(configDrivenAgreementController.handler).toHaveBeenCalledOnce()
       expect(
         configDrivenAgreementController.handler.mock.calls[0][0].pre.data
-      ).toEqual({ ...gasPageModel, source: 'gas' })
+      ).toBe(gasPageModel)
     })
 
     test('routes a PDF-style print request with a query token to GAS mode=print', async () => {
@@ -170,7 +171,7 @@ describe('#agreementController', () => {
       )
       expect(
         configDrivenAgreementController.handler.mock.calls[0][0].pre.data
-      ).toEqual({ ...gasPageModel, source: 'gas' })
+      ).toBe(gasPageModel)
     })
 
     test('does not pass non-print route modes to GAS', async () => {

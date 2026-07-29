@@ -6,7 +6,7 @@ import { configDrivenAgreementController } from '#~/server/config-driven-agreeme
 
 export const viewAgreementController = {
   async handler(request, h) {
-    if (request.pre?.data?.source === GAS) {
+    if (request.app?.agreementBackend === GAS) {
       return configDrivenAgreementController.handler(request, h)
     }
 
