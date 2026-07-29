@@ -37,9 +37,7 @@ const findUnsupportedComponent = (value) => {
     return value.component
   }
 
-  return Object.values(value)
-    .map(findUnsupportedComponent)
-    .find((component) => component)
+  return Object.values(value).map(findUnsupportedComponent).find(Boolean)
 }
 
 const assertSupportedComponents = (components, request) => {
