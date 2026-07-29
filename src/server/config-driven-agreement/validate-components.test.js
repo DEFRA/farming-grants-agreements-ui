@@ -1,27 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { supportedComponents } from './supported-components.js'
 import { validateComponents } from './validate-components.js'
-
-const supportedComponents = [
-  'accordion',
-  'checkboxes',
-  'container',
-  'details',
-  'heading',
-  'line-break',
-  'notification-banner',
-  'ordered-list',
-  'panel',
-  'paragraph',
-  'status',
-  'summary-list',
-  'table',
-  'text',
-  'unordered-list',
-  'url',
-  'warning-text',
-  'watermark'
-]
 
 describe('validateComponents', () => {
   afterEach(() => {

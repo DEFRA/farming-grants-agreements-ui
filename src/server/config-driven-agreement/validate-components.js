@@ -1,25 +1,8 @@
 import Boom from '@hapi/boom'
 
-const supportedComponents = new Set([
-  'accordion',
-  'checkboxes',
-  'container',
-  'details',
-  'heading',
-  'line-break',
-  'notification-banner',
-  'ordered-list',
-  'panel',
-  'paragraph',
-  'status',
-  'summary-list',
-  'table',
-  'text',
-  'unordered-list',
-  'url',
-  'warning-text',
-  'watermark'
-])
+import { supportedComponents } from './supported-components.js'
+
+const supportedComponentsSet = new Set(supportedComponents)
 
 const safeAttributeNamePattern = /^[a-z_:][a-z\d:._-]*$/i
 
@@ -56,7 +39,7 @@ const findUnsupportedComponent = (value) => {
 
   if (
     Object.hasOwn(value, 'component') &&
-    !supportedComponents.has(value.component)
+    !supportedComponentsSet.has(value.component)
   ) {
     return { componentType: value.component }
   }
