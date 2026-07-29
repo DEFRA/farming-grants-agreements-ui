@@ -1,4 +1,5 @@
 export default {
+  ignores: [(message) => message.trim() === 'no-mistakes: apply CI fixes'],
   rules: {
     'ticket-format': [2, 'always']
   },
