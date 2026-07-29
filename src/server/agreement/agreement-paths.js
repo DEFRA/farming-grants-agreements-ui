@@ -50,9 +50,9 @@ export const appendQueryAuthentication = (value, queryAuthentication) => {
 const appendToBaseUrl = (
   baseUrl,
   segments,
+  queryAuthentication,
   search = '',
-  hash = '',
-  queryAuthentication
+  hash = ''
 ) => {
   if (!absoluteUrlPattern.test(baseUrl)) {
     return appendQueryAuthentication(
@@ -88,9 +88,9 @@ export const translateAgreementPath = (value, baseUrl, queryAuthentication) => {
     ? appendToBaseUrl(
         baseUrl,
         segments,
+        queryAuthentication,
         target.search,
-        target.hash,
-        queryAuthentication
+        target.hash
       )
     : undefined
 }
@@ -119,8 +119,8 @@ export const translateGasLocation = (
   return appendToBaseUrl(
     baseUrl,
     segments,
+    queryAuthentication,
     target.search,
-    target.hash,
-    queryAuthentication
+    target.hash
   )
 }

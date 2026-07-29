@@ -40,7 +40,7 @@ const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
   )
 }
 
-const buildActions = (actions = [], baseUrl = '/', queryAuthentication) =>
+const buildActions = (queryAuthentication, actions = [], baseUrl = '/') =>
   actions.map((action) => ({
     ...action,
     ...(action.href
@@ -99,10 +99,10 @@ const hasWatermark = (components = []) =>
   components.some((component) => component?.component === 'watermark')
 
 const buildConfigDrivenAgreementModel = (
-  renderModel = {},
-  baseUrl = '/',
   transportMetadata,
-  queryAuthentication
+  queryAuthentication,
+  renderModel = {},
+  baseUrl = '/'
 ) => {
   const components = renderModel.components ?? renderModel.content ?? []
 
@@ -110,7 +110,7 @@ const buildConfigDrivenAgreementModel = (
     pageTitle: renderModel.page?.title ?? renderModel.title ?? 'Agreement',
     agreement: renderModel.agreement,
     components: buildComponentUrls(components, baseUrl, queryAuthentication),
-    actions: buildActions(renderModel.actions, baseUrl, queryAuthentication),
+    actions: buildActions(queryAuthentication, renderModel.actions, baseUrl),
     errors: renderModel.errors ?? [],
     hasWatermark: hasWatermark(components),
     layout: renderModel.page?.layout ?? renderModel.layout ?? 'default',
@@ -127,10 +127,10 @@ export const renderConfigDrivenAgreement = (
   h.view(
     'config-driven-agreement/page',
     buildConfigDrivenAgreementModel(
-      renderModel,
-      getBaseUrl(request),
       transportMetadata,
-      getQueryAuthentication(request)
+      getQueryAuthentication(request),
+      renderModel,
+      getBaseUrl(request)
     )
   )
 

@@ -378,6 +378,80 @@ describe('generic GAS Agreement action routes', () => {
     )
   })
 
+  test('rejects an action request when authentication has no JWT payload', async () => {
+    extractJwtPayload.mockReturnValue(undefined)
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/AGR_42/actions/anything',
+      headers: { 'x-encrypted-auth': 'invalid-auth' }
+    })
+
+    expect(response.statusCode).toBe(401)
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+  })
+
+  test('rejects a GAS action page that has no ETag', async () => {
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: new Headers(),
+      json: vi.fn().mockResolvedValue(actionPageModel())
+    })
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/AGR_42/actions/anything',
+      headers: { 'x-encrypted-auth': 'auth' }
+    })
+
+    expect(response.statusCode).toBe(502)
+  })
+
+  test('rejects an unexpected successful GAS POST response', async () => {
+    globalThis.fetch.mockResolvedValueOnce(
+      gasPageResponse(actionPageModel(), '"AGR_42:2"', 201)
+    )
+
+    const response = await server.inject({
+      method: 'POST',
+      url: '/AGR_42/actions/anything',
+      headers: { 'x-encrypted-auth': 'auth' },
+      payload: {
+        [actionTransportFieldNames.etag]: '"AGR_42:1"',
+        [actionTransportFieldNames.idempotencyKey]:
+          'a2f91696-bb4b-49fb-a731-672117fe03aa'
+      }
+    })
+
+    expect(response.statusCode).toBe(502)
+  })
+
+  test.each([
+    ['a missing Location', undefined],
+    ['an external Location', 'https://example.com/agreements/AGR_42']
+  ])('rejects a GAS redirect with %s', async (_description, location) => {
+    globalThis.fetch.mockResolvedValueOnce({
+      ...gasRedirectResponse(303, location ?? ''),
+      headers: location ? responseHeaders({ location }) : new Headers()
+    })
+
+    const response = await server.inject({
+      method: 'POST',
+      url: '/AGR_42/actions/anything',
+      headers: { 'x-encrypted-auth': 'auth' },
+      payload: {
+        [actionTransportFieldNames.etag]: '"AGR_42:1"',
+        [actionTransportFieldNames.idempotencyKey]:
+          'a2f91696-bb4b-49fb-a731-672117fe03aa'
+      }
+    })
+
+    expect(response.statusCode).toBe(502)
+    expect(response.headers).not.toHaveProperty('location')
+  })
+
   test('does not proxy the new route for an Agreement selected for the legacy backend', async () => {
     extractJwtPayload.mockReturnValue({ grantCode: 'legacy-grant' })
 

@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom'
 
 import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
+import { statusCodes } from '#~/server/common/constants/status-codes.js'
 import {
   GAS,
   gasActionRequest,
@@ -83,23 +84,27 @@ export const agreementActionController = {
       jwtPayload
     })
 
-    if (response.status === 422) {
+    if (response.status === statusCodes.unprocessableEntity) {
       return renderActionPage(
         request,
         h,
         response.pageModel,
         response.etag,
         idempotencyKey
-      ).code(422)
+      ).code(statusCodes.unprocessableEntity)
     }
 
-    if ([303, 412].includes(response.status)) {
+    if (
+      [statusCodes.seeOther, statusCodes.preconditionFailed].includes(
+        response.status
+      )
+    ) {
       const publicLocation = translateGasLocation(
         response.location,
         getBaseUrl(request),
         getQueryAuthentication(request)
       )
-      return h.redirect(publicLocation).code(303)
+      return h.redirect(publicLocation).code(statusCodes.seeOther)
     }
 
     throw Boom.badGateway(`Unexpected GAS action response: ${response.status}`)

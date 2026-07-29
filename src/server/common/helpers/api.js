@@ -205,14 +205,18 @@ export const gasActionRequest = async ({
       }
     },
     async (response) => {
-      if ([303, 412].includes(response.status)) {
+      if (
+        [statusCodes.seeOther, statusCodes.preconditionFailed].includes(
+          response.status
+        )
+      ) {
         return {
           status: response.status,
           location: response.headers.get('location')
         }
       }
 
-      if (response.ok || response.status === 422) {
+      if (response.ok || response.status === statusCodes.unprocessableEntity) {
         return {
           status: response.status,
           pageModel: await response.json(),
@@ -220,6 +224,6 @@ export const gasActionRequest = async ({
         }
       }
 
-      await handleError(response, agreementId, method)
+      return handleError(response, agreementId, method)
     }
   )
