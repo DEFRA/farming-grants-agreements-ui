@@ -127,6 +127,38 @@ describe('#agreementController', () => {
       expect(url).not.toContain('?')
     })
 
+    test('should load and config-render a GAS Agreement by ID', async () => {
+      extractJwtPayload.mockReturnValue({
+        grantCode: 'pigs-might-fly',
+        clientRef: 'client-ref-001',
+        sbi: 106284736
+      })
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ page: { title: 'GAS Agreement' } })
+      })
+      configDrivenAgreementController.handler.mockImplementationOnce(
+        (request, h) => h.response('GAS Agreement')
+      )
+
+      const response = await server.inject({
+        method: 'GET',
+        url: '/PMF123456789?view=latest&x-encrypted-auth=query-auth',
+        headers: { 'x-encrypted-auth': 'header-auth' }
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.result).toBe('GAS Agreement')
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3102/agreements/PMF123456789?view=latest',
+        expect.objectContaining({
+          method: 'GET',
+          headers: { Authorization: 'Bearer mock-gas-token' },
+          redirect: 'manual'
+        })
+      )
+    })
+
     test('should call the legacy backend when grantCode is "FPTT"', async () => {
       const mockPayload = {
         sub: '1234567890',

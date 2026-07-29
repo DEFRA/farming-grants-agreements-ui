@@ -86,9 +86,33 @@ describe('buildViewModel', () => {
     )
   })
 
+  it('preserves a genuine external action href', () => {
+    const model = buildViewModel({
+      actions: [{ href: 'https://example.com/external', text: 'External' }]
+    })
+
+    expect(model.actions[0].href).toBe('https://example.com/external')
+  })
+
+  it('translates a GAS action href with query parameters', () => {
+    const model = buildViewModel(
+      {
+        actions: [
+          {
+            href: '/agreements/PMF123/actions/accept?confirmation=true',
+            text: 'Accept'
+          }
+        ]
+      },
+      '/agreement'
+    )
+
+    expect(model.actions[0].href).toBe(
+      '/agreement/PMF123/actions/accept?confirmation=true'
+    )
+  })
+
   it.each([
-    'https://example.com/external',
-    '/agreements/PMF123/actions/accept?confirmation=true',
     '/agreement/PMF123/accept',
     '/agreements/../actions/accept',
     '/agreements/%2e%2e/actions/accept',
@@ -112,10 +136,7 @@ describe('buildViewModel', () => {
     ['#confirm', '#confirm'],
     ['/agreement', '/agreement'],
     ['/agreement/PMF123', '/agreement/PMF123'],
-    [
-      '/agreements/PMF123/actions/accept',
-      '/agreement/agreements/PMF123/actions/accept'
-    ]
+    ['/agreements/PMF123/actions/accept', '/agreement/PMF123/actions/accept']
   ])('translates a legacy action target %s', (action, expected) => {
     const model = buildViewModel(
       { actions: [{ action, method: 'POST', text: 'Accept' }] },
@@ -140,7 +161,7 @@ describe('buildViewModel', () => {
     )
 
     expect(model.actions[0].action).toBe(
-      'https://example.com/api/agreements/PMF123/actions/accept'
+      'https://example.com/api/PMF123/actions/accept'
     )
   })
 })
