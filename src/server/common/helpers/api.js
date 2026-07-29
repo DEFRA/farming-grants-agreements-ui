@@ -24,15 +24,12 @@ const buildUrl = ({
   if (backend === GAS) {
     const gasUrl = config.get('gasBackend.url')
     if (method.toUpperCase() === 'GET') {
-      if (agreementId) {
-        return `${gasUrl}/agreements/${agreementId}`
-      }
-
       const searchParams = new URLSearchParams(queryParams)
 
       if (agreementId) {
         const queryString = searchParams.toString()
-        return `${gasUrl}/agreements/${agreementId}${queryString ? `?${queryString}` : ''}`
+        const agreementUrl = `${gasUrl}/agreements/${agreementId}`
+        return queryString ? `${agreementUrl}?${queryString}` : agreementUrl
       }
 
       const { grantCode, clientRef, sbi } = jwtPayload || {}
