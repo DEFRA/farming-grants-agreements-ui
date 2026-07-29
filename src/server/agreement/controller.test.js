@@ -137,6 +137,9 @@ describe('#agreementController', () => {
         components: [{ component: 'paragraph', text: 'From GAS' }],
         actions: [{ href: '/gas-provided-action', text: 'GAS action' }],
         availableActions: ['gas-only-action'],
+        grant: { code: 'gas-owned-grant' },
+        lifecycle: { current: 'gas-owned-state' },
+        template: { name: 'gas-owned-template' },
         readOnly: false
       }
       extractJwtPayload.mockReturnValue({
