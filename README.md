@@ -18,6 +18,7 @@ Core delivery platform Node.js Frontend Template.
   - [Update dependencies](#update-dependencies)
   - [Formatting](#formatting)
     - [Windows prettier issue](#windows-prettier-issue)
+  - [Pull requests](#pull-requests)
 - [Docker](#docker)
   - [Development image](#development-image)
   - [Production image](#production-image)
@@ -144,6 +145,10 @@ If you are having issues with formatting of line breaks on Windows update your g
 ```bash
 git config --global core.autocrlf false
 ```
+
+### Pull requests
+
+Use the format `TICKET-123: Summary` for every commit message and pull request title.
 
 ## Docker
 
