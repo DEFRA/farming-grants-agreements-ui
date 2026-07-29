@@ -32,11 +32,22 @@ const renderGasAgreement = (renderModel) => {
   return load(configDrivenAgreementController.handler(request, h))
 }
 
+const agreementContent = [
+  { component: 'heading', level: 1, text: 'Your agreement' },
+  { component: 'paragraph', text: 'Agreement details' }
+]
+
+const defaultModel = {
+  page: { title: 'Your agreement' },
+  components: agreementContent,
+  actions: []
+}
+
 const documentModel = {
-  page: { title: 'Your agreement', layout: 'document' },
+  ...defaultModel,
+  page: { ...defaultModel.page, layout: 'document' },
   components: [
-    { component: 'heading', level: 1, text: 'Your agreement' },
-    { component: 'paragraph', text: 'Agreement details' },
+    ...agreementContent,
     {
       component: 'watermark',
       text: 'DRAFT',
@@ -59,14 +70,7 @@ describe('config-driven GAS agreement page', () => {
   })
 
   test('uses the default two-thirds layout without watermark styling', () => {
-    const $ = renderGasAgreement({
-      page: { title: 'Your agreement' },
-      components: [
-        { component: 'heading', level: 1, text: 'Your agreement' },
-        { component: 'paragraph', text: 'Agreement details' }
-      ],
-      actions: []
-    })
+    const $ = renderGasAgreement(defaultModel)
 
     expect($('.govuk-grid-column-two-thirds')).toHaveLength(1)
     expect($('.govuk-grid-column-full')).toHaveLength(0)
