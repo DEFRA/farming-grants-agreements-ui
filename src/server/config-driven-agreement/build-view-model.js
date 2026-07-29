@@ -33,7 +33,7 @@ const buildProxiedPath = (baseUrl, value) => {
 
 const buildActionHref = (baseUrl, href) => {
   const match =
-    typeof href === 'string' ? href.match(gasActionPathPattern) : undefined
+    typeof href === 'string' ? gasActionPathPattern.exec(href) : undefined
   if (!match) {
     throw Boom.badGateway('Unsupported agreement action URL')
   }
