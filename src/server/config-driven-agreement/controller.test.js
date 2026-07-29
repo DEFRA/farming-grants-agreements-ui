@@ -16,6 +16,9 @@ describe('configDrivenAgreementController', () => {
         data: {}
       },
       log: vi.fn(),
+      logger: {
+        error: vi.fn()
+      },
       headers: {}
     }
     mockH = {
@@ -104,6 +107,21 @@ describe('configDrivenAgreementController', () => {
       )
     })
 
+    it('rejects an unsupported component and logs its type outside production', () => {
+      mockRequest.pre.data = {
+        components: [{ component: 'unsupported-widget' }]
+      }
+
+      expect(() =>
+        configDrivenAgreementController.handler(mockRequest, mockH)
+      ).toThrow('Unsupported agreement component')
+      expect(mockRequest.logger.error).toHaveBeenCalledWith(
+        { componentType: 'unsupported-widget' },
+        'Unsupported agreement component'
+      )
+      expect(mockH.view).not.toHaveBeenCalled()
+    })
+
     it('should use renderModel.page.layout if available', () => {
       mockRequest.pre.data = {
         page: { layout: 'document' }
@@ -136,58 +154,55 @@ describe('configDrivenAgreementController', () => {
   })
 
   describe('buildProxiedPath logic (via buildActions)', () => {
-    it('should not modify absolute URLs', () => {
+    it('proxies a GAS Agreement action through the Agreements UI base path', () => {
+      vi.mocked(baseUrlHelper.getBaseUrl).mockReturnValue('/agreement')
       mockRequest.pre.data = {
         actions: [
-          { href: 'https://example.com/external', text: 'External' },
-          { action: 'http://example.com/api', text: 'API' }
+          {
+            href: '/agreements/PMF123/actions/accept',
+            text: 'Accept agreement'
+          }
         ]
       }
 
       configDrivenAgreementController.handler(mockRequest, mockH)
 
       const model = mockH.view.mock.calls[0][1]
-      expect(model.actions[0].href).toBe('https://example.com/external')
-      expect(model.actions[1].action).toBe('http://example.com/api')
+      expect(model.actions[0].href).toBe('/agreement/PMF123/actions/accept')
     })
 
-    it('should not modify anchor links', () => {
+    it('rejects an absolute action URL through the existing error handling', () => {
       mockRequest.pre.data = {
-        actions: [{ href: '#main-content', text: 'Skip' }]
+        actions: [{ href: 'https://example.com/external', text: 'External' }]
       }
 
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      const model = mockH.view.mock.calls[0][1]
-      expect(model.actions[0].href).toBe('#main-content')
+      expect(() =>
+        configDrivenAgreementController.handler(mockRequest, mockH)
+      ).toThrow('Unsupported agreement action URL')
+      expect(mockH.view).not.toHaveBeenCalled()
     })
 
-    it('should join baseUrl with relative paths', () => {
-      vi.mocked(baseUrlHelper.getBaseUrl).mockReturnValue('/my-proxy')
+    it('rejects an action path containing a query string', () => {
+      const href = '/agreements/PMF123/actions/accept?confirmation=true'
       mockRequest.pre.data = {
-        actions: [{ href: 'submit', text: 'Submit' }]
+        actions: [{ href, text: 'Accept' }]
       }
 
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      const model = mockH.view.mock.calls[0][1]
-      expect(model.actions[0].href).toBe('/my-proxy/submit')
+      expect(() =>
+        configDrivenAgreementController.handler(mockRequest, mockH)
+      ).toThrow('Unsupported agreement action URL')
+      expect(mockH.view).not.toHaveBeenCalled()
     })
 
-    it('should not modify path if it already starts with baseUrl', () => {
-      vi.mocked(baseUrlHelper.getBaseUrl).mockReturnValue('/my-proxy')
+    it('rejects an unsupported action path through the existing error handling', () => {
       mockRequest.pre.data = {
-        actions: [
-          { href: '/my-proxy', text: 'Home' },
-          { href: '/my-proxy/details', text: 'Details' }
-        ]
+        actions: [{ href: '/agreement/PMF123/accept', text: 'Accept' }]
       }
 
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      const model = mockH.view.mock.calls[0][1]
-      expect(model.actions[0].href).toBe('/my-proxy')
-      expect(model.actions[1].href).toBe('/my-proxy/details')
+      expect(() =>
+        configDrivenAgreementController.handler(mockRequest, mockH)
+      ).toThrow('Unsupported agreement action URL')
+      expect(mockH.view).not.toHaveBeenCalled()
     })
 
     it('should handle undefined values in buildProxiedPath gracefully', () => {
