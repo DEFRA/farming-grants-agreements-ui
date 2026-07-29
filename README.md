@@ -209,11 +209,13 @@ farming-grants-agreements-ui-redis-1                           "docker-entrypoin
 
 ## API endpoints
 
-| Endpoint              | Description                                                   |
-| :-------------------- | :------------------------------------------------------------ |
-| `GET: /health`        | Health                                                        |
-| `GET: /{agreementId}` | Get an agreement in HTML format based on agreementId          |
-| `GET: /`              | Get an agreement in HTML format based on the sbi in the token |
+| Endpoint                                    | Description                                                   |
+| :------------------------------------------ | :------------------------------------------------------------ |
+| `GET: /health`                              | Health                                                        |
+| `GET: /{agreementId}`                       | Get an agreement in HTML format based on agreementId          |
+| `GET: /`                                    | Get an agreement in HTML format based on the sbi in the token |
+| `GET: /{agreementId}/actions/{actionName}`  | Get a GAS-backed agreement action page                        |
+| `POST: /{agreementId}/actions/{actionName}` | Submit a GAS-backed agreement action                          |
 
 Pass the JWT token in the header as `x-encrypted-auth`.
 

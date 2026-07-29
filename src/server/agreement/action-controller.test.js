@@ -165,8 +165,7 @@ describe('generic GAS Agreement action routes', () => {
                         {
                           component: 'url',
                           params: {
-                            href:
-                              'http://gas.internal:3102/agreements/AGR_42/actions/review?stage=confirm',
+                            href: 'http://gas.internal:3102/agreements/AGR_42/actions/review?stage=confirm',
                             text: 'Review action'
                           }
                         }

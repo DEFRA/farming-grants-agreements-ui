@@ -40,29 +40,17 @@ const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
   )
 }
 
-const buildActions = (
-  actions = [],
-  baseUrl = '/',
-  queryAuthentication
-) =>
+const buildActions = (actions = [], baseUrl = '/', queryAuthentication) =>
   actions.map((action) => ({
     ...action,
     ...(action.href
       ? {
-          href: buildProxiedPath(
-            baseUrl,
-            action.href,
-            queryAuthentication
-          )
+          href: buildProxiedPath(baseUrl, action.href, queryAuthentication)
         }
       : {}),
     ...(action.action
       ? {
-          action: buildProxiedPath(
-            baseUrl,
-            action.action,
-            queryAuthentication
-          )
+          action: buildProxiedPath(baseUrl, action.action, queryAuthentication)
         }
       : {})
   }))
@@ -100,11 +88,7 @@ const buildComponentUrls = (value, baseUrl, queryAuthentication) => {
     return transformedValue
   }
 
-  const href = buildProxiedPath(
-    baseUrl,
-    urlParams.href,
-    queryAuthentication
-  )
+  const href = buildProxiedPath(baseUrl, urlParams.href, queryAuthentication)
 
   return urlParams === transformedValue
     ? { ...transformedValue, href }
@@ -125,16 +109,8 @@ const buildConfigDrivenAgreementModel = (
   return {
     pageTitle: renderModel.page?.title ?? renderModel.title ?? 'Agreement',
     agreement: renderModel.agreement,
-    components: buildComponentUrls(
-      components,
-      baseUrl,
-      queryAuthentication
-    ),
-    actions: buildActions(
-      renderModel.actions,
-      baseUrl,
-      queryAuthentication
-    ),
+    components: buildComponentUrls(components, baseUrl, queryAuthentication),
+    actions: buildActions(renderModel.actions, baseUrl, queryAuthentication),
     errors: renderModel.errors ?? [],
     hasWatermark: hasWatermark(components),
     layout: renderModel.page?.layout ?? renderModel.layout ?? 'default',

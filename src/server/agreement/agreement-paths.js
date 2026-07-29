@@ -35,13 +35,10 @@ export const appendQueryAuthentication = (value, queryAuthentication) => {
 
   const hashIndex = value.indexOf('#')
   const hash = hashIndex === -1 ? '' : value.slice(hashIndex)
-  const valueWithoutHash =
-    hashIndex === -1 ? value : value.slice(0, hashIndex)
+  const valueWithoutHash = hashIndex === -1 ? value : value.slice(0, hashIndex)
   const queryIndex = valueWithoutHash.indexOf('?')
   const pathname =
-    queryIndex === -1
-      ? valueWithoutHash
-      : valueWithoutHash.slice(0, queryIndex)
+    queryIndex === -1 ? valueWithoutHash : valueWithoutHash.slice(0, queryIndex)
   const searchParams = new URLSearchParams(
     queryIndex === -1 ? '' : valueWithoutHash.slice(queryIndex + 1)
   )
@@ -68,17 +65,10 @@ const appendToBaseUrl = (
   publicUrl.pathname = path.posix.join(publicUrl.pathname, ...segments)
   publicUrl.search = search
   publicUrl.hash = hash
-  return appendQueryAuthentication(
-    publicUrl.toString(),
-    queryAuthentication
-  )
+  return appendQueryAuthentication(publicUrl.toString(), queryAuthentication)
 }
 
-export const translateAgreementPath = (
-  value,
-  baseUrl,
-  queryAuthentication
-) => {
+export const translateAgreementPath = (value, baseUrl, queryAuthentication) => {
   if (typeof value !== 'string') {
     return undefined
   }
