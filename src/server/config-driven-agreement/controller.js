@@ -1,12 +1,18 @@
 import path from 'node:path'
 
 import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
+import { translateAgreementPath } from '#~/server/agreement/agreement-paths.js'
 
 const absoluteUrlPattern = /^[a-z][a-z\d+.-]*:/i
 
 const buildProxiedPath = (baseUrl, value) => {
   if (!value || absoluteUrlPattern.test(value) || value.startsWith('#')) {
     return value
+  }
+
+  const translatedAgreementPath = translateAgreementPath(value, baseUrl)
+  if (translatedAgreementPath) {
+    return translatedAgreementPath
   }
 
   if (
@@ -31,7 +37,11 @@ const buildActions = (actions = [], baseUrl = '/') =>
 const hasWatermark = (components = []) =>
   components.some((component) => component?.component === 'watermark')
 
-const buildConfigDrivenAgreementModel = (renderModel = {}, baseUrl = '/') => {
+const buildConfigDrivenAgreementModel = (
+  renderModel = {},
+  baseUrl = '/',
+  transportMetadata
+) => {
   const components = renderModel.components ?? renderModel.content ?? []
 
   return {
@@ -41,17 +51,28 @@ const buildConfigDrivenAgreementModel = (renderModel = {}, baseUrl = '/') => {
     actions: buildActions(renderModel.actions, baseUrl),
     errors: renderModel.errors ?? [],
     hasWatermark: hasWatermark(components),
-    layout: renderModel.page?.layout ?? renderModel.layout ?? 'default'
+    layout: renderModel.page?.layout ?? renderModel.layout ?? 'default',
+    transportMetadata
   }
 }
 
+export const renderConfigDrivenAgreement = (
+  request,
+  h,
+  renderModel,
+  transportMetadata
+) =>
+  h.view(
+    'config-driven-agreement/page',
+    buildConfigDrivenAgreementModel(
+      renderModel,
+      getBaseUrl(request),
+      transportMetadata
+    )
+  )
+
 export const configDrivenAgreementController = {
   handler(request, h) {
-    const renderModel = request.pre?.data
-
-    return h.view(
-      'config-driven-agreement/page',
-      buildConfigDrivenAgreementModel(renderModel, getBaseUrl(request))
-    )
+    return renderConfigDrivenAgreement(request, h, request.pre?.data)
   }
 }

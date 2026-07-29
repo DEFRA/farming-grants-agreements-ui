@@ -3,6 +3,10 @@ import { agreementController } from './controller.js'
 import { apiRequest, getBackend } from '#~/server/common/helpers/api.js'
 import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
 import { viewAgreementController } from '#~/server/view-agreement/controller.js'
+import {
+  agreementActionController,
+  getGasActionAuthentication
+} from './action-controller.js'
 
 const getAgreementData = async (request) => {
   const { agreementId = '' } = request.params
@@ -49,6 +53,32 @@ export const agreement = {
             pre: [{ method: getAgreementData, assign: 'data' }]
           },
           ...agreementController
+        },
+        {
+          method: 'GET',
+          path: '/{agreementId}/actions/{actionName}',
+          options: {
+            pre: [
+              {
+                method: getGasActionAuthentication,
+                assign: 'actionAuthentication'
+              }
+            ]
+          },
+          handler: agreementActionController.get
+        },
+        {
+          method: 'POST',
+          path: '/{agreementId}/actions/{actionName}',
+          options: {
+            pre: [
+              {
+                method: getGasActionAuthentication,
+                assign: 'actionAuthentication'
+              }
+            ]
+          },
+          handler: agreementActionController.post
         },
         {
           method: 'GET',

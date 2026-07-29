@@ -8,7 +8,7 @@ import {
   vi
 } from 'vitest'
 
-import { apiRequest } from './api.js'
+import { apiRequest, gasActionRequest } from './api.js'
 
 vi.mock('./jwt-auth.js', () => ({
   extractJwtPayload: vi.fn(),
@@ -173,6 +173,7 @@ describe('apiRequest error handling', () => {
 
     const result = await apiRequest({
       ...baseRequest,
+      agreementId: undefined,
       queryParams: { existing: 'param' },
       jwtPayload,
       backend: 'gas'
@@ -248,6 +249,30 @@ describe('apiRequest error handling', () => {
     expect(fetchArgs.headers).not.toHaveProperty('x-encrypted-auth')
 
     mockConfig.get = originalGet
+  })
+
+  test('uses the configured timeout for GAS action requests', async () => {
+    vi.useFakeTimers()
+    globalThis.fetch.mockImplementationOnce(
+      (url, { signal }) =>
+        new Promise((resolve, reject) => {
+          signal.addEventListener('abort', () => reject(signal.reason))
+        })
+    )
+
+    const responsePromise = gasActionRequest({
+      agreementId: 'GAS123',
+      actionName: 'arbitrary-action',
+      jwtPayload: { grantCode: 'GAS001' }
+    })
+
+    const rejection = expect(responsePromise).rejects.toThrow(
+      'Network timed out while fetching data'
+    )
+
+    await vi.advanceTimersByTimeAsync(30000)
+    await rejection
+    vi.useRealTimers()
   })
 
   test('constructs legacy backend URL correctly', async () => {
