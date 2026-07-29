@@ -15,6 +15,7 @@ Core delivery platform Node.js Frontend Template.
   - [Development](#development)
   - [Production](#production)
   - [Npm scripts](#npm-scripts)
+  - [Pull requests](#pull-requests)
   - [Update dependencies](#update-dependencies)
   - [Formatting](#formatting)
     - [Windows prettier issue](#windows-prettier-issue)
@@ -123,6 +124,10 @@ To view them in your command line run:
 ```bash
 npm run
 ```
+
+### Pull requests
+
+Pull request titles and human-written commit messages must use the Jira ticket format `TICKET-123: Message`.
 
 ### Update dependencies
 
