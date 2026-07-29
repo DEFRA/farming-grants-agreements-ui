@@ -67,6 +67,50 @@ const buildActions = (
       : {})
   }))
 
+const buildComponentUrls = (value, baseUrl, queryAuthentication) => {
+  if (Array.isArray(value)) {
+    return value.map((item) =>
+      buildComponentUrls(item, baseUrl, queryAuthentication)
+    )
+  }
+
+  if (!value || typeof value !== 'object') {
+    return value
+  }
+
+  const transformedValue = Object.fromEntries(
+    Object.entries(value).map(([name, childValue]) => [
+      name,
+      buildComponentUrls(childValue, baseUrl, queryAuthentication)
+    ])
+  )
+
+  if (transformedValue.component !== 'url') {
+    return transformedValue
+  }
+
+  const urlParams =
+    transformedValue.params &&
+    typeof transformedValue.params === 'object' &&
+    !Array.isArray(transformedValue.params)
+      ? transformedValue.params
+      : transformedValue
+
+  if (!urlParams.href) {
+    return transformedValue
+  }
+
+  const href = buildProxiedPath(
+    baseUrl,
+    urlParams.href,
+    queryAuthentication
+  )
+
+  return urlParams === transformedValue
+    ? { ...transformedValue, href }
+    : { ...transformedValue, params: { ...urlParams, href } }
+}
+
 const hasWatermark = (components = []) =>
   components.some((component) => component?.component === 'watermark')
 
@@ -81,7 +125,11 @@ const buildConfigDrivenAgreementModel = (
   return {
     pageTitle: renderModel.page?.title ?? renderModel.title ?? 'Agreement',
     agreement: renderModel.agreement,
-    components,
+    components: buildComponentUrls(
+      components,
+      baseUrl,
+      queryAuthentication
+    ),
     actions: buildActions(
       renderModel.actions,
       baseUrl,

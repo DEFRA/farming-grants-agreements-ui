@@ -143,10 +143,45 @@ describe('generic GAS Agreement action routes', () => {
     )
   })
 
-  test('translates configured GAS absolute action URLs and retains external links', async () => {
+  test('translates configured GAS URLs throughout the page and retains external links', async () => {
     globalThis.fetch.mockResolvedValueOnce(
       gasPageResponse(
         actionPageModel({
+          components: [
+            {
+              component: 'container',
+              items: [
+                {
+                  component: 'url',
+                  href: '/agreements/AGR_42/actions/next',
+                  text: 'Next action'
+                },
+                {
+                  component: 'summary-list',
+                  rows: [
+                    {
+                      label: 'Review',
+                      text: [
+                        {
+                          component: 'url',
+                          params: {
+                            href:
+                              'http://gas.internal:3102/agreements/AGR_42/actions/review?stage=confirm',
+                            text: 'Review action'
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  component: 'url',
+                  href: 'https://example.com/guidance',
+                  text: 'External guidance'
+                }
+              ]
+            }
+          ],
           actions: [
             {
               method: 'POST',
@@ -174,6 +209,13 @@ describe('generic GAS Agreement action routes', () => {
     expect($('form').attr('action')).toBe(
       '/agreement/AGR_42/actions/recalculate-anything?stage=confirm&x-encrypted-auth=query-auth'
     )
+    expect($('a:contains("Next action")').attr('href')).toBe(
+      '/agreement/AGR_42/actions/next?x-encrypted-auth=query-auth'
+    )
+    expect($('a:contains("Review action")').attr('href')).toBe(
+      '/agreement/AGR_42/actions/review?stage=confirm&x-encrypted-auth=query-auth'
+    )
+    expect($('a[href="https://example.com/guidance"]')).toHaveLength(1)
     expect($('a[href="https://example.com/help"]')).toHaveLength(1)
     expect(response.result).not.toContain('http://gas.internal:3102')
   })
