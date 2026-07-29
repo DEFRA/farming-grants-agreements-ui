@@ -107,6 +107,32 @@ describe('configDrivenAgreementController', () => {
       )
     })
 
+    it.each([
+      {
+        component: 'checkboxes',
+        name: 'confirm',
+        items: [{ value: 'confirmed', html: '<img src=x onerror=alert(1)>' }]
+      },
+      {
+        component: 'checkboxes',
+        name: 'confirm',
+        items: [
+          {
+            value: 'confirmed',
+            text: 'Confirm',
+            attributes: { onclick: 'alert(1)' }
+          }
+        ]
+      }
+    ])('rejects unsafe checkbox content before rendering', (checkboxes) => {
+      mockRequest.pre.data = { components: [checkboxes] }
+
+      expect(() =>
+        configDrivenAgreementController.handler(mockRequest, mockH)
+      ).toThrow('Unsupported agreement checkbox content')
+      expect(mockH.view).not.toHaveBeenCalled()
+    })
+
     it('rejects an unsupported component and logs its type outside production', () => {
       mockRequest.pre.data = {
         components: [{ component: 'unsupported-widget' }]

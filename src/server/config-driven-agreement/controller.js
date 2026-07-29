@@ -53,6 +53,38 @@ const assertSupportedComponents = (components, request) => {
   throw Boom.badGateway('Unsupported agreement component')
 }
 
+const hasEventHandlerAttribute = (attributes = {}) =>
+  Object.keys(attributes).some((name) => /^on/i.test(name.trim()))
+
+const isUnsafeCheckboxProperty = ([name, value]) =>
+  name === 'html' || (name === 'attributes' && hasEventHandlerAttribute(value))
+
+const hasUnsafeCheckboxContent = (value) =>
+  Boolean(value) &&
+  typeof value === 'object' &&
+  Object.entries(value).some(
+    (entry) =>
+      isUnsafeCheckboxProperty(entry) || hasUnsafeCheckboxContent(entry[1])
+  )
+
+const containsUnsafeCheckbox = (value) => {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  if (value.component === 'checkboxes' && hasUnsafeCheckboxContent(value)) {
+    return true
+  }
+
+  return Object.values(value).some(containsUnsafeCheckbox)
+}
+
+const assertSafeCheckboxes = (components) => {
+  if (containsUnsafeCheckbox(components)) {
+    throw Boom.badGateway('Unsupported agreement checkbox content')
+  }
+}
+
 const buildProxiedPath = (baseUrl, value) => {
   if (!value || absoluteUrlPattern.test(value) || value.startsWith('#')) {
     return value
@@ -110,6 +142,7 @@ export const configDrivenAgreementController = {
     const components = renderModel?.components ?? renderModel?.content ?? []
 
     assertSupportedComponents(components, request)
+    assertSafeCheckboxes(components)
 
     return h.view(
       'config-driven-agreement/page',
