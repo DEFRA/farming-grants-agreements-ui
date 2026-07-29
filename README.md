@@ -217,7 +217,8 @@ farming-grants-agreements-ui-redis-1                           "docker-entrypoin
 | `GET: /{agreementId}/actions/{actionName}`  | Get a GAS-backed agreement action page                        |
 | `POST: /{agreementId}/actions/{actionName}` | Submit a GAS-backed agreement action                          |
 
-Pass the JWT token in the header as `x-encrypted-auth`.
+Pass the JWT token as `x-encrypted-auth` in the request header or query string.
+When both are present, the header takes priority.
 
 ### Generating a JWT for API calls (scripts/gen-auth-header.js)
 
