@@ -29,6 +29,12 @@ const buildUrl = ({
       }
 
       const searchParams = new URLSearchParams(queryParams)
+
+      if (agreementId) {
+        const queryString = searchParams.toString()
+        return `${gasUrl}/agreements/${agreementId}${queryString ? `?${queryString}` : ''}`
+      }
+
       const { grantCode, clientRef, sbi } = jwtPayload || {}
 
       searchParams.set('code', grantCode)

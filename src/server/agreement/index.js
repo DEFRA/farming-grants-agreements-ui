@@ -28,7 +28,8 @@ const getAgreementData = async (request) => {
     auth: authToken,
     body: method === 'POST' ? request.payload : undefined,
     backend,
-    jwtPayload
+    jwtPayload,
+    queryParams: request.params.mode === 'print' ? { mode: 'print' } : undefined
   })
 }
 
