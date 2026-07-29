@@ -123,6 +123,18 @@ describe('configDrivenAgreementController', () => {
             attributes: { onclick: 'alert(1)' }
           }
         ]
+      },
+      {
+        component: 'checkboxes',
+        name: 'confirm',
+        attributes: 'onclick="alert(1)"',
+        items: [{ value: 'confirmed', text: 'Confirm' }]
+      },
+      {
+        component: 'checkboxes',
+        name: 'confirm',
+        attributes: null,
+        items: [{ value: 'confirmed', text: 'Confirm' }]
       }
     ])('rejects unsafe checkbox content before rendering', (checkboxes) => {
       mockRequest.pre.data = { components: [checkboxes] }

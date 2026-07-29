@@ -53,11 +53,20 @@ const assertSupportedComponents = (components, request) => {
   throw Boom.badGateway('Unsupported agreement component')
 }
 
-const hasEventHandlerAttribute = (attributes = {}) =>
-  Object.keys(attributes).some((name) => /^on/i.test(name.trim()))
+const hasUnsafeAttributes = (attributes) => {
+  if (
+    !attributes ||
+    typeof attributes !== 'object' ||
+    Array.isArray(attributes)
+  ) {
+    return true
+  }
+
+  return Object.keys(attributes).some((name) => /^on/i.test(name.trim()))
+}
 
 const isUnsafeCheckboxProperty = ([name, value]) =>
-  name === 'html' || (name === 'attributes' && hasEventHandlerAttribute(value))
+  name === 'html' || (name === 'attributes' && hasUnsafeAttributes(value))
 
 const hasUnsafeCheckboxContent = (value) =>
   Boolean(value) &&
