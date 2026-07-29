@@ -173,6 +173,7 @@ describe('apiRequest error handling', () => {
 
     const result = await apiRequest({
       ...baseRequest,
+      agreementId: undefined,
       queryParams: { existing: 'param' },
       jwtPayload,
       backend: 'gas'
