@@ -4,7 +4,7 @@ export default {
   ...config,
   ignores: [
     (message) =>
-      /^no-mistakes\((?:ci|document|review)\):\s+\S/.test(
+      /^(?:no-mistakes\((?:ci|document|review)\):\s+\S|no-mistakes: apply CI fixes$)/.test(
         message.split('\n')[0]
       )
   ]
