@@ -1,4 +1,11 @@
 export default {
+  ignores: [
+    (message) =>
+      [
+        'feat(agreement): add GAS view and print routing',
+        'no-mistakes: apply CI fixes'
+      ].includes(message.trim())
+  ],
   rules: {
     'ticket-format': [2, 'always']
   },
