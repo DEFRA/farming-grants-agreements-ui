@@ -156,6 +156,42 @@ describe('configDrivenAgreementController', () => {
       expect(mockH.view).not.toHaveBeenCalled()
     })
 
+    it('passes a safe nested GOV.UK checkbox model through unchanged', () => {
+      const checkboxes = {
+        component: 'checkboxes',
+        name: 'confirm',
+        hint: {
+          text: 'Read the agreement before confirming',
+          attributes: { 'data-testid': 'checkbox-hint' }
+        },
+        formGroup: {
+          classes: 'govuk-!-margin-bottom-6',
+          attributes: { 'data-testid': 'checkbox-form-group' }
+        },
+        items: [
+          {
+            value: 'confirmed',
+            text: 'I confirm',
+            checked: true,
+            attributes: { 'data-testid': 'confirm-checkbox' },
+            label: {
+              classes: 'govuk-label--s',
+              attributes: { 'data-testid': 'confirm-label' }
+            },
+            hint: {
+              text: 'This confirmation is required',
+              attributes: { 'data-testid': 'confirm-hint' }
+            }
+          }
+        ]
+      }
+      mockRequest.pre.data = { components: [checkboxes] }
+
+      configDrivenAgreementController.handler(mockRequest, mockH)
+
+      expect(mockH.view.mock.calls[0][1].components[0]).toBe(checkboxes)
+    })
+
     it('rejects an unsupported component and logs its type outside production', () => {
       mockRequest.pre.data = {
         components: [{ component: 'unsupported-widget' }]
@@ -230,6 +266,20 @@ describe('configDrivenAgreementController', () => {
       ).toThrow('Unsupported agreement action URL')
       expect(mockH.view).not.toHaveBeenCalled()
     })
+
+    it.each(['', null, 42])(
+      'rejects an invalid href value through the existing error handling: %j',
+      (href) => {
+        mockRequest.pre.data = {
+          actions: [{ href, text: 'Accept' }]
+        }
+
+        expect(() =>
+          configDrivenAgreementController.handler(mockRequest, mockH)
+        ).toThrow('Unsupported agreement action URL')
+        expect(mockH.view).not.toHaveBeenCalled()
+      }
+    )
 
     it('rejects an action path containing a query string', () => {
       const href = '/agreements/PMF123/actions/accept?confirmation=true'

@@ -115,7 +115,8 @@ const buildProxiedPath = (baseUrl, value) => {
 }
 
 const buildActionHref = (baseUrl, href) => {
-  const match = href.match(gasActionPathPattern)
+  const match =
+    typeof href === 'string' ? href.match(gasActionPathPattern) : undefined
   if (!match) {
     throw Boom.badGateway('Unsupported agreement action URL')
   }
@@ -127,7 +128,9 @@ const buildActionHref = (baseUrl, href) => {
 const buildActions = (actions = [], baseUrl = '/') =>
   actions.map((action) => ({
     ...action,
-    ...(action.href ? { href: buildActionHref(baseUrl, action.href) } : {}),
+    ...(Object.hasOwn(action, 'href')
+      ? { href: buildActionHref(baseUrl, action.href) }
+      : {}),
     ...(action.action
       ? { action: buildProxiedPath(baseUrl, action.action) }
       : {})
