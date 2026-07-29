@@ -103,14 +103,14 @@ describe('generic GAS Agreement action routes', () => {
 
     const response = await server.inject({
       method: 'GET',
-      url: '/AGR_42/actions/recalculate-anything?x-encrypted-auth=query-auth',
+      url: '/AGR_42/actions/recalculate-anything?view=latest&x-encrypted-auth=query-auth',
       headers: { 'x-base-url': '/agreement' }
     })
 
     expect(response.statusCode).toBe(200)
     expect(pageModel).toEqual(originalModel)
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      'http://gas.internal:3102/agreements/AGR_42/actions/recalculate-anything',
+      'http://gas.internal:3102/agreements/AGR_42/actions/recalculate-anything?view=latest',
       {
         method: 'GET',
         headers: {
@@ -134,13 +134,48 @@ describe('generic GAS Agreement action routes', () => {
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
     )
     expect($('form').attr('action')).toBe(
-      '/agreement/AGR_42/actions/recalculate-anything'
+      '/agreement/AGR_42/actions/recalculate-anything?x-encrypted-auth=query-auth'
     )
     expect($('input[name="contactPreference"]').val()).toBe('email')
     expect($('input[name="anythingAtAll"]').val()).toBe('kept exactly')
     expect(response.result).toContain(
       'This content is owned completely by GAS.'
     )
+  })
+
+  test('translates configured GAS absolute action URLs and retains external links', async () => {
+    globalThis.fetch.mockResolvedValueOnce(
+      gasPageResponse(
+        actionPageModel({
+          actions: [
+            {
+              method: 'POST',
+              action:
+                'http://gas.internal:3102/agreements/AGR_42/actions/recalculate-anything?stage=confirm',
+              text: 'Run operation'
+            },
+            {
+              href: 'https://example.com/help',
+              text: 'External help'
+            }
+          ]
+        }),
+        '"AGR_42:7"'
+      )
+    )
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/AGR_42/actions/recalculate-anything?x-encrypted-auth=query-auth',
+      headers: { 'x-base-url': '/agreement' }
+    })
+
+    const $ = load(response.result)
+    expect($('form').attr('action')).toBe(
+      '/agreement/AGR_42/actions/recalculate-anything?stage=confirm&x-encrypted-auth=query-auth'
+    )
+    expect($('a[href="https://example.com/help"]')).toHaveLength(1)
+    expect(response.result).not.toContain('http://gas.internal:3102')
   })
 
   test('POST removes only transport metadata and renders the complete 422 model with its new ETag and the same key', async () => {
@@ -262,9 +297,8 @@ describe('generic GAS Agreement action routes', () => {
 
     const response = await server.inject({
       method: 'POST',
-      url: '/AGR_42/actions/anything',
+      url: '/AGR_42/actions/anything?step=confirm&x-encrypted-auth=query-auth',
       headers: {
-        'x-encrypted-auth': 'auth',
         'x-base-url': '/agreement'
       },
       payload: {
@@ -276,8 +310,13 @@ describe('generic GAS Agreement action routes', () => {
     })
 
     expect(response.statusCode).toBe(303)
-    expect(response.headers.location).toBe('/agreement/AGR_42?view=latest')
+    expect(response.headers.location).toBe(
+      '/agreement/AGR_42?view=latest&x-encrypted-auth=query-auth'
+    )
     expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+    expect(globalThis.fetch.mock.calls[0][0]).toBe(
+      'http://gas.internal:3102/agreements/AGR_42/actions/anything?step=confirm'
+    )
     expect(globalThis.fetch.mock.calls[0][1].redirect).toBe('manual')
   })
 
@@ -286,13 +325,16 @@ describe('generic GAS Agreement action routes', () => {
       gasPageResponse(actionPageModel(), '"AGR_42:1"')
     )
 
-    await server.inject({
+    const response = await server.inject({
       method: 'GET',
       url: '/AGR_42/actions/anything?x-encrypted-auth=query-auth',
       headers: { 'x-encrypted-auth': 'header-auth' }
     })
 
     expect(extractJwtPayload).toHaveBeenCalledWith('header-auth')
+    expect(load(response.result)('form').attr('action')).toBe(
+      '/AGR_42/actions/recalculate-anything'
+    )
   })
 
   test('does not proxy the new route for an Agreement selected for the legacy backend', async () => {

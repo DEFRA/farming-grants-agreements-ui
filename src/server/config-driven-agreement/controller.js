@@ -1,36 +1,69 @@
 import path from 'node:path'
 
 import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
-import { translateAgreementPath } from '#~/server/agreement/agreement-paths.js'
+import {
+  appendQueryAuthentication,
+  translateAgreementPath
+} from '#~/server/agreement/agreement-paths.js'
+import { getQueryAuthentication } from '#~/server/agreement/agreement-request.js'
 
 const absoluteUrlPattern = /^[a-z][a-z\d+.-]*:/i
 
-const buildProxiedPath = (baseUrl, value) => {
-  if (!value || absoluteUrlPattern.test(value) || value.startsWith('#')) {
+const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
+  if (!value || value.startsWith('#')) {
     return value
   }
 
-  const translatedAgreementPath = translateAgreementPath(value, baseUrl)
+  const translatedAgreementPath = translateAgreementPath(
+    value,
+    baseUrl,
+    queryAuthentication
+  )
   if (translatedAgreementPath) {
     return translatedAgreementPath
+  }
+
+  if (absoluteUrlPattern.test(value) || value.startsWith('//')) {
+    return value
   }
 
   if (
     baseUrl !== '/' &&
     (value === baseUrl || value.startsWith(`${baseUrl}/`))
   ) {
-    return value
+    return appendQueryAuthentication(value, queryAuthentication)
   }
 
-  return path.posix.join(baseUrl, value)
+  return appendQueryAuthentication(
+    path.posix.join(baseUrl, value),
+    queryAuthentication
+  )
 }
 
-const buildActions = (actions = [], baseUrl = '/') =>
+const buildActions = (
+  actions = [],
+  baseUrl = '/',
+  queryAuthentication
+) =>
   actions.map((action) => ({
     ...action,
-    ...(action.href ? { href: buildProxiedPath(baseUrl, action.href) } : {}),
+    ...(action.href
+      ? {
+          href: buildProxiedPath(
+            baseUrl,
+            action.href,
+            queryAuthentication
+          )
+        }
+      : {}),
     ...(action.action
-      ? { action: buildProxiedPath(baseUrl, action.action) }
+      ? {
+          action: buildProxiedPath(
+            baseUrl,
+            action.action,
+            queryAuthentication
+          )
+        }
       : {})
   }))
 
@@ -40,7 +73,8 @@ const hasWatermark = (components = []) =>
 const buildConfigDrivenAgreementModel = (
   renderModel = {},
   baseUrl = '/',
-  transportMetadata
+  transportMetadata,
+  queryAuthentication
 ) => {
   const components = renderModel.components ?? renderModel.content ?? []
 
@@ -48,7 +82,11 @@ const buildConfigDrivenAgreementModel = (
     pageTitle: renderModel.page?.title ?? renderModel.title ?? 'Agreement',
     agreement: renderModel.agreement,
     components,
-    actions: buildActions(renderModel.actions, baseUrl),
+    actions: buildActions(
+      renderModel.actions,
+      baseUrl,
+      queryAuthentication
+    ),
     errors: renderModel.errors ?? [],
     hasWatermark: hasWatermark(components),
     layout: renderModel.page?.layout ?? renderModel.layout ?? 'default',
@@ -67,7 +105,8 @@ export const renderConfigDrivenAgreement = (
     buildConfigDrivenAgreementModel(
       renderModel,
       getBaseUrl(request),
-      transportMetadata
+      transportMetadata,
+      getQueryAuthentication(request)
     )
   )
 

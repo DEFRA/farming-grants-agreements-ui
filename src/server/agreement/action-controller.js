@@ -14,12 +14,14 @@ import {
   extractActionSubmission
 } from './action-transport.js'
 import { translateGasLocation } from './agreement-paths.js'
-
-const getAuthToken = (request) =>
-  request.headers['x-encrypted-auth'] || request.query['x-encrypted-auth']
+import {
+  getAgreementAuthentication,
+  getGasQueryParams,
+  getQueryAuthentication
+} from './agreement-request.js'
 
 export const getGasActionAuthentication = (request) => {
-  const authToken = getAuthToken(request)
+  const authToken = getAgreementAuthentication(request)
   const jwtPayload = extractJwtPayload(authToken)
 
   if (!jwtPayload) {
@@ -57,6 +59,7 @@ export const agreementActionController = {
     const response = await gasActionRequest({
       agreementId,
       actionName,
+      queryParams: getGasQueryParams(request),
       jwtPayload
     })
 
@@ -76,6 +79,7 @@ export const agreementActionController = {
       body: { values },
       etag,
       idempotencyKey,
+      queryParams: getGasQueryParams(request),
       jwtPayload
     })
 
@@ -92,7 +96,8 @@ export const agreementActionController = {
     if ([303, 412].includes(response.status)) {
       const publicLocation = translateGasLocation(
         response.location,
-        getBaseUrl(request)
+        getBaseUrl(request),
+        getQueryAuthentication(request)
       )
       return h.redirect(publicLocation).code(303)
     }

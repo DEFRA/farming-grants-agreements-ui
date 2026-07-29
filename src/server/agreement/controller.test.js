@@ -102,14 +102,14 @@ describe('#agreementController', () => {
 
       const response = await server.inject({
         method: 'GET',
-        url: '/PMF123456789',
-        headers: { 'x-encrypted-auth': 'mock-auth' }
+        url: '/PMF123456789?view=latest&x-encrypted-auth=query-auth',
+        headers: { 'x-encrypted-auth': 'header-auth' }
       })
 
       expect(response.statusCode).toBe(200)
       expect(response.result).toBe('GAS Agreement')
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3102/agreements/PMF123456789',
+        'http://localhost:3102/agreements/PMF123456789?view=latest',
         expect.objectContaining({
           method: 'GET',
           headers: { Authorization: 'Bearer mock-gas-token' },

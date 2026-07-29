@@ -13,6 +13,19 @@ export const getBackend = (jwtPayload) => {
   return allowedGrantCodes.includes(jwtPayload?.grantCode) ? GAS : LEGACY
 }
 
+const appendQueryParams = (url, queryParams) => {
+  const searchParams = new URLSearchParams()
+
+  for (const [name, value] of Object.entries(queryParams ?? {})) {
+    for (const item of Array.isArray(value) ? value : [value]) {
+      searchParams.append(name, item)
+    }
+  }
+
+  const search = searchParams.toString()
+  return search ? `${url}?${search}` : url
+}
+
 const buildUrl = ({
   backend,
   agreementId,
@@ -25,12 +38,18 @@ const buildUrl = ({
     const gasUrl = config.get('gasBackend.url')
 
     if (actionName) {
-      return `${gasUrl}/agreements/${encodeURIComponent(agreementId)}/actions/${encodeURIComponent(actionName)}`
+      return appendQueryParams(
+        `${gasUrl}/agreements/${encodeURIComponent(agreementId)}/actions/${encodeURIComponent(actionName)}`,
+        queryParams
+      )
     }
 
     if (method.toUpperCase() === 'GET') {
       if (agreementId) {
-        return `${gasUrl}/agreements/${encodeURIComponent(agreementId)}`
+        return appendQueryParams(
+          `${gasUrl}/agreements/${encodeURIComponent(agreementId)}`,
+          queryParams
+        )
       }
 
       const searchParams = new URLSearchParams(queryParams)
@@ -166,6 +185,7 @@ export const gasActionRequest = async ({
   body,
   etag,
   idempotencyKey,
+  queryParams,
   jwtPayload
 }) =>
   requestBackend(
@@ -176,6 +196,7 @@ export const gasActionRequest = async ({
       body,
       backend: GAS,
       jwtPayload,
+      queryParams,
       transportHeaders: {
         ...(etag !== undefined && { 'If-Match': etag }),
         ...(idempotencyKey !== undefined && {

@@ -4,9 +4,14 @@ import Boom from '@hapi/boom'
 
 import { config } from '#~/config/config.js'
 
+import { encryptedAuthQueryName } from './agreement-request.js'
+
 const absoluteUrlPattern = /^[a-z][a-z\d+.-]*:/i
 const agreementPathPattern =
   /^\/agreements\/([^/]+?)(?:\/actions\/([^/]+))?\/?$/
+
+const isAbsoluteUrl = (value) =>
+  absoluteUrlPattern.test(value) || value.startsWith('//')
 
 const isSafeSegment = (segment) =>
   segment &&
@@ -23,31 +28,88 @@ const getAgreementSegments = (pathname) => {
   return actionName ? [agreementId, 'actions', actionName] : [agreementId]
 }
 
-const appendToBaseUrl = (baseUrl, segments, search = '', hash = '') => {
+export const appendQueryAuthentication = (value, queryAuthentication) => {
+  if (queryAuthentication === undefined) {
+    return value
+  }
+
+  const hashIndex = value.indexOf('#')
+  const hash = hashIndex === -1 ? '' : value.slice(hashIndex)
+  const valueWithoutHash =
+    hashIndex === -1 ? value : value.slice(0, hashIndex)
+  const queryIndex = valueWithoutHash.indexOf('?')
+  const pathname =
+    queryIndex === -1
+      ? valueWithoutHash
+      : valueWithoutHash.slice(0, queryIndex)
+  const searchParams = new URLSearchParams(
+    queryIndex === -1 ? '' : valueWithoutHash.slice(queryIndex + 1)
+  )
+  searchParams.set(encryptedAuthQueryName, queryAuthentication)
+
+  return `${pathname}?${searchParams.toString()}${hash}`
+}
+
+const appendToBaseUrl = (
+  baseUrl,
+  segments,
+  search = '',
+  hash = '',
+  queryAuthentication
+) => {
   if (!absoluteUrlPattern.test(baseUrl)) {
-    return `${path.posix.join(baseUrl, ...segments)}${search}${hash}`
+    return appendQueryAuthentication(
+      `${path.posix.join(baseUrl, ...segments)}${search}${hash}`,
+      queryAuthentication
+    )
   }
 
   const publicUrl = new URL(baseUrl)
   publicUrl.pathname = path.posix.join(publicUrl.pathname, ...segments)
   publicUrl.search = search
   publicUrl.hash = hash
-  return publicUrl.toString()
+  return appendQueryAuthentication(
+    publicUrl.toString(),
+    queryAuthentication
+  )
 }
 
-export const translateAgreementPath = (value, baseUrl) => {
-  if (typeof value !== 'string' || absoluteUrlPattern.test(value)) {
+export const translateAgreementPath = (
+  value,
+  baseUrl,
+  queryAuthentication
+) => {
+  if (typeof value !== 'string') {
     return undefined
   }
 
-  const target = new URL(value, 'http://agreements-ui.local')
+  const gasBaseUrl = new URL(config.get('gasBackend.url'))
+  const target = new URL(value, gasBaseUrl)
+  if (isAbsoluteUrl(value) && target.origin !== gasBaseUrl.origin) {
+    return undefined
+  }
+
   const segments = getAgreementSegments(target.pathname)
+  if (isAbsoluteUrl(value) && !segments) {
+    throw Boom.badGateway('GAS returned an unsupported Agreement URL')
+  }
+
   return segments
-    ? appendToBaseUrl(baseUrl, segments, target.search, target.hash)
+    ? appendToBaseUrl(
+        baseUrl,
+        segments,
+        target.search,
+        target.hash,
+        queryAuthentication
+      )
     : undefined
 }
 
-export const translateGasLocation = (location, baseUrl) => {
+export const translateGasLocation = (
+  location,
+  baseUrl,
+  queryAuthentication
+) => {
   if (!location) {
     throw Boom.badGateway('GAS response did not include a Location header')
   }
@@ -64,5 +126,11 @@ export const translateGasLocation = (location, baseUrl) => {
     throw Boom.badGateway('GAS returned an unsupported Location header')
   }
 
-  return appendToBaseUrl(baseUrl, segments, target.search, target.hash)
+  return appendToBaseUrl(
+    baseUrl,
+    segments,
+    target.search,
+    target.hash,
+    queryAuthentication
+  )
 }

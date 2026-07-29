@@ -7,14 +7,17 @@ import {
   agreementActionController,
   getGasActionAuthentication
 } from './action-controller.js'
+import {
+  getAgreementAuthentication,
+  getGasQueryParams
+} from './agreement-request.js'
 
 const getAgreementData = async (request) => {
   const { agreementId = '' } = request.params
   const action = request?.payload?.action
   const method = action === 'accept-offer' ? 'POST' : 'GET'
 
-  const authToken =
-    request.headers['x-encrypted-auth'] || request.query['x-encrypted-auth']
+  const authToken = getAgreementAuthentication(request)
 
   const jwtPayload = extractJwtPayload(authToken)
 
@@ -32,7 +35,8 @@ const getAgreementData = async (request) => {
     auth: authToken,
     body: method === 'POST' ? request.payload : undefined,
     backend,
-    jwtPayload
+    jwtPayload,
+    queryParams: getGasQueryParams(request)
   })
 }
 
