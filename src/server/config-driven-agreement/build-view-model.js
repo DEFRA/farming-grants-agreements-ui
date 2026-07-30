@@ -62,9 +62,9 @@ const buildActionHref = (baseUrl, href, queryAuthentication) => {
 }
 
 const translateActionPaths = (
+  queryAuthentication,
   actions = [],
-  baseUrl = '/',
-  queryAuthentication
+  baseUrl = '/'
 ) =>
   actions.map((action) => ({
     ...action,
@@ -135,9 +135,9 @@ export const buildViewModel = (
     agreement: renderModel.agreement,
     components: buildComponentUrls(components, baseUrl, queryAuthentication),
     actions: translateActionPaths(
+      queryAuthentication,
       renderModel.actions,
-      baseUrl,
-      queryAuthentication
+      baseUrl
     ),
     errors: renderModel.errors ?? [],
     hasWatermark: hasWatermark(components),

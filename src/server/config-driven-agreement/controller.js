@@ -15,17 +15,19 @@ const getBuildOptions = (request, transportMetadata) => {
 export const renderConfigDrivenAgreement = (
   request,
   h,
-  renderModel = {},
+  renderModel,
   transportMetadata
 ) => {
-  const components = renderModel.components ?? renderModel.content ?? []
+  const resolvedRenderModel = renderModel ?? {}
+  const components =
+    resolvedRenderModel.components ?? resolvedRenderModel.content ?? []
   validateComponents(components, request.logger)
 
   const baseUrl = getBaseUrl(request)
   const buildOptions = getBuildOptions(request, transportMetadata)
   const viewModel = buildOptions
-    ? buildViewModel(renderModel, baseUrl, buildOptions)
-    : buildViewModel(renderModel, baseUrl)
+    ? buildViewModel(resolvedRenderModel, baseUrl, buildOptions)
+    : buildViewModel(resolvedRenderModel, baseUrl)
 
   return h.view('config-driven-agreement/page', viewModel)
 }
