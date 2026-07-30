@@ -1,6 +1,3 @@
-import { mkdir, writeFile } from 'node:fs/promises'
-import path from 'node:path'
-
 import {
   afterAll,
   beforeAll,
@@ -156,20 +153,5 @@ describe('GAS public agreement rendering', () => {
     expect(printResponse.result).toContain('GAS PRINT')
     expect(printResponse.result).toContain('Printable Pigs Might Fly agreement')
     expect(printResponse.result).toContain('Print content supplied by GAS.')
-
-    const evidenceDirectory = process.env.NO_MISTAKES_EVIDENCE_DIR
-    if (evidenceDirectory) {
-      await mkdir(evidenceDirectory, { recursive: true })
-      await Promise.all([
-        writeFile(
-          path.join(evidenceDirectory, 'gas-agreement-view.html'),
-          viewResponse.result
-        ),
-        writeFile(
-          path.join(evidenceDirectory, 'gas-agreement-print.html'),
-          printResponse.result
-        )
-      ])
-    }
   })
 })
