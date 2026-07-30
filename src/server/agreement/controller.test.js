@@ -86,6 +86,47 @@ describe('#agreementController', () => {
       expect(searchParams.get('clientRef')).toBe('client-ref-001')
     })
 
+    test('should call the GAS backend by agreement number when grantCode is "pigs-might-fly" and agreementId is provided', async () => {
+      const mockPayload = {
+        sub: '1234567890',
+        name: 'John Doe',
+        admin: true,
+        iat: 1516239022,
+        sbi: 106284736,
+        source: 'defra',
+        clientRef: 'client-ref-001',
+        grantCode: 'pigs-might-fly'
+      }
+      extractJwtPayload.mockReturnValue(mockPayload)
+
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({})
+      })
+
+      await server.inject({
+        method: 'GET',
+        url: '/PMF001',
+        headers: {
+          'x-encrypted-auth': 'mock-auth'
+        }
+      })
+
+      // GAS URL for by-number request should NOT include query parameters
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3102/agreements/PMF001',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer mock-gas-token'
+          }),
+          method: 'GET'
+        })
+      )
+
+      const url = fetch.mock.calls[0][0]
+      expect(url).not.toContain('?')
+    })
+
     test('should call the legacy backend when grantCode is "FPTT"', async () => {
       const mockPayload = {
         sub: '1234567890',
