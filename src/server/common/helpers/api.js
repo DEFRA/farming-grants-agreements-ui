@@ -10,7 +10,15 @@ const logger = createLogger()
 
 export const getBackend = (jwtPayload) => {
   const allowedGrantCodes = config.get('gasBackend.allowedGrantCodes')
-  return allowedGrantCodes.includes(jwtPayload?.grantCode) ? GAS : LEGACY
+  const grantCode = jwtPayload?.grantCode
+  const isAllowed = allowedGrantCodes.includes(grantCode)
+
+  const backendType = isAllowed ? GAS : LEGACY
+
+  logger.info(
+    `Determining backendType ${backendType}  for request based on grant code ${grantCode} the allowed grant codes are: ${allowedGrantCodes.join()}`
+  )
+  return backendType
 }
 
 const buildUrl = ({
