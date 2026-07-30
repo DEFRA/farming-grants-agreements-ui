@@ -1,204 +1,55 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { configDrivenAgreementController } from './controller.js'
-import * as baseUrlHelper from '#~/server/common/helpers/base-url.js'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('#~/server/common/helpers/base-url.js', () => ({
-  getBaseUrl: vi.fn()
-}))
+import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
+
+import { buildViewModel } from './build-view-model.js'
+import { configDrivenAgreementController } from './controller.js'
+import { validateComponents } from './validate-components.js'
+
+vi.mock('#~/server/common/helpers/base-url.js')
+vi.mock('./build-view-model.js')
+vi.mock('./validate-components.js')
 
 describe('configDrivenAgreementController', () => {
-  let mockRequest
-  let mockH
+  let request
+  let h
 
   beforeEach(() => {
-    mockRequest = {
+    request = {
       pre: {
-        data: {}
+        data: {
+          components: [{ component: 'paragraph', text: 'Hello' }]
+        }
       },
-      log: vi.fn(),
-      headers: {}
+      logger: { error: vi.fn() }
     }
-    mockH = {
+    h = {
       view: vi.fn().mockReturnValue('rendered-view')
     }
-    vi.mocked(baseUrlHelper.getBaseUrl).mockReturnValue('/')
+    vi.mocked(getBaseUrl).mockReturnValue('/agreement')
+    vi.mocked(buildViewModel).mockReturnValue({ pageTitle: 'Agreement' })
   })
 
-  describe('handler', () => {
-    it('should render the page with default model when no data is provided', () => {
-      mockRequest.pre.data = {}
+  it('validates, adapts and renders the GAS page model', () => {
+    const result = configDrivenAgreementController.handler(request, h)
 
-      const result = configDrivenAgreementController.handler(mockRequest, mockH)
-
-      expect(mockH.view).toHaveBeenCalledWith(
-        'config-driven-agreement/page',
-        expect.objectContaining({
-          pageTitle: 'Agreement',
-          components: [],
-          actions: [],
-          errors: [],
-          hasWatermark: false,
-          layout: 'default'
-        })
-      )
-      expect(result).toBe('rendered-view')
+    expect(validateComponents).toHaveBeenCalledWith(
+      request.pre.data.components,
+      request.logger
+    )
+    expect(buildViewModel).toHaveBeenCalledWith(request.pre.data, '/agreement')
+    expect(h.view).toHaveBeenCalledWith('config-driven-agreement/page', {
+      pageTitle: 'Agreement'
     })
-
-    it('should use renderModel.page.title for pageTitle if available', () => {
-      mockRequest.pre.data = {
-        page: { title: 'Custom Title' }
-      }
-
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      expect(mockH.view).toHaveBeenCalledWith(
-        'config-driven-agreement/page',
-        expect.objectContaining({
-          pageTitle: 'Custom Title'
-        })
-      )
-    })
-
-    it('should use renderModel.title for pageTitle if renderModel.page.title is missing', () => {
-      mockRequest.pre.data = {
-        title: 'Model Title'
-      }
-
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      expect(mockH.view).toHaveBeenCalledWith(
-        'config-driven-agreement/page',
-        expect.objectContaining({
-          pageTitle: 'Model Title'
-        })
-      )
-    })
-
-    it('should set hasWatermark to true if a watermark component exists', () => {
-      mockRequest.pre.data = {
-        components: [{ component: 'watermark' }]
-      }
-
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      expect(mockH.view).toHaveBeenCalledWith(
-        'config-driven-agreement/page',
-        expect.objectContaining({
-          hasWatermark: true
-        })
-      )
-    })
-
-    it('should use renderModel.content if renderModel.components is missing', () => {
-      mockRequest.pre.data = {
-        content: [{ component: 'paragraph', text: 'hello' }]
-      }
-
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      expect(mockH.view).toHaveBeenCalledWith(
-        'config-driven-agreement/page',
-        expect.objectContaining({
-          components: [{ component: 'paragraph', text: 'hello' }]
-        })
-      )
-    })
-
-    it('should use renderModel.page.layout if available', () => {
-      mockRequest.pre.data = {
-        page: { layout: 'document' }
-      }
-
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      expect(mockH.view).toHaveBeenCalledWith(
-        'config-driven-agreement/page',
-        expect.objectContaining({
-          layout: 'document'
-        })
-      )
-    })
-
-    it('should use renderModel.layout if renderModel.page.layout is missing', () => {
-      mockRequest.pre.data = {
-        layout: 'custom-layout'
-      }
-
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      expect(mockH.view).toHaveBeenCalledWith(
-        'config-driven-agreement/page',
-        expect.objectContaining({
-          layout: 'custom-layout'
-        })
-      )
-    })
+    expect(result).toBe('rendered-view')
   })
 
-  describe('buildProxiedPath logic (via buildActions)', () => {
-    it('should not modify absolute URLs', () => {
-      mockRequest.pre.data = {
-        actions: [
-          { href: 'https://example.com/external', text: 'External' },
-          { action: 'http://example.com/api', text: 'API' }
-        ]
-      }
+  it('uses an empty model when pre-handler data is missing', () => {
+    request.pre = undefined
 
-      configDrivenAgreementController.handler(mockRequest, mockH)
+    configDrivenAgreementController.handler(request, h)
 
-      const model = mockH.view.mock.calls[0][1]
-      expect(model.actions[0].href).toBe('https://example.com/external')
-      expect(model.actions[1].action).toBe('http://example.com/api')
-    })
-
-    it('should not modify anchor links', () => {
-      mockRequest.pre.data = {
-        actions: [{ href: '#main-content', text: 'Skip' }]
-      }
-
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      const model = mockH.view.mock.calls[0][1]
-      expect(model.actions[0].href).toBe('#main-content')
-    })
-
-    it('should join baseUrl with relative paths', () => {
-      vi.mocked(baseUrlHelper.getBaseUrl).mockReturnValue('/my-proxy')
-      mockRequest.pre.data = {
-        actions: [{ href: 'submit', text: 'Submit' }]
-      }
-
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      const model = mockH.view.mock.calls[0][1]
-      expect(model.actions[0].href).toBe('/my-proxy/submit')
-    })
-
-    it('should not modify path if it already starts with baseUrl', () => {
-      vi.mocked(baseUrlHelper.getBaseUrl).mockReturnValue('/my-proxy')
-      mockRequest.pre.data = {
-        actions: [
-          { href: '/my-proxy', text: 'Home' },
-          { href: '/my-proxy/details', text: 'Details' }
-        ]
-      }
-
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      const model = mockH.view.mock.calls[0][1]
-      expect(model.actions[0].href).toBe('/my-proxy')
-      expect(model.actions[1].href).toBe('/my-proxy/details')
-    })
-
-    it('should handle undefined values in buildProxiedPath gracefully', () => {
-      mockRequest.pre.data = {
-        actions: [{ text: 'No href' }]
-      }
-
-      configDrivenAgreementController.handler(mockRequest, mockH)
-
-      const model = mockH.view.mock.calls[0][1]
-      expect(model.actions[0]).not.toHaveProperty('href')
-    })
+    expect(validateComponents).toHaveBeenCalledWith([], request.logger)
+    expect(buildViewModel).toHaveBeenCalledWith({}, '/agreement')
   })
 })
