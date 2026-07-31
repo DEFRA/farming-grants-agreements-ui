@@ -4,14 +4,6 @@ import { getQueryAuthentication } from '#~/server/agreement/agreement-request.js
 import { buildViewModel } from './build-view-model.js'
 import { validateComponents } from './validate-components.js'
 
-const getBuildOptions = (request, transportMetadata) => {
-  const queryAuthentication = getQueryAuthentication(request)
-
-  return queryAuthentication === undefined && transportMetadata === undefined
-    ? undefined
-    : { queryAuthentication, transportMetadata }
-}
-
 export const renderConfigDrivenAgreement = (
   request,
   h,
@@ -24,12 +16,15 @@ export const renderConfigDrivenAgreement = (
   validateComponents(components, request.logger)
 
   const baseUrl = getBaseUrl(request)
-  const buildOptions = getBuildOptions(request, transportMetadata)
-  const viewModel = buildOptions
-    ? buildViewModel(resolvedRenderModel, baseUrl, buildOptions)
-    : buildViewModel(resolvedRenderModel, baseUrl)
+  const queryAuthentication = getQueryAuthentication(request)
+  const viewModel = buildViewModel(resolvedRenderModel, baseUrl, {
+    queryAuthentication,
+    transportMetadata
+  })
 
-  return h.view('config-driven-agreement/page', viewModel)
+  return h
+    .view('config-driven-agreement/page', viewModel)
+    .header('Referrer-Policy', 'no-referrer')
 }
 
 export const configDrivenAgreementController = {

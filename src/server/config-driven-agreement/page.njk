@@ -18,17 +18,25 @@
         }) }}
       {% endif %}
 
-      {{ dynamicContent(components) }}
+      {% set renderComponentsInsideForm = actions.length == 1 and actions[0].method == 'POST' %}
+
+      {% if not renderComponentsInsideForm %}
+        {{ dynamicContent(components) }}
+      {% endif %}
 
       {% for action in actions %}
-        {% if action.href %}
+        {% if action.href and action.method != 'POST' %}
           {{ govukButton({
             text: action.text,
             href: action.href,
             classes: action.classes
           }) }}
         {% else %}
-          <form method="{{ action.method or 'POST' }}" action="{{ action.action }}">
+          <form method="{{ action.method or 'POST' }}" action="{{ action.action or action.href }}">
+            {% if renderComponentsInsideForm %}
+              {{ dynamicContent(components) }}
+            {% endif %}
+
             {% if transportMetadata %}
               <input type="hidden" name="{{ transportMetadata.etag.name }}" value="{{ transportMetadata.etag.value }}">
               <input type="hidden" name="{{ transportMetadata.idempotencyKey.name }}" value="{{ transportMetadata.idempotencyKey.value }}">

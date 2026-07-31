@@ -8,6 +8,27 @@ import {
 } from '#~/server/agreement/agreement-paths.js'
 
 const absoluteUrlPattern = /^[a-z][a-z\d+.-]*:/i
+const allowedExternalProtocols = new Set(['http:', 'https:', 'mailto:'])
+
+const isAllowedExternalUrl = (value) => {
+  if (!absoluteUrlPattern.test(value)) {
+    return false
+  }
+
+  try {
+    return allowedExternalProtocols.has(new URL(value).protocol)
+  } catch {
+    return false
+  }
+}
+
+const returnAllowedExternalUrl = (value) => {
+  if (isAllowedExternalUrl(value)) {
+    return value
+  }
+
+  throw Boom.badGateway('Unsupported agreement URL')
+}
 
 const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
   if (typeof value !== 'string' || !value || value.startsWith('#')) {
@@ -24,7 +45,7 @@ const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
   }
 
   if (absoluteUrlPattern.test(value) || value.startsWith('//')) {
-    return value
+    return returnAllowedExternalUrl(value)
   }
 
   if (
@@ -55,16 +76,16 @@ const buildActionHref = (baseUrl, href, queryAuthentication) => {
   }
 
   if (absoluteUrlPattern.test(href) || href.startsWith('//')) {
-    return href
+    return returnAllowedExternalUrl(href)
   }
 
   throw Boom.badGateway('Unsupported agreement action URL')
 }
 
 const translateActionPaths = (
-  queryAuthentication,
   actions = [],
-  baseUrl = '/'
+  baseUrl = '/',
+  queryAuthentication
 ) =>
   actions.map((action) => ({
     ...action,
@@ -135,9 +156,9 @@ export const buildViewModel = (
     agreement: renderModel.agreement,
     components: buildComponentUrls(components, baseUrl, queryAuthentication),
     actions: translateActionPaths(
-      queryAuthentication,
       renderModel.actions,
-      baseUrl
+      baseUrl,
+      queryAuthentication
     ),
     errors: renderModel.errors ?? [],
     hasWatermark: hasWatermark(components),

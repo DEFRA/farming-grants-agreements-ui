@@ -13,6 +13,14 @@ const agreementPathPattern =
 const isAbsoluteUrl = (value) =>
   absoluteUrlPattern.test(value) || value.startsWith('//')
 
+const parseUrl = (value, baseUrl) => {
+  try {
+    return new URL(value, baseUrl)
+  } catch {
+    return undefined
+  }
+}
+
 const isSafeSegment = (segment) =>
   segment &&
   !['.', '..'].includes(segment.toLowerCase()) &&
@@ -74,7 +82,11 @@ export const translateAgreementPath = (value, baseUrl, queryAuthentication) => {
   }
 
   const gasBaseUrl = new URL(config.get('gasBackend.url'))
-  const target = new URL(value, gasBaseUrl)
+  const target = parseUrl(value, gasBaseUrl)
+  if (!target) {
+    return undefined
+  }
+
   if (isAbsoluteUrl(value) && target.origin !== gasBaseUrl.origin) {
     return undefined
   }
@@ -105,7 +117,10 @@ export const translateGasLocation = (
   }
 
   const gasBaseUrl = new URL(config.get('gasBackend.url'))
-  const target = new URL(location, gasBaseUrl)
+  const target = parseUrl(location, gasBaseUrl)
+  if (!target) {
+    throw Boom.badGateway('GAS returned an unsupported Location header')
+  }
 
   if (target.origin !== gasBaseUrl.origin) {
     throw Boom.badGateway('GAS returned an unsupported Location header')

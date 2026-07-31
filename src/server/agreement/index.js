@@ -40,6 +40,20 @@ const getAgreementData = async (request) => {
   })
 }
 
+const gasActionPre = [
+  {
+    method: getGasActionAuthentication,
+    assign: 'actionAuthentication'
+  }
+]
+
+const gasActionPayload = {
+  allow: 'application/x-www-form-urlencoded',
+  output: 'data',
+  parse: true,
+  maxBytes: 64 * 1024
+}
+
 /**
  * Sets up the routes used in the agreement page.
  * These routes are registered in src/server/router.js.
@@ -62,12 +76,7 @@ export const agreement = {
           method: 'GET',
           path: '/{agreementId}/actions/{actionName}',
           options: {
-            pre: [
-              {
-                method: getGasActionAuthentication,
-                assign: 'actionAuthentication'
-              }
-            ]
+            pre: gasActionPre
           },
           handler: agreementActionController.get
         },
@@ -75,12 +84,8 @@ export const agreement = {
           method: 'POST',
           path: '/{agreementId}/actions/{actionName}',
           options: {
-            pre: [
-              {
-                method: getGasActionAuthentication,
-                assign: 'actionAuthentication'
-              }
-            ]
+            pre: gasActionPre,
+            payload: gasActionPayload
           },
           handler: agreementActionController.post
         },
