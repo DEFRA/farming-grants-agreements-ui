@@ -14,7 +14,10 @@ import {
   createActionTransport,
   extractActionSubmission
 } from './action-transport.js'
-import { translateGasLocation } from './agreement-paths.js'
+import {
+  translateGasAgreementLocation,
+  translateGasLocation
+} from './agreement-paths.js'
 import {
   getAgreementAuthentication,
   getGasQueryParams,
@@ -94,11 +97,17 @@ export const agreementActionController = {
       ).code(statusCodes.unprocessableEntity)
     }
 
-    if (
-      [statusCodes.seeOther, statusCodes.preconditionFailed].includes(
-        response.status
+    if (response.status === statusCodes.preconditionFailed) {
+      const publicLocation = translateGasAgreementLocation(
+        response.location,
+        agreementId,
+        getBaseUrl(request),
+        getQueryAuthentication(request)
       )
-    ) {
+      return h.redirect(publicLocation).code(statusCodes.seeOther)
+    }
+
+    if (response.status === statusCodes.seeOther) {
       const publicLocation = translateGasLocation(
         response.location,
         getBaseUrl(request),

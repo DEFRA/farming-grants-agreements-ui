@@ -30,7 +30,12 @@ const returnAllowedExternalUrl = (value) => {
   throw Boom.badGateway('Unsupported agreement URL')
 }
 
-const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
+const buildProxiedPath = (
+  baseUrl,
+  value,
+  queryAuthentication,
+  allowExternal = true
+) => {
   if (typeof value !== 'string' || !value || value.startsWith('#')) {
     return value
   }
@@ -45,6 +50,9 @@ const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
   }
 
   if (absoluteUrlPattern.test(value) || value.startsWith('//')) {
+    if (!allowExternal) {
+      throw Boom.badGateway('Unsupported agreement action URL')
+    }
     return returnAllowedExternalUrl(value)
   }
 
@@ -61,7 +69,7 @@ const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
   )
 }
 
-const buildActionHref = (baseUrl, href, queryAuthentication) => {
+const buildActionHref = (baseUrl, href, method, queryAuthentication) => {
   if (typeof href !== 'string' || !href) {
     throw Boom.badGateway('Unsupported agreement action URL')
   }
@@ -76,6 +84,9 @@ const buildActionHref = (baseUrl, href, queryAuthentication) => {
   }
 
   if (absoluteUrlPattern.test(href) || href.startsWith('//')) {
+    if (method === 'POST') {
+      throw Boom.badGateway('Unsupported agreement action URL')
+    }
     return returnAllowedExternalUrl(href)
   }
 
@@ -87,19 +98,47 @@ const translateActionPaths = (
   baseUrl = '/',
   queryAuthentication
 ) =>
-  actions.map((action) => ({
-    ...action,
-    ...(Object.hasOwn(action, 'href')
-      ? {
-          href: buildActionHref(baseUrl, action.href, queryAuthentication)
-        }
-      : {}),
-    ...(action.action
-      ? {
-          action: buildProxiedPath(baseUrl, action.action, queryAuthentication)
-        }
-      : {})
-  }))
+  actions.map((action) => {
+    const translatedAction = {
+      ...action,
+      ...(Object.hasOwn(action, 'href')
+        ? {
+            href: buildActionHref(
+              baseUrl,
+              action.href,
+              action.method,
+              queryAuthentication
+            )
+          }
+        : {}),
+      ...(action.action
+        ? {
+            action: buildProxiedPath(
+              baseUrl,
+              action.action,
+              queryAuthentication,
+              action.method !== 'POST'
+            )
+          }
+        : {})
+    }
+
+    return {
+      ...translatedAction,
+      renderAsForm: !translatedAction.href || translatedAction.method === 'POST'
+    }
+  })
+
+const validateActionForm = (actions) => {
+  const formActions = actions.filter((action) => action.renderAsForm)
+  const [formAction] = formActions
+  const hasExactlyOnePostForm =
+    formActions.length === 1 && formAction.method === 'POST'
+
+  if (!hasExactlyOnePostForm) {
+    throw Boom.badGateway('GAS action page must contain exactly one POST form')
+  }
+}
 
 const buildComponentUrls = (value, baseUrl, queryAuthentication) => {
   if (Array.isArray(value)) {
@@ -150,16 +189,23 @@ export const buildViewModel = (
   { queryAuthentication, transportMetadata } = {}
 ) => {
   const components = renderModel.components ?? renderModel.content ?? []
+  const actions = translateActionPaths(
+    renderModel.actions,
+    baseUrl,
+    queryAuthentication
+  )
+  const hasFormAction = transportMetadata !== undefined
+
+  if (hasFormAction) {
+    validateActionForm(actions)
+  }
 
   return {
     pageTitle: renderModel.page?.title ?? renderModel.title ?? 'Agreement',
     agreement: renderModel.agreement,
     components: buildComponentUrls(components, baseUrl, queryAuthentication),
-    actions: translateActionPaths(
-      renderModel.actions,
-      baseUrl,
-      queryAuthentication
-    ),
+    actions,
+    hasFormAction,
     errors: renderModel.errors ?? [],
     hasWatermark: hasWatermark(components),
     layout: renderModel.page?.layout ?? renderModel.layout ?? 'default',

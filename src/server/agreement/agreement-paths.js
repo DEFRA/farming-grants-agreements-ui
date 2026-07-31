@@ -107,11 +107,7 @@ export const translateAgreementPath = (value, baseUrl, queryAuthentication) => {
     : undefined
 }
 
-export const translateGasLocation = (
-  location,
-  baseUrl,
-  queryAuthentication
-) => {
+const getGasLocation = (location) => {
   if (!location) {
     throw Boom.badGateway('GAS response did not include a Location header')
   }
@@ -131,11 +127,43 @@ export const translateGasLocation = (
     throw Boom.badGateway('GAS returned an unsupported Location header')
   }
 
-  return appendToBaseUrl(
+  return { segments, target }
+}
+
+const buildPublicLocation = (
+  { segments, target },
+  baseUrl,
+  queryAuthentication
+) =>
+  appendToBaseUrl(
     baseUrl,
     segments,
     queryAuthentication,
     target.search,
     target.hash
   )
+
+export const translateGasLocation = (location, baseUrl, queryAuthentication) =>
+  buildPublicLocation(getGasLocation(location), baseUrl, queryAuthentication)
+
+export const translateGasAgreementLocation = (
+  location,
+  agreementId,
+  baseUrl,
+  queryAuthentication
+) => {
+  const gasLocation = getGasLocation(location)
+  const isCurrentAgreement =
+    gasLocation.segments.length === 1 &&
+    [agreementId, encodeURIComponent(agreementId)].includes(
+      gasLocation.segments[0]
+    )
+
+  if (!isCurrentAgreement) {
+    throw Boom.badGateway(
+      'GAS returned a stale Location for another Agreement page'
+    )
+  }
+
+  return buildPublicLocation(gasLocation, baseUrl, queryAuthentication)
 }

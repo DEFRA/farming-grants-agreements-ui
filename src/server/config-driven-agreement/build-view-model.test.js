@@ -9,6 +9,7 @@ describe('buildViewModel', () => {
       agreement: undefined,
       components: [],
       actions: [],
+      hasFormAction: false,
       errors: [],
       hasWatermark: false,
       layout: 'default'
@@ -32,6 +33,7 @@ describe('buildViewModel', () => {
       agreement,
       components,
       actions: [],
+      hasFormAction: false,
       errors,
       hasWatermark: true,
       layout: 'document'
@@ -132,7 +134,6 @@ describe('buildViewModel', () => {
   })
 
   it.each([
-    ['https://example.com/api', 'https://example.com/api'],
     ['#confirm', '#confirm'],
     ['/agreement', '/agreement'],
     ['/agreement/PMF123', '/agreement/PMF123'],
@@ -144,6 +145,20 @@ describe('buildViewModel', () => {
     )
 
     expect(model.actions[0].action).toBe(expected)
+  })
+
+  it('rejects an external POST action target', () => {
+    expect(() =>
+      buildViewModel({
+        actions: [
+          {
+            action: 'https://example.com/collect-agreement-values',
+            method: 'POST',
+            text: 'Submit externally'
+          }
+        ]
+      })
+    ).toThrow('Unsupported agreement action URL')
   })
 
   it('preserves an absolute base URL for a legacy action target', () => {

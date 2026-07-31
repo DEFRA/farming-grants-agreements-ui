@@ -198,6 +198,127 @@ describe('generic GAS Agreement action routes', () => {
     expect($('a.govuk-button')).toHaveLength(0)
   })
 
+  test('keeps GAS controls inside the POST form when the page has a secondary link', async () => {
+    globalThis.fetch.mockResolvedValueOnce(
+      gasPageResponse(
+        actionPageModel({
+          components: [
+            {
+              component: 'checkboxes',
+              name: 'confirm',
+              items: [{ value: 'confirmed', text: 'Confirm agreement' }]
+            }
+          ],
+          actions: [
+            {
+              method: 'POST',
+              href: '/agreements/AGR_42/actions/accept',
+              text: 'Accept agreement offer'
+            },
+            {
+              href: '/agreements/AGR_42',
+              text: 'Return to agreement'
+            }
+          ]
+        }),
+        '"AGR_42:7"'
+      )
+    )
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/AGR_42/actions/accept',
+      headers: { 'x-base-url': '/agreement' }
+    })
+
+    const $ = load(response.result)
+    const postForm = $('form[method="POST"]')
+
+    expect(response.statusCode).toBe(200)
+    expect(postForm).toHaveLength(1)
+    expect(postForm.find('input[name="confirm"]')).toHaveLength(1)
+    expect($('a:contains("Return to agreement")')).toHaveLength(1)
+  })
+
+  test('rejects a GAS action page containing more than one form', async () => {
+    globalThis.fetch.mockResolvedValueOnce(
+      gasPageResponse(
+        actionPageModel({
+          actions: [
+            {
+              method: 'POST',
+              href: '/agreements/AGR_42/actions/accept',
+              text: 'Accept agreement offer'
+            },
+            {
+              method: 'POST',
+              href: '/agreements/AGR_42/actions/decline',
+              text: 'Decline agreement offer'
+            }
+          ]
+        }),
+        '"AGR_42:7"'
+      )
+    )
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/AGR_42/actions/accept',
+      headers: { 'x-base-url': '/agreement' }
+    })
+
+    expect(response.statusCode).toBe(502)
+  })
+
+  test('rejects a GAS action page that does not contain a form', async () => {
+    globalThis.fetch.mockResolvedValueOnce(
+      gasPageResponse(
+        actionPageModel({
+          actions: [
+            {
+              href: '/agreements/AGR_42',
+              text: 'Return to agreement'
+            }
+          ]
+        }),
+        '"AGR_42:7"'
+      )
+    )
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/AGR_42/actions/accept',
+      headers: { 'x-base-url': '/agreement' }
+    })
+
+    expect(response.statusCode).toBe(502)
+  })
+
+  test('rejects a GAS action page whose form does not use POST', async () => {
+    globalThis.fetch.mockResolvedValueOnce(
+      gasPageResponse(
+        actionPageModel({
+          actions: [
+            {
+              method: 'GET',
+              action: '/agreements/AGR_42/actions/accept',
+              text: 'Submit agreement action'
+            }
+          ]
+        }),
+        '"AGR_42:7"'
+      )
+    )
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/AGR_42/actions/accept',
+      headers: { 'x-base-url': '/agreement' }
+    })
+
+    expect(response.statusCode).toBe(502)
+  })
+
   test('translates configured GAS URLs throughout the page and retains external links', async () => {
     globalThis.fetch.mockResolvedValueOnce(
       gasPageResponse(
@@ -333,6 +454,31 @@ describe('generic GAS Agreement action routes', () => {
       expect(response.statusCode).toBe(502)
     }
   )
+
+  test('rejects a GAS page that posts Agreement values to an external URL', async () => {
+    globalThis.fetch.mockResolvedValueOnce(
+      gasPageResponse(
+        actionPageModel({
+          actions: [
+            {
+              method: 'POST',
+              href: 'https://example.com/collect-agreement-values',
+              text: 'Submit externally'
+            }
+          ]
+        }),
+        '"AGR_42:7"'
+      )
+    )
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/AGR_42/actions/anything',
+      headers: { 'x-encrypted-auth': 'auth' }
+    })
+
+    expect(response.statusCode).toBe(502)
+  })
 
   test('POST parses browser form values, removes transport metadata and renders the complete 422 model', async () => {
     const idempotencyKey = '9ea924aa-45e9-43a7-888e-c25054ea658c'
@@ -478,6 +624,33 @@ describe('generic GAS Agreement action routes', () => {
     )
     expect(globalThis.fetch.mock.calls[0][1].redirect).toBe('manual')
   })
+
+  test.each([
+    ['an Agreement action', '/agreements/AGR_42/actions/anything'],
+    ['another Agreement', '/agreements/AGR_99']
+  ])(
+    'rejects a stale 412 that points to %s',
+    async (_description, location) => {
+      globalThis.fetch.mockResolvedValueOnce(gasRedirectResponse(412, location))
+
+      const response = await server.inject({
+        method: 'POST',
+        url: '/AGR_42/actions/anything',
+        headers: {
+          'x-encrypted-auth': 'auth',
+          'content-type': 'application/x-www-form-urlencoded'
+        },
+        payload: formPayload({
+          [actionTransportFieldNames.etag]: '"AGR_42:1"',
+          [actionTransportFieldNames.idempotencyKey]:
+            'a2f91696-bb4b-49fb-a731-672117fe03aa'
+        })
+      })
+
+      expect(response.statusCode).toBe(502)
+      expect(response.headers).not.toHaveProperty('location')
+    }
+  )
 
   test('header authentication wins over query authentication', async () => {
     globalThis.fetch.mockResolvedValueOnce(

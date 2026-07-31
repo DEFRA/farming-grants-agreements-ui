@@ -18,14 +18,12 @@
         }) }}
       {% endif %}
 
-      {% set renderComponentsInsideForm = actions.length == 1 and actions[0].method == 'POST' %}
-
-      {% if not renderComponentsInsideForm %}
+      {% if not hasFormAction %}
         {{ dynamicContent(components) }}
       {% endif %}
 
       {% for action in actions %}
-        {% if action.href and action.method != 'POST' %}
+        {% if not action.renderAsForm %}
           {{ govukButton({
             text: action.text,
             href: action.href,
@@ -33,7 +31,7 @@
           }) }}
         {% else %}
           <form method="{{ action.method or 'POST' }}" action="{{ action.action or action.href }}">
-            {% if renderComponentsInsideForm %}
+            {% if hasFormAction %}
               {{ dynamicContent(components) }}
             {% endif %}
 
