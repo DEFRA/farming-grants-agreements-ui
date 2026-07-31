@@ -195,6 +195,7 @@ describe('generic GAS Agreement action routes', () => {
     expect(form.attr('action')).toBe('/agreement/AGR_42/actions/accept')
     expect(form.find('input[name="confirm"]')).toHaveLength(1)
     expect(form.find('input[name="__agreementsUiEtag"]')).toHaveLength(1)
+    expect(form.find('button[type="submit"]').attr('name')).toBeUndefined()
     expect($('a.govuk-button')).toHaveLength(0)
   })
 
