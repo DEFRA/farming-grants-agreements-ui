@@ -9,6 +9,8 @@ import { encryptedAuthQueryName } from './agreement-request.js'
 const absoluteUrlPattern = /^[a-z][a-z\d+.-]*:/i
 const agreementPathPattern =
   /^\/agreements\/([^/]+?)(?:\/actions\/([^/]+))?\/?$/
+const unsupportedLocationHeaderMessage =
+  'GAS returned an unsupported Location header'
 
 const isAbsoluteUrl = (value) =>
   absoluteUrlPattern.test(value) || value.startsWith('//')
@@ -115,16 +117,16 @@ const getGasLocation = (location) => {
   const gasBaseUrl = new URL(config.get('gasBackend.url'))
   const target = parseUrl(location, gasBaseUrl)
   if (!target) {
-    throw Boom.badGateway('GAS returned an unsupported Location header')
+    throw Boom.badGateway(unsupportedLocationHeaderMessage)
   }
 
   if (target.origin !== gasBaseUrl.origin) {
-    throw Boom.badGateway('GAS returned an unsupported Location header')
+    throw Boom.badGateway(unsupportedLocationHeaderMessage)
   }
 
   const segments = getAgreementSegments(target.pathname)
   if (!segments) {
-    throw Boom.badGateway('GAS returned an unsupported Location header')
+    throw Boom.badGateway(unsupportedLocationHeaderMessage)
   }
 
   return { segments, target }

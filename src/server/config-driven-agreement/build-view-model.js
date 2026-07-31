@@ -9,6 +9,16 @@ import {
 
 const absoluteUrlPattern = /^[a-z][a-z\d+.-]*:/i
 const allowedExternalProtocols = new Set(['http:', 'https:', 'mailto:'])
+const unsupportedActionUrlMessage = 'Unsupported agreement action URL'
+
+const isAbsoluteUrl = (value) =>
+  absoluteUrlPattern.test(value) || value.startsWith('//')
+
+const shouldPreservePath = (value) =>
+  typeof value !== 'string' || !value || value.startsWith('#')
+
+const isWithinBaseUrl = (value, baseUrl) =>
+  baseUrl !== '/' && (value === baseUrl || value.startsWith(`${baseUrl}/`))
 
 const isAllowedExternalUrl = (value) => {
   if (!absoluteUrlPattern.test(value)) {
@@ -36,7 +46,7 @@ const buildProxiedPath = (
   queryAuthentication,
   allowExternal = true
 ) => {
-  if (typeof value !== 'string' || !value || value.startsWith('#')) {
+  if (shouldPreservePath(value)) {
     return value
   }
 
@@ -49,17 +59,14 @@ const buildProxiedPath = (
     return translatedAgreementPath
   }
 
-  if (absoluteUrlPattern.test(value) || value.startsWith('//')) {
+  if (isAbsoluteUrl(value)) {
     if (!allowExternal) {
-      throw Boom.badGateway('Unsupported agreement action URL')
+      throw Boom.badGateway(unsupportedActionUrlMessage)
     }
     return returnAllowedExternalUrl(value)
   }
 
-  if (
-    baseUrl !== '/' &&
-    (value === baseUrl || value.startsWith(`${baseUrl}/`))
-  ) {
+  if (isWithinBaseUrl(value, baseUrl)) {
     return appendQueryAuthentication(value, queryAuthentication)
   }
 
@@ -71,7 +78,7 @@ const buildProxiedPath = (
 
 const buildActionHref = (baseUrl, href, method, queryAuthentication) => {
   if (typeof href !== 'string' || !href) {
-    throw Boom.badGateway('Unsupported agreement action URL')
+    throw Boom.badGateway(unsupportedActionUrlMessage)
   }
 
   const translatedAgreementPath = translateAgreementPath(
@@ -83,21 +90,17 @@ const buildActionHref = (baseUrl, href, method, queryAuthentication) => {
     return translatedAgreementPath
   }
 
-  if (absoluteUrlPattern.test(href) || href.startsWith('//')) {
+  if (isAbsoluteUrl(href)) {
     if (method === 'POST') {
-      throw Boom.badGateway('Unsupported agreement action URL')
+      throw Boom.badGateway(unsupportedActionUrlMessage)
     }
     return returnAllowedExternalUrl(href)
   }
 
-  throw Boom.badGateway('Unsupported agreement action URL')
+  throw Boom.badGateway(unsupportedActionUrlMessage)
 }
 
-const translateActionPaths = (
-  actions = [],
-  baseUrl = '/',
-  queryAuthentication
-) =>
+const translateActionPaths = (actions, baseUrl, queryAuthentication) =>
   actions.map((action) => {
     const translatedAction = {
       ...action,
@@ -190,7 +193,7 @@ export const buildViewModel = (
 ) => {
   const components = renderModel.components ?? renderModel.content ?? []
   const actions = translateActionPaths(
-    renderModel.actions,
+    renderModel.actions ?? [],
     baseUrl,
     queryAuthentication
   )
