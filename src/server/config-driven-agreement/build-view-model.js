@@ -186,12 +186,15 @@ const buildComponentUrls = (value, baseUrl, queryAuthentication) => {
 const hasWatermark = (components = []) =>
   components.some((component) => component?.component === 'watermark')
 
+const getComponents = (renderModel) =>
+  renderModel.components ?? renderModel.content ?? []
+
 export const buildViewModel = (
   renderModel = {},
   baseUrl = '/',
   { queryAuthentication, transportMetadata } = {}
 ) => {
-  const components = renderModel.components ?? renderModel.content ?? []
+  const components = getComponents(renderModel)
   const actions = translateActionPaths(
     renderModel.actions ?? [],
     baseUrl,
