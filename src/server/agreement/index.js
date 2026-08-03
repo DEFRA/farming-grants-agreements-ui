@@ -4,13 +4,22 @@ import { apiRequest, getBackend } from '#~/server/common/helpers/api.js'
 import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
 import { viewAgreementController } from '#~/server/view-agreement/controller.js'
 
+const getAgreementMethod = (payload) =>
+  payload?.action === 'accept-offer' ? 'POST' : 'GET'
+
+const getAuthToken = (request) =>
+  request.headers['x-encrypted-auth'] || request.query['x-encrypted-auth']
+
+const getAgreementBody = (method, payload) =>
+  method === 'POST' ? payload : undefined
+
+const getAgreementQueryParams = (mode) =>
+  mode === 'print' ? { mode } : undefined
+
 const getAgreementData = async (request) => {
   const { agreementId = '' } = request.params
-  const action = request?.payload?.action
-  const method = action === 'accept-offer' ? 'POST' : 'GET'
-
-  const authToken =
-    request.headers['x-encrypted-auth'] || request.query['x-encrypted-auth']
+  const method = getAgreementMethod(request.payload)
+  const authToken = getAuthToken(request)
 
   const jwtPayload = extractJwtPayload(authToken)
 
@@ -26,10 +35,10 @@ const getAgreementData = async (request) => {
     agreementId,
     method,
     auth: authToken,
-    body: method === 'POST' ? request.payload : undefined,
+    body: getAgreementBody(method, request.payload),
     backend,
     jwtPayload,
-    queryParams: request.params.mode === 'print' ? { mode: 'print' } : undefined
+    queryParams: getAgreementQueryParams(request.params.mode)
   })
 }
 

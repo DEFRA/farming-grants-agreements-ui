@@ -8,6 +8,28 @@ export const GAS = 'gas'
 const LEGACY = 'legacy'
 const logger = createLogger()
 
+const buildGasAgreementUrl = (gasUrl, agreementId, searchParams) => {
+  const agreementUrl = `${gasUrl}/agreements/${agreementId}`
+  const queryString = searchParams.toString()
+  return queryString ? `${agreementUrl}?${queryString}` : agreementUrl
+}
+
+const buildGasGetUrl = (gasUrl, agreementId, queryParams, jwtPayload) => {
+  const searchParams = new URLSearchParams(queryParams)
+
+  if (agreementId) {
+    return buildGasAgreementUrl(gasUrl, agreementId, searchParams)
+  }
+
+  const { grantCode, clientRef, sbi } = jwtPayload || {}
+
+  searchParams.set('code', grantCode)
+  searchParams.set('clientRef', clientRef)
+  searchParams.set('sbi', sbi)
+
+  return `${gasUrl}/agreements/current?${searchParams.toString()}`
+}
+
 export const getBackend = (jwtPayload) => {
   const allowedGrantCodes = config.get('gasBackend.allowedGrantCodes')
   return allowedGrantCodes.includes(jwtPayload?.grantCode) ? GAS : LEGACY
@@ -24,21 +46,7 @@ const buildUrl = ({
   if (backend === GAS) {
     const gasUrl = config.get('gasBackend.url')
     if (method.toUpperCase() === 'GET') {
-      const searchParams = new URLSearchParams(queryParams)
-
-      if (agreementId) {
-        const queryString = searchParams.toString()
-        const agreementUrl = `${gasUrl}/agreements/${agreementId}`
-        return queryString ? `${agreementUrl}?${queryString}` : agreementUrl
-      }
-
-      const { grantCode, clientRef, sbi } = jwtPayload || {}
-
-      searchParams.set('code', grantCode)
-      searchParams.set('clientRef', clientRef)
-      searchParams.set('sbi', sbi)
-
-      return `${gasUrl}/agreements/current?${searchParams.toString()}`
+      return buildGasGetUrl(gasUrl, agreementId, queryParams, jwtPayload)
     }
     return `${gasUrl}/agreements/${agreementId}/actions/${actionName}`
   }

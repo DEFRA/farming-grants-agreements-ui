@@ -8,6 +8,14 @@ import {
   vi
 } from 'vitest'
 
+import {
+  gasAgreementApiUrls,
+  gasBackendUrl,
+  gasGrantCode,
+  gasPrintPageModel,
+  gasPublicAgreementPaths,
+  gasViewPageModel
+} from '#~/server/agreement/__test__/gas-agreement.fixture.js'
 import { config } from '#~/config/config.js'
 import { createServer } from '#~/server/server.js'
 import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
@@ -21,9 +29,9 @@ describe('GAS public agreement rendering', () => {
   const originalFetch = globalThis.fetch
 
   beforeAll(async () => {
-    config.set('gasBackend.url', 'http://localhost:3102')
+    config.set('gasBackend.url', gasBackendUrl)
     config.set('gasBackend.authToken', 'mock-gas-token')
-    config.set('gasBackend.allowedGrantCodes', ['pigs-might-fly'])
+    config.set('gasBackend.allowedGrantCodes', [gasGrantCode])
     server = await createServer()
     await server.initialize()
   })
@@ -38,86 +46,29 @@ describe('GAS public agreement rendering', () => {
     globalThis.fetch = vi.fn()
     extractJwtPayload.mockReturnValue({
       source: 'entra',
-      grantCode: 'pigs-might-fly'
+      grantCode: gasGrantCode
     })
   })
 
   test('renders GAS view and print page models through the public routes', async () => {
-    const viewModel = {
-      page: { title: 'GAS managed agreement', layout: 'document' },
-      agreement: {
-        agreementNumber: 'PMF823153883',
-        code: 'GAS-ONLY',
-        status: 'terminated'
-      },
-      components: [
-        {
-          component: 'heading',
-          level: 1,
-          text: 'Pigs Might Fly agreement'
-        },
-        {
-          component: 'paragraph',
-          text: 'This content came from the complete GAS page model.'
-        },
-        {
-          component: 'summary-list',
-          title: 'Agreement details',
-          rows: [
-            { label: 'Agreement number', text: 'PMF823153883' },
-            { label: 'Status supplied by GAS', text: 'Terminated' }
-          ]
-        }
-      ],
-      actions: [
-        {
-          href: '/agreements/PMF823153883/actions/accept-offer',
-          text: 'GAS provided action'
-        }
-      ],
-      availableActions: ['gas-only-action'],
-      lifecycle: { current: 'gas-owned-state' },
-      readOnly: false
-    }
-    const printModel = {
-      page: { title: 'Printable GAS agreement', layout: 'document' },
-      agreement: {
-        agreementNumber: 'PMF823153883',
-        code: 'GAS-ONLY',
-        status: 'terminated'
-      },
-      components: [
-        { component: 'watermark', text: 'GAS PRINT' },
-        {
-          component: 'heading',
-          level: 1,
-          text: 'Printable Pigs Might Fly agreement'
-        },
-        {
-          component: 'paragraph',
-          text: 'Print content supplied by GAS.'
-        }
-      ],
-      actions: []
-    }
     globalThis.fetch
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => viewModel
+        json: async () => gasViewPageModel
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => printModel
+        json: async () => gasPrintPageModel
       })
 
     const viewResponse = await server.inject({
       method: 'GET',
-      url: '/PMF823153883?x-encrypted-auth=query-auth',
+      url: `${gasPublicAgreementPaths.view}?x-encrypted-auth=query-auth`,
       headers: { 'x-encrypted-auth': 'caseworking-header-auth' }
     })
     const printResponse = await server.inject({
       method: 'GET',
-      url: '/PMF823153883/print?x-encrypted-auth=pdf-query-auth'
+      url: `${gasPublicAgreementPaths.print}?x-encrypted-auth=pdf-query-auth`
     })
 
     expect(viewResponse.statusCode).toBe(200)
@@ -129,7 +80,7 @@ describe('GAS public agreement rendering', () => {
     expect(extractJwtPayload).toHaveBeenNthCalledWith(2, 'pdf-query-auth')
     expect(globalThis.fetch).toHaveBeenNthCalledWith(
       1,
-      'http://localhost:3102/agreements/PMF823153883',
+      gasAgreementApiUrls.view,
       expect.objectContaining({
         headers: { Authorization: 'Bearer mock-gas-token' },
         method: 'GET'
@@ -137,7 +88,7 @@ describe('GAS public agreement rendering', () => {
     )
     expect(globalThis.fetch).toHaveBeenNthCalledWith(
       2,
-      'http://localhost:3102/agreements/PMF823153883?mode=print',
+      gasAgreementApiUrls.print,
       expect.objectContaining({
         headers: { Authorization: 'Bearer mock-gas-token' },
         method: 'GET'
