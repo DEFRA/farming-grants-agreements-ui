@@ -14,22 +14,28 @@ const agreement = {
 
 const renderGasAgreement = (renderModel) => {
   const environment = nunjucksConfig.options.compileOptions.environment
+  let renderedPage
   const request = {
     pre: { data: { source: 'gas', agreement, ...renderModel } },
     headers: {}
   }
+  const response = {
+    header: vi.fn().mockReturnThis()
+  }
   const h = {
-    view: vi.fn((template, model) =>
-      environment.render(`${template}.njk`, {
+    view: vi.fn((template, model) => {
+      renderedPage = environment.render(`${template}.njk`, {
         ...nunjucksConfig.options.context,
         getAssetPath: () => '',
         buildUrl: (url) => url,
         ...model
       })
-    )
+      return response
+    })
   }
 
-  return load(configDrivenAgreementController.handler(request, h))
+  configDrivenAgreementController.handler(request, h)
+  return load(renderedPage)
 }
 
 const agreementContent = [
@@ -88,5 +94,28 @@ describe('config-driven GAS agreement page', () => {
     expect($watermark.attr('aria-hidden')).toBe('true')
     expect($header.text().trim()).toBe('Draft Agreement')
     expect($header.attr('aria-hidden')).toBe('true')
+  })
+
+  test('keeps ordinary page components outside action forms', () => {
+    const $ = renderGasAgreement({
+      ...defaultModel,
+      components: [
+        {
+          component: 'checkboxes',
+          name: 'confirm',
+          items: [{ value: 'confirmed', text: 'Confirm agreement' }]
+        }
+      ],
+      actions: [
+        {
+          method: 'POST',
+          action: '/agreement',
+          text: 'Continue'
+        }
+      ]
+    })
+
+    expect($('input[name="confirm"]')).toHaveLength(1)
+    expect($('form input[name="confirm"]')).toHaveLength(0)
   })
 })

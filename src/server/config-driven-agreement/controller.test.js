@@ -13,6 +13,7 @@ vi.mock('./validate-components.js')
 describe('configDrivenAgreementController', () => {
   let request
   let h
+  let viewResponse
 
   beforeEach(() => {
     request = {
@@ -23,8 +24,11 @@ describe('configDrivenAgreementController', () => {
       },
       logger: { error: vi.fn() }
     }
+    viewResponse = {
+      header: vi.fn().mockReturnValue('rendered-view')
+    }
     h = {
-      view: vi.fn().mockReturnValue('rendered-view')
+      view: vi.fn().mockReturnValue(viewResponse)
     }
     vi.mocked(getBaseUrl).mockReturnValue('/agreement')
     vi.mocked(buildViewModel).mockReturnValue({ pageTitle: 'Agreement' })
@@ -37,10 +41,21 @@ describe('configDrivenAgreementController', () => {
       request.pre.data.components,
       request.logger
     )
-    expect(buildViewModel).toHaveBeenCalledWith(request.pre.data, '/agreement')
+    expect(buildViewModel).toHaveBeenCalledWith(
+      request.pre.data,
+      '/agreement',
+      {
+        queryAuthentication: undefined,
+        transportMetadata: undefined
+      }
+    )
     expect(h.view).toHaveBeenCalledWith('config-driven-agreement/page', {
       pageTitle: 'Agreement'
     })
+    expect(viewResponse.header).toHaveBeenCalledWith(
+      'Referrer-Policy',
+      'no-referrer'
+    )
     expect(result).toBe('rendered-view')
   })
 
@@ -50,6 +65,9 @@ describe('configDrivenAgreementController', () => {
     configDrivenAgreementController.handler(request, h)
 
     expect(validateComponents).toHaveBeenCalledWith([], request.logger)
-    expect(buildViewModel).toHaveBeenCalledWith({}, '/agreement')
+    expect(buildViewModel).toHaveBeenCalledWith({}, '/agreement', {
+      queryAuthentication: undefined,
+      transportMetadata: undefined
+    })
   })
 })

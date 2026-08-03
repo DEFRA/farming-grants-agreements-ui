@@ -1,18 +1,34 @@
 import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
+import { getQueryAuthentication } from '#~/server/agreement/agreement-request.js'
 
 import { buildViewModel } from './build-view-model.js'
 import { validateComponents } from './validate-components.js'
 
+export const renderConfigDrivenAgreement = (
+  request,
+  h,
+  renderModel,
+  transportMetadata
+) => {
+  const resolvedRenderModel = renderModel ?? {}
+  const components =
+    resolvedRenderModel.components ?? resolvedRenderModel.content ?? []
+  validateComponents(components, request.logger)
+
+  const baseUrl = getBaseUrl(request)
+  const queryAuthentication = getQueryAuthentication(request)
+  const viewModel = buildViewModel(resolvedRenderModel, baseUrl, {
+    queryAuthentication,
+    transportMetadata
+  })
+
+  return h
+    .view('config-driven-agreement/page', viewModel)
+    .header('Referrer-Policy', 'no-referrer')
+}
+
 export const configDrivenAgreementController = {
   handler(request, h) {
-    const renderModel = request.pre?.data ?? {}
-    const components = renderModel.components ?? renderModel.content ?? []
-
-    validateComponents(components, request.logger)
-
-    return h.view(
-      'config-driven-agreement/page',
-      buildViewModel(renderModel, getBaseUrl(request))
-    )
+    return renderConfigDrivenAgreement(request, h, request.pre?.data)
   }
 }

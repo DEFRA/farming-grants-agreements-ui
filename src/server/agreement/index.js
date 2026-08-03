@@ -3,14 +3,21 @@ import { agreementController } from './controller.js'
 import { apiRequest, getBackend } from '#~/server/common/helpers/api.js'
 import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
 import { viewAgreementController } from '#~/server/view-agreement/controller.js'
+import {
+  agreementActionController,
+  getGasActionAuthentication
+} from './action-controller.js'
+import {
+  getAgreementAuthentication,
+  getGasQueryParams
+} from './agreement-request.js'
 
 const getAgreementData = async (request) => {
   const { agreementId = '' } = request.params
   const action = request?.payload?.action
   const method = action === 'accept-offer' ? 'POST' : 'GET'
 
-  const authToken =
-    request.headers['x-encrypted-auth'] || request.query['x-encrypted-auth']
+  const authToken = getAgreementAuthentication(request)
 
   const jwtPayload = extractJwtPayload(authToken)
 
@@ -28,8 +35,23 @@ const getAgreementData = async (request) => {
     auth: authToken,
     body: method === 'POST' ? request.payload : undefined,
     backend,
-    jwtPayload
+    jwtPayload,
+    queryParams: getGasQueryParams(request)
   })
+}
+
+const gasActionPre = [
+  {
+    method: getGasActionAuthentication,
+    assign: 'actionAuthentication'
+  }
+]
+
+const gasActionPayload = {
+  allow: 'application/x-www-form-urlencoded',
+  output: 'data',
+  parse: true,
+  maxBytes: 64 * 1024
 }
 
 /**
@@ -49,6 +71,23 @@ export const agreement = {
             pre: [{ method: getAgreementData, assign: 'data' }]
           },
           ...agreementController
+        },
+        {
+          method: 'GET',
+          path: '/{agreementId}/actions/{actionName}',
+          options: {
+            pre: gasActionPre
+          },
+          handler: agreementActionController.get
+        },
+        {
+          method: 'POST',
+          path: '/{agreementId}/actions/{actionName}',
+          options: {
+            pre: gasActionPre,
+            payload: gasActionPayload
+          },
+          handler: agreementActionController.post
         },
         {
           method: 'GET',

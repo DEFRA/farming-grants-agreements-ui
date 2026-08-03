@@ -9,6 +9,7 @@ describe('buildViewModel', () => {
       agreement: undefined,
       components: [],
       actions: [],
+      hasFormAction: false,
       errors: [],
       hasWatermark: false,
       layout: 'default'
@@ -32,6 +33,7 @@ describe('buildViewModel', () => {
       agreement,
       components,
       actions: [],
+      hasFormAction: false,
       errors,
       hasWatermark: true,
       layout: 'document'
@@ -86,9 +88,33 @@ describe('buildViewModel', () => {
     )
   })
 
+  it('preserves a genuine external action href', () => {
+    const model = buildViewModel({
+      actions: [{ href: 'https://example.com/external', text: 'External' }]
+    })
+
+    expect(model.actions[0].href).toBe('https://example.com/external')
+  })
+
+  it('translates a GAS action href with query parameters', () => {
+    const model = buildViewModel(
+      {
+        actions: [
+          {
+            href: '/agreements/PMF123/actions/accept?confirmation=true',
+            text: 'Accept'
+          }
+        ]
+      },
+      '/agreement'
+    )
+
+    expect(model.actions[0].href).toBe(
+      '/agreement/PMF123/actions/accept?confirmation=true'
+    )
+  })
+
   it.each([
-    'https://example.com/external',
-    '/agreements/PMF123/actions/accept?confirmation=true',
     '/agreement/PMF123/accept',
     '/agreements/../actions/accept',
     '/agreements/%2e%2e/actions/accept',
@@ -108,14 +134,10 @@ describe('buildViewModel', () => {
   })
 
   it.each([
-    ['https://example.com/api', 'https://example.com/api'],
     ['#confirm', '#confirm'],
     ['/agreement', '/agreement'],
     ['/agreement/PMF123', '/agreement/PMF123'],
-    [
-      '/agreements/PMF123/actions/accept',
-      '/agreement/agreements/PMF123/actions/accept'
-    ]
+    ['/agreements/PMF123/actions/accept', '/agreement/PMF123/actions/accept']
   ])('translates a legacy action target %s', (action, expected) => {
     const model = buildViewModel(
       { actions: [{ action, method: 'POST', text: 'Accept' }] },
@@ -123,6 +145,20 @@ describe('buildViewModel', () => {
     )
 
     expect(model.actions[0].action).toBe(expected)
+  })
+
+  it('rejects an external POST action target', () => {
+    expect(() =>
+      buildViewModel({
+        actions: [
+          {
+            action: 'https://example.com/collect-agreement-values',
+            method: 'POST',
+            text: 'Submit externally'
+          }
+        ]
+      })
+    ).toThrow('Unsupported agreement action URL')
   })
 
   it('preserves an absolute base URL for a legacy action target', () => {
@@ -140,7 +176,7 @@ describe('buildViewModel', () => {
     )
 
     expect(model.actions[0].action).toBe(
-      'https://example.com/api/agreements/PMF123/actions/accept'
+      'https://example.com/api/PMF123/actions/accept'
     )
   })
 })
