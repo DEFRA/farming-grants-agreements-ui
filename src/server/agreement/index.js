@@ -12,11 +12,26 @@ import {
   getGasQueryParams
 } from './agreement-request.js'
 
+const getAgreementMethod = (payload) =>
+  payload?.action === 'accept-offer' ? 'POST' : 'GET'
+
+const getAgreementBody = (method, payload) =>
+  method === 'POST' ? payload : undefined
+
+const getAgreementQueryParams = (request) => {
+  const queryParams = getGasQueryParams(request)
+  delete queryParams.mode
+
+  if (request.params.mode === 'print') {
+    queryParams.mode = 'print'
+  }
+
+  return queryParams
+}
+
 const getAgreementData = async (request) => {
   const { agreementId = '' } = request.params
-  const action = request?.payload?.action
-  const method = action === 'accept-offer' ? 'POST' : 'GET'
-
+  const method = getAgreementMethod(request.payload)
   const authToken = getAgreementAuthentication(request)
 
   const jwtPayload = extractJwtPayload(authToken)
@@ -33,10 +48,10 @@ const getAgreementData = async (request) => {
     agreementId,
     method,
     auth: authToken,
-    body: method === 'POST' ? request.payload : undefined,
+    body: getAgreementBody(method, request.payload),
     backend,
     jwtPayload,
-    queryParams: getGasQueryParams(request)
+    queryParams: getAgreementQueryParams(request)
   })
 }
 

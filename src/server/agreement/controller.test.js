@@ -1,4 +1,12 @@
 import { agreementController } from './controller.js'
+import {
+  gasAgreementApiUrls,
+  gasBackendUrl,
+  gasGrantCode,
+  gasPrintPageModel,
+  gasPublicAgreementPaths,
+  gasViewPageModel
+} from '#~/server/agreement/__test__/gas-agreement.fixture.js'
 import { createServer } from '#~/server/server.js'
 import * as getControllerByActionModule from '#~/server/common/helpers/get-controller-by-action.js'
 import { configDrivenAgreementController } from '#~/server/config-driven-agreement/controller.js'
@@ -21,9 +29,9 @@ describe('#agreementController', () => {
 
   beforeAll(async () => {
     config.set('backend.url', 'http://localhost:3555')
-    config.set('gasBackend.url', 'http://localhost:3102')
+    config.set('gasBackend.url', gasBackendUrl)
     config.set('gasBackend.authToken', 'mock-gas-token')
-    config.set('gasBackend.allowedGrantCodes', ['pigs-might-fly'])
+    config.set('gasBackend.allowedGrantCodes', [gasGrantCode])
     globalThis.fetch = vi.fn()
     server = await createServer()
     await server.initialize()
@@ -48,7 +56,7 @@ describe('#agreementController', () => {
         sbi: 106284736,
         source: 'defra',
         clientRef: 'client-ref-001',
-        grantCode: 'pigs-might-fly'
+        grantCode: gasGrantCode
       }
       extractJwtPayload.mockReturnValue(mockPayload)
 
@@ -82,7 +90,7 @@ describe('#agreementController', () => {
       const url = fetch.mock.calls[0][0]
       const searchParams = new URLSearchParams(url.split('?')[1])
       expect(searchParams.get('sbi')).toBe('106284736')
-      expect(searchParams.get('code')).toBe('pigs-might-fly')
+      expect(searchParams.get('code')).toBe(gasGrantCode)
       expect(searchParams.get('clientRef')).toBe('client-ref-001')
     })
 
@@ -95,7 +103,7 @@ describe('#agreementController', () => {
         sbi: 106284736,
         source: 'defra',
         clientRef: 'client-ref-001',
-        grantCode: 'pigs-might-fly'
+        grantCode: gasGrantCode
       }
       extractJwtPayload.mockReturnValue(mockPayload)
 
@@ -112,7 +120,6 @@ describe('#agreementController', () => {
         }
       })
 
-      // GAS URL for by-number request should NOT include query parameters
       expect(fetch).toHaveBeenCalledWith(
         'http://localhost:3102/agreements/PMF001',
         expect.objectContaining({
@@ -127,35 +134,104 @@ describe('#agreementController', () => {
       expect(url).not.toContain('?')
     })
 
-    test('should load and config-render a GAS Agreement by ID', async () => {
+    test('routes a Caseworking agreement view to GAS by grant code and passes its complete page model to the renderer', async () => {
       extractJwtPayload.mockReturnValue({
-        grantCode: 'pigs-might-fly',
-        clientRef: 'client-ref-001',
-        sbi: 106284736
+        source: 'entra',
+        grantCode: gasGrantCode
       })
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ page: { title: 'GAS Agreement' } })
+        json: async () => gasViewPageModel
       })
-      configDrivenAgreementController.handler.mockImplementationOnce(
-        (request, h) => h.response('GAS Agreement')
+      configDrivenAgreementController.handler.mockImplementation(
+        (_request, h) => h.response('rendered by config-driven renderer')
       )
 
       const response = await server.inject({
         method: 'GET',
-        url: '/PMF123456789?view=latest&x-encrypted-auth=query-auth',
-        headers: { 'x-encrypted-auth': 'header-auth' }
+        url: `${gasPublicAgreementPaths.view}?view=latest&x-encrypted-auth=query-auth`,
+        headers: {
+          'x-encrypted-auth': 'caseworking-header-auth'
+        }
       })
 
-      expect(response.statusCode).toBe(200)
-      expect(response.result).toBe('GAS Agreement')
+      expect(response.statusCode).toBe(statusCodes.ok)
+      expect(extractJwtPayload).toHaveBeenCalledWith('caseworking-header-auth')
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3102/agreements/PMF123456789?view=latest',
-        expect.objectContaining({
-          method: 'GET',
+        `${gasAgreementApiUrls.view}?view=latest`,
+        {
           headers: { Authorization: 'Bearer mock-gas-token' },
+          method: 'GET',
+          signal: expect.any(AbortSignal),
           redirect: 'manual'
-        })
+        }
+      )
+      expect(configDrivenAgreementController.handler).toHaveBeenCalledOnce()
+      expect(configDrivenAgreementController.handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pre: expect.objectContaining({
+            data: { ...gasViewPageModel, source: 'gas' }
+          })
+        }),
+        expect.anything()
+      )
+    })
+
+    test('routes a PDF-style print request with a query token to GAS mode=print', async () => {
+      extractJwtPayload.mockReturnValue({
+        source: 'defra',
+        grantCode: gasGrantCode
+      })
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => gasPrintPageModel
+      })
+      configDrivenAgreementController.handler.mockImplementation(
+        (_request, h) => h.response('rendered by config-driven renderer')
+      )
+
+      const response = await server.inject({
+        method: 'GET',
+        url: `${gasPublicAgreementPaths.print}?x-encrypted-auth=pdf-query-auth`
+      })
+
+      expect(response.statusCode).toBe(statusCodes.ok)
+      expect(extractJwtPayload).toHaveBeenCalledWith('pdf-query-auth')
+      expect(fetch).toHaveBeenCalledWith(gasAgreementApiUrls.print, {
+        headers: { Authorization: 'Bearer mock-gas-token' },
+        method: 'GET',
+        signal: expect.any(AbortSignal),
+        redirect: 'manual'
+      })
+      expect(configDrivenAgreementController.handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pre: expect.objectContaining({
+            data: { ...gasPrintPageModel, source: 'gas' }
+          })
+        }),
+        expect.anything()
+      )
+    })
+
+    test('does not pass non-print route modes to GAS', async () => {
+      extractJwtPayload.mockReturnValue({
+        source: 'entra',
+        grantCode: gasGrantCode
+      })
+      fetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+      configDrivenAgreementController.handler.mockImplementation(
+        (_request, h) => h.response('rendered by config-driven renderer')
+      )
+
+      await server.inject({
+        method: 'GET',
+        url: `${gasPublicAgreementPaths.view}/preview?mode=print`,
+        headers: { 'x-encrypted-auth': 'mock-auth' }
+      })
+
+      expect(fetch).toHaveBeenCalledWith(
+        gasAgreementApiUrls.view,
+        expect.any(Object)
       )
     })
 
@@ -194,7 +270,46 @@ describe('#agreementController', () => {
       })
     })
 
-    test('should call the backend API', async () => {
+    test('preserves WMP view and print routing through the legacy backend', async () => {
+      extractJwtPayload.mockReturnValue({
+        source: 'entra',
+        grantCode: 'WMP'
+      })
+      fetch
+        .mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+
+      await server.inject({
+        method: 'GET',
+        url: '/WMP123456789',
+        headers: { 'x-encrypted-auth': 'mock-auth' }
+      })
+      await server.inject({
+        method: 'GET',
+        url: '/WMP123456789/print',
+        headers: { 'x-encrypted-auth': 'mock-auth' }
+      })
+
+      expect(fetch).toHaveBeenNthCalledWith(
+        1,
+        'http://localhost:3555/WMP123456789',
+        expect.objectContaining({
+          headers: { 'x-encrypted-auth': 'mock-auth' },
+          method: 'GET'
+        })
+      )
+      expect(fetch).toHaveBeenNthCalledWith(
+        2,
+        'http://localhost:3555/WMP123456789',
+        expect.objectContaining({
+          headers: { 'x-encrypted-auth': 'mock-auth' },
+          method: 'GET'
+        })
+      )
+    })
+
+    test('uses the legacy backend when the JWT has no grant code', async () => {
+      extractJwtPayload.mockReturnValue({ source: 'entra' })
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({})
