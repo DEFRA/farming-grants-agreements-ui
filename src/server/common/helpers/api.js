@@ -13,6 +13,19 @@ export const getBackend = (jwtPayload) => {
   return allowedGrantCodes.includes(jwtPayload?.grantCode) ? GAS : LEGACY
 }
 
+const appendQueryParams = (url, queryParams) => {
+  const searchParams = new URLSearchParams()
+
+  for (const [name, value] of Object.entries(queryParams ?? {})) {
+    for (const item of Array.isArray(value) ? value : [value]) {
+      searchParams.append(name, item)
+    }
+  }
+
+  const search = searchParams.toString()
+  return search ? `${url}?${search}` : url
+}
+
 const buildUrl = ({
   backend,
   agreementId,
@@ -23,9 +36,20 @@ const buildUrl = ({
 }) => {
   if (backend === GAS) {
     const gasUrl = config.get('gasBackend.url')
+
+    if (actionName) {
+      return appendQueryParams(
+        `${gasUrl}/agreements/${encodeURIComponent(agreementId)}/actions/${encodeURIComponent(actionName)}`,
+        queryParams
+      )
+    }
+
     if (method.toUpperCase() === 'GET') {
       if (agreementId) {
-        return `${gasUrl}/agreements/${agreementId}`
+        return appendQueryParams(
+          `${gasUrl}/agreements/${encodeURIComponent(agreementId)}`,
+          queryParams
+        )
       }
 
       const searchParams = new URLSearchParams(queryParams)
@@ -42,12 +66,13 @@ const buildUrl = ({
   return `${config.get('backend.url')}/${agreementId}`
 }
 
-const getHeaders = ({ backend, auth, method }) => {
+const getHeaders = ({ backend, auth, method, transportHeaders }) => {
   const headers = {
     ...(backend === LEGACY && { 'x-encrypted-auth': auth }),
     ...(method.toUpperCase() === 'POST' && {
       'Content-Type': 'application/json'
-    })
+    }),
+    ...transportHeaders
   }
 
   if (backend === GAS) {
@@ -90,16 +115,20 @@ const handleError = async (response, agreementId, method) => {
   throw new Error(message, { cause: response })
 }
 
-export const apiRequest = async ({
-  agreementId,
-  method = 'GET',
-  auth,
-  body,
-  queryParams,
-  actionName,
-  backend = LEGACY,
-  jwtPayload
-}) => {
+const requestBackend = async (
+  {
+    agreementId,
+    method = 'GET',
+    auth,
+    body,
+    queryParams,
+    actionName,
+    backend = LEGACY,
+    jwtPayload,
+    transportHeaders
+  },
+  handleResponse
+) => {
   const controller = new AbortController()
   const timeoutId = setTimeout(
     () => controller.abort(new Error('Network timed out while fetching data')),
@@ -115,15 +144,31 @@ export const apiRequest = async ({
       actionName,
       jwtPayload
     })
-    const headers = getHeaders({ backend, auth, method })
+    const headers = getHeaders({
+      backend,
+      auth,
+      method,
+      transportHeaders
+    })
 
     logger.info(`Sending ${method} request to '${backend}' service: ${url}`)
     const response = await fetch(url, {
       method,
       headers,
       ...(body && { body: JSON.stringify(body) }),
-      signal: controller.signal
+      signal: controller.signal,
+      ...(backend === GAS && { redirect: 'manual' })
     })
+
+    return await handleResponse(response)
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
+export const apiRequest = async (request) =>
+  requestBackend(request, async (response) => {
+    const { agreementId, method = 'GET', backend = LEGACY } = request
 
     if (!response.ok) {
       await handleError(response, agreementId, method)
@@ -131,7 +176,54 @@ export const apiRequest = async ({
 
     const data = await response.json()
     return { ...data, source: backend }
-  } finally {
-    clearTimeout(timeoutId)
-  }
-}
+  })
+
+export const gasActionRequest = async ({
+  agreementId,
+  actionName,
+  method = 'GET',
+  body,
+  etag,
+  idempotencyKey,
+  queryParams,
+  jwtPayload
+}) =>
+  requestBackend(
+    {
+      agreementId,
+      actionName,
+      method,
+      body,
+      backend: GAS,
+      jwtPayload,
+      queryParams,
+      transportHeaders: {
+        ...(etag !== undefined && { 'If-Match': etag }),
+        ...(idempotencyKey !== undefined && {
+          'Idempotency-Key': idempotencyKey
+        })
+      }
+    },
+    async (response) => {
+      if (
+        [statusCodes.seeOther, statusCodes.preconditionFailed].includes(
+          response.status
+        )
+      ) {
+        return {
+          status: response.status,
+          location: response.headers.get('location')
+        }
+      }
+
+      if (response.ok || response.status === statusCodes.unprocessableEntity) {
+        return {
+          status: response.status,
+          pageModel: await response.json(),
+          etag: response.headers.get('etag')
+        }
+      }
+
+      return handleError(response, agreementId, method)
+    }
+  )

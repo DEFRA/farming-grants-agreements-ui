@@ -9,6 +9,7 @@ export const viewAgreementController = {
     if (request.pre?.data?.source === GAS) {
       return configDrivenAgreementController.handler(request, h)
     }
+
     const { agreementData, auth } = request.pre?.data || {}
 
     if (
