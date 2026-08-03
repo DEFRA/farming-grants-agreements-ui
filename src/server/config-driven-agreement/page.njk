@@ -18,17 +18,28 @@
         }) }}
       {% endif %}
 
-      {{ dynamicContent(components) }}
+      {% if not hasFormAction %}
+        {{ dynamicContent(components) }}
+      {% endif %}
 
       {% for action in actions %}
-        {% if action.href %}
+        {% if not action.renderAsForm %}
           {{ govukButton({
             text: action.text,
             href: action.href,
             classes: action.classes
           }) }}
         {% else %}
-          <form method="{{ action.method or 'POST' }}" action="{{ action.action }}">
+          <form method="{{ action.method or 'POST' }}" action="{{ action.action or action.href }}">
+            {% if hasFormAction %}
+              {{ dynamicContent(components) }}
+            {% endif %}
+
+            {% if transportMetadata %}
+              <input type="hidden" name="{{ transportMetadata.etag.name }}" value="{{ transportMetadata.etag.value }}">
+              <input type="hidden" name="{{ transportMetadata.idempotencyKey.name }}" value="{{ transportMetadata.idempotencyKey.value }}">
+            {% endif %}
+
             {% for field in action.fields %}
               <input type="hidden" name="{{ field.name }}" value="{{ field.value }}">
             {% endfor %}
@@ -47,8 +58,6 @@
 
             {{ govukButton({
               text: action.text,
-              name: action.name,
-              value: action.value,
               classes: action.classes
             }) }}
           </form>

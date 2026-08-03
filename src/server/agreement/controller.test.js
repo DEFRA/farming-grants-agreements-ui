@@ -149,7 +149,7 @@ describe('#agreementController', () => {
 
       const response = await server.inject({
         method: 'GET',
-        url: `${gasPublicAgreementPaths.view}?x-encrypted-auth=query-auth`,
+        url: `${gasPublicAgreementPaths.view}?view=latest&x-encrypted-auth=query-auth`,
         headers: {
           'x-encrypted-auth': 'caseworking-header-auth'
         }
@@ -157,11 +157,15 @@ describe('#agreementController', () => {
 
       expect(response.statusCode).toBe(statusCodes.ok)
       expect(extractJwtPayload).toHaveBeenCalledWith('caseworking-header-auth')
-      expect(fetch).toHaveBeenCalledWith(gasAgreementApiUrls.view, {
-        headers: { Authorization: 'Bearer mock-gas-token' },
-        method: 'GET',
-        signal: expect.any(AbortSignal)
-      })
+      expect(fetch).toHaveBeenCalledWith(
+        `${gasAgreementApiUrls.view}?view=latest`,
+        {
+          headers: { Authorization: 'Bearer mock-gas-token' },
+          method: 'GET',
+          signal: expect.any(AbortSignal),
+          redirect: 'manual'
+        }
+      )
       expect(configDrivenAgreementController.handler).toHaveBeenCalledOnce()
       expect(configDrivenAgreementController.handler).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -196,7 +200,8 @@ describe('#agreementController', () => {
       expect(fetch).toHaveBeenCalledWith(gasAgreementApiUrls.print, {
         headers: { Authorization: 'Bearer mock-gas-token' },
         method: 'GET',
-        signal: expect.any(AbortSignal)
+        signal: expect.any(AbortSignal),
+        redirect: 'manual'
       })
       expect(configDrivenAgreementController.handler).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -220,7 +225,7 @@ describe('#agreementController', () => {
 
       await server.inject({
         method: 'GET',
-        url: `${gasPublicAgreementPaths.view}/preview`,
+        url: `${gasPublicAgreementPaths.view}/preview?mode=print`,
         headers: { 'x-encrypted-auth': 'mock-auth' }
       })
 
