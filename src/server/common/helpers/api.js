@@ -26,6 +26,24 @@ const appendQueryParams = (url, queryParams) => {
   return search ? `${url}?${search}` : url
 }
 
+const buildGasGetUrl = (gasUrl, agreementId, queryParams, jwtPayload) => {
+  if (agreementId) {
+    return appendQueryParams(
+      `${gasUrl}/agreements/${encodeURIComponent(agreementId)}`,
+      queryParams
+    )
+  }
+
+  const searchParams = new URLSearchParams(queryParams)
+  const { grantCode, clientRef, sbi } = jwtPayload || {}
+
+  searchParams.set('code', grantCode)
+  searchParams.set('clientRef', clientRef)
+  searchParams.set('sbi', sbi)
+
+  return `${gasUrl}/agreements/current?${searchParams.toString()}`
+}
+
 const buildUrl = ({
   backend,
   agreementId,
@@ -45,21 +63,7 @@ const buildUrl = ({
     }
 
     if (method.toUpperCase() === 'GET') {
-      if (agreementId) {
-        return appendQueryParams(
-          `${gasUrl}/agreements/${encodeURIComponent(agreementId)}`,
-          queryParams
-        )
-      }
-
-      const searchParams = new URLSearchParams(queryParams)
-      const { grantCode, clientRef, sbi } = jwtPayload || {}
-
-      searchParams.set('code', grantCode)
-      searchParams.set('clientRef', clientRef)
-      searchParams.set('sbi', sbi)
-
-      return `${gasUrl}/agreements/current?${searchParams.toString()}`
+      return buildGasGetUrl(gasUrl, agreementId, queryParams, jwtPayload)
     }
     return `${gasUrl}/agreements/${agreementId}/actions/${actionName}`
   }
