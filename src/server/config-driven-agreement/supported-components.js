@@ -15,6 +15,5 @@ export const supportedComponents = [
   'text',
   'unordered-list',
   'url',
-  'warning-text',
-  'watermark'
+  'warning-text'
 ]

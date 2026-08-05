@@ -183,9 +183,6 @@ const buildComponentUrls = (value, baseUrl, queryAuthentication) => {
     : { ...transformedValue, params: { ...urlParams, href } }
 }
 
-const componentsHaveWatermark = (components = []) =>
-  components.some((component) => component?.component === 'watermark')
-
 const getComponents = (renderModel) =>
   renderModel.components ?? renderModel.content ?? []
 
@@ -198,6 +195,17 @@ const buildSections = (sections, baseUrl, queryAuthentication) =>
       queryAuthentication
     )
   }))
+
+const buildPageViewModel = (renderModel, page) => ({
+  pageTitle: page.title ?? renderModel.title ?? 'Agreement',
+  contents: page.contents ?? false,
+  print: page.print ?? false,
+  watermark: page.watermark,
+  layout: page.layout ?? renderModel.layout ?? 'default'
+})
+
+const includeTransportMetadata = (transportMetadata) =>
+  transportMetadata === undefined ? {} : { transportMetadata }
 
 export const buildViewModel = (
   renderModel = {},
@@ -212,14 +220,13 @@ export const buildViewModel = (
   )
   const hasFormAction = transportMetadata !== undefined
   const page = renderModel.page ?? {}
-  const watermark = page.watermark
 
   if (hasFormAction) {
     validateActionForm(actions)
   }
 
   return {
-    pageTitle: renderModel.page?.title ?? renderModel.title ?? 'Agreement',
+    ...buildPageViewModel(renderModel, page),
     agreement: renderModel.agreement,
     components: buildComponentUrls(components, baseUrl, queryAuthentication),
     sections: buildSections(
@@ -230,11 +237,6 @@ export const buildViewModel = (
     actions,
     hasFormAction,
     errors: renderModel.errors ?? [],
-    contents: page.contents ?? false,
-    print: page.print ?? false,
-    watermark,
-    hasWatermark: Boolean(watermark) || componentsHaveWatermark(components),
-    layout: page.layout ?? renderModel.layout ?? 'default',
-    ...(transportMetadata && { transportMetadata })
+    ...includeTransportMetadata(transportMetadata)
   }
 }

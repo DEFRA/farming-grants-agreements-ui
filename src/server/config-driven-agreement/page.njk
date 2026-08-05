@@ -1,4 +1,4 @@
-{% set bodyClasses = "config-driven-agreement-page" ~ (" view-agreement-has-watermark" if hasWatermark else "") %}
+{% set bodyClasses = "config-driven-agreement-page" ~ (" view-agreement-has-watermark" if watermark else "") %}
 {% set mainClasses = "" %}
 
 {% extends "layouts/page.njk" %}
@@ -7,7 +7,7 @@
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "config-driven-agreement/dynamic-content/macro.njk" import dynamicContent %}
-{% from "config-driven-agreement/dynamic-content/components/watermark.njk" import defraWatermark %}
+{% from "config-driven-agreement/document/watermark.njk" import defraWatermark %}
 
 {% block content %}
   <div class="govuk-grid-row">

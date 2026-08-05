@@ -32,6 +32,12 @@ describe('validateComponents', () => {
     )
   })
 
+  it('rejects a watermark supplied as a content component', () => {
+    expect(() =>
+      validateComponents([{ component: 'watermark', text: 'DRAFT' }])
+    ).toThrow('Unsupported agreement component')
+  })
+
   it('does not log an unsupported component in production', () => {
     vi.stubEnv('NODE_ENV', 'production')
     const logger = { error: vi.fn() }

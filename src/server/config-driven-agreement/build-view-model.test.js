@@ -15,7 +15,6 @@ describe('buildViewModel', () => {
       contents: false,
       print: false,
       watermark: undefined,
-      hasWatermark: false,
       layout: 'default'
     })
   })
@@ -23,7 +22,7 @@ describe('buildViewModel', () => {
   it('uses the GAS page model fields', () => {
     const agreement = { agreementNumber: 'PMF123' }
     const components = [{ component: 'heading', text: 'Agreement' }]
-    const watermark = { text: 'DRAFT', header: 'Draft Agreement' }
+    const watermark = { text: 'DRAFT' }
     const errors = [{ href: '#confirm', text: 'Confirm the agreement' }]
 
     expect(
@@ -75,7 +74,6 @@ describe('buildViewModel', () => {
       contents: true,
       print: true,
       watermark,
-      hasWatermark: true,
       layout: 'document'
     })
   })

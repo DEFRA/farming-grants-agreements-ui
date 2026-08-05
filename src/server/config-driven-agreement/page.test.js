@@ -57,9 +57,7 @@ const documentModel = {
     contents: true,
     print: true,
     watermark: {
-      text: 'DRAFT',
-      header: 'Draft Agreement',
-      classes: 'custom-watermark'
+      text: 'DRAFT'
     }
   },
   components: agreementContent,
@@ -126,14 +124,10 @@ describe('config-driven GAS agreement page', () => {
   test('renders an accessible-hidden page watermark', () => {
     const $ = renderGasAgreement(documentModel)
     const $watermark = $('.print-watermark')
-    const $header = $('.print-watermark-header')
 
     expect($('body').hasClass('view-agreement-has-watermark')).toBe(true)
     expect($watermark.text().trim()).toBe('DRAFT')
-    expect($watermark.hasClass('custom-watermark')).toBe(true)
     expect($watermark.attr('aria-hidden')).toBe('true')
-    expect($header.text().trim()).toBe('Draft Agreement')
-    expect($header.attr('aria-hidden')).toBe('true')
   })
 
   test('keeps ordinary page components outside action forms', () => {
