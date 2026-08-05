@@ -26,22 +26,15 @@ const appendQueryParams = (url, queryParams) => {
   return search ? `${url}?${search}` : url
 }
 
-const buildGasGetUrl = (gasUrl, agreementId, queryParams, jwtPayload) => {
+const buildGasGetUrl = (gasUrl, agreementId, queryParams) => {
   if (agreementId) {
     return appendQueryParams(
-      `${gasUrl}/agreements/${encodeURIComponent(agreementId)}`,
+      `${gasUrl}/agreements/${encodeURIComponent(agreementId)}/document`,
       queryParams
     )
   }
 
-  const searchParams = new URLSearchParams(queryParams)
-  const { grantCode, clientRef, sbi } = jwtPayload || {}
-
-  searchParams.set('code', grantCode)
-  searchParams.set('clientRef', clientRef)
-  searchParams.set('sbi', sbi)
-
-  return `${gasUrl}/agreements/current?${searchParams.toString()}`
+  return appendQueryParams(`${gasUrl}/agreements/current`, queryParams)
 }
 
 const buildUrl = ({
@@ -63,16 +56,41 @@ const buildUrl = ({
     }
 
     if (method.toUpperCase() === 'GET') {
-      return buildGasGetUrl(gasUrl, agreementId, queryParams, jwtPayload)
+      return buildGasGetUrl(gasUrl, agreementId, queryParams)
     }
     return `${gasUrl}/agreements/${agreementId}/actions/${actionName}`
   }
   return `${config.get('backend.url')}/${agreementId}`
 }
 
-const getHeaders = ({ backend, auth, method, transportHeaders }) => {
+const getGasAgreementHeaders = (jwtPayload = {}, includeClientRef = false) => ({
+  ...(jwtPayload.source !== undefined && {
+    'x-agreement-source': String(jwtPayload.source)
+  }),
+  ...(jwtPayload.grantCode !== undefined && {
+    'x-agreement-code': String(jwtPayload.grantCode)
+  }),
+  ...(includeClientRef &&
+    jwtPayload.clientRef !== undefined && {
+      'x-agreement-client-ref': String(jwtPayload.clientRef)
+    }),
+  ...(jwtPayload.sbi !== undefined && {
+    'x-agreement-sbi': String(jwtPayload.sbi)
+  })
+})
+
+const getHeaders = ({
+  backend,
+  auth,
+  method,
+  agreementContext,
+  includeClientRef,
+  transportHeaders
+}) => {
   const headers = {
     ...(backend === LEGACY && { 'x-encrypted-auth': auth }),
+    ...(backend === GAS &&
+      getGasAgreementHeaders(agreementContext, includeClientRef)),
     ...(method.toUpperCase() === 'POST' && {
       'Content-Type': 'application/json'
     }),
@@ -152,6 +170,8 @@ const requestBackend = async (
       backend,
       auth,
       method,
+      agreementContext: jwtPayload,
+      includeClientRef: !agreementId && !actionName,
       transportHeaders
     })
 

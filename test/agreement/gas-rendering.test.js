@@ -9,10 +9,9 @@ import {
 } from 'vitest'
 
 import {
-  gasAgreementApiUrls,
+  gasAgreementDocumentApiUrls,
   gasBackendUrl,
   gasGrantCode,
-  gasPrintPageModel,
   gasPublicAgreementPaths,
   gasViewPageModel
 } from '#~/server/agreement/__test__/gas-agreement.fixture.js'
@@ -46,11 +45,13 @@ describe('GAS public agreement rendering', () => {
     globalThis.fetch = vi.fn()
     extractJwtPayload.mockReturnValue({
       source: 'entra',
-      grantCode: gasGrantCode
+      grantCode: gasGrantCode,
+      clientRef: 'case-reference',
+      sbi: '300000000'
     })
   })
 
-  test('renders GAS view and print page models through the public routes', async () => {
+  test('renders the same GAS document through the public view and print routes', async () => {
     globalThis.fetch
       .mockResolvedValueOnce({
         ok: true,
@@ -58,7 +59,7 @@ describe('GAS public agreement rendering', () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => gasPrintPageModel
+        json: async () => gasViewPageModel
       })
 
     const viewResponse = await server.inject({
@@ -80,17 +81,27 @@ describe('GAS public agreement rendering', () => {
     expect(extractJwtPayload).toHaveBeenNthCalledWith(2, 'pdf-query-auth')
     expect(globalThis.fetch).toHaveBeenNthCalledWith(
       1,
-      gasAgreementApiUrls.view,
+      gasAgreementDocumentApiUrls.view,
       expect.objectContaining({
-        headers: { Authorization: 'Bearer mock-gas-token' },
+        headers: {
+          Authorization: 'Bearer mock-gas-token',
+          'x-agreement-source': 'entra',
+          'x-agreement-code': gasGrantCode,
+          'x-agreement-sbi': '300000000'
+        },
         method: 'GET'
       })
     )
     expect(globalThis.fetch).toHaveBeenNthCalledWith(
       2,
-      gasAgreementApiUrls.print,
+      gasAgreementDocumentApiUrls.print,
       expect.objectContaining({
-        headers: { Authorization: 'Bearer mock-gas-token' },
+        headers: {
+          Authorization: 'Bearer mock-gas-token',
+          'x-agreement-source': 'entra',
+          'x-agreement-code': gasGrantCode,
+          'x-agreement-sbi': '300000000'
+        },
         method: 'GET'
       })
     )
@@ -101,8 +112,9 @@ describe('GAS public agreement rendering', () => {
     expect(viewResponse.result).toContain('Status supplied by GAS')
     expect(viewResponse.result).toContain('Terminated')
     expect(viewResponse.result).toContain('GAS provided action')
-    expect(printResponse.result).toContain('GAS PRINT')
-    expect(printResponse.result).toContain('Printable Pigs Might Fly agreement')
-    expect(printResponse.result).toContain('Print content supplied by GAS.')
+    expect(printResponse.result).toContain('Pigs Might Fly agreement')
+    expect(printResponse.result).toContain(
+      'This content came from the complete GAS page model.'
+    )
   })
 })

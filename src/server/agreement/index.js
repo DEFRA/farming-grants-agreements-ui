@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
 import { agreementController } from './controller.js'
-import { apiRequest, getBackend } from '#~/server/common/helpers/api.js'
+import { apiRequest, GAS, getBackend } from '#~/server/common/helpers/api.js'
 import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
 import { viewAgreementController } from '#~/server/view-agreement/controller.js'
 import {
@@ -18,7 +18,11 @@ const getAgreementMethod = (payload) =>
 const getAgreementBody = (method, payload) =>
   method === 'POST' ? payload : undefined
 
-const getAgreementQueryParams = (request) => {
+const getAgreementQueryParams = (request, backend) => {
+  if (backend === GAS) {
+    return {}
+  }
+
   const queryParams = getGasQueryParams(request)
   delete queryParams.mode
 
@@ -27,6 +31,12 @@ const getAgreementQueryParams = (request) => {
   }
 
   return queryParams
+}
+
+const assertSupportedGasMode = (backend, mode) => {
+  if (backend === GAS && mode && mode !== 'print') {
+    throw Boom.notFound('Agreement route not found')
+  }
 }
 
 const getAgreementData = async (request) => {
@@ -43,6 +53,7 @@ const getAgreementData = async (request) => {
   }
 
   const backend = getBackend(jwtPayload)
+  assertSupportedGasMode(backend, request.params.mode)
 
   return apiRequest({
     agreementId,
@@ -51,7 +62,7 @@ const getAgreementData = async (request) => {
     body: getAgreementBody(method, request.payload),
     backend,
     jwtPayload,
-    queryParams: getAgreementQueryParams(request)
+    queryParams: getAgreementQueryParams(request, backend)
   })
 }
 

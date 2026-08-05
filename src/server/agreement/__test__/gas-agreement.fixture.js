@@ -7,9 +7,9 @@ export const gasPublicAgreementPaths = {
   print: `/${gasAgreementNumber}/print`
 }
 
-export const gasAgreementApiUrls = {
-  view: `${gasBackendUrl}/agreements/${gasAgreementNumber}`,
-  print: `${gasBackendUrl}/agreements/${gasAgreementNumber}?mode=print`
+export const gasAgreementDocumentApiUrls = {
+  view: `${gasBackendUrl}/agreements/${gasAgreementNumber}/document`,
+  print: `${gasBackendUrl}/agreements/${gasAgreementNumber}/document`
 }
 
 export const gasViewPageModel = {
@@ -49,26 +49,4 @@ export const gasViewPageModel = {
   lifecycle: { current: 'gas-owned-state' },
   template: { name: 'gas-owned-template' },
   readOnly: false
-}
-
-export const gasPrintPageModel = {
-  page: { title: 'Printable GAS agreement', layout: 'document' },
-  agreement: {
-    agreementNumber: gasAgreementNumber,
-    code: 'GAS-ONLY',
-    status: 'terminated'
-  },
-  components: [
-    { component: 'watermark', text: 'GAS PRINT' },
-    {
-      component: 'heading',
-      level: 1,
-      text: 'Printable Pigs Might Fly agreement'
-    },
-    {
-      component: 'paragraph',
-      text: 'Print content supplied by GAS.'
-    }
-  ],
-  actions: []
 }
