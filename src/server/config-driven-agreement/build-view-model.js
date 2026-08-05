@@ -183,11 +183,21 @@ const buildComponentUrls = (value, baseUrl, queryAuthentication) => {
     : { ...transformedValue, params: { ...urlParams, href } }
 }
 
-const hasWatermark = (components = []) =>
+const componentsHaveWatermark = (components = []) =>
   components.some((component) => component?.component === 'watermark')
 
 const getComponents = (renderModel) =>
   renderModel.components ?? renderModel.content ?? []
+
+const buildSections = (sections, baseUrl, queryAuthentication) =>
+  sections.map((section) => ({
+    ...section,
+    components: buildComponentUrls(
+      section.components ?? [],
+      baseUrl,
+      queryAuthentication
+    )
+  }))
 
 export const buildViewModel = (
   renderModel = {},
@@ -201,6 +211,8 @@ export const buildViewModel = (
     queryAuthentication
   )
   const hasFormAction = transportMetadata !== undefined
+  const page = renderModel.page ?? {}
+  const watermark = page.watermark
 
   if (hasFormAction) {
     validateActionForm(actions)
@@ -210,11 +222,19 @@ export const buildViewModel = (
     pageTitle: renderModel.page?.title ?? renderModel.title ?? 'Agreement',
     agreement: renderModel.agreement,
     components: buildComponentUrls(components, baseUrl, queryAuthentication),
+    sections: buildSections(
+      renderModel.sections ?? [],
+      baseUrl,
+      queryAuthentication
+    ),
     actions,
     hasFormAction,
     errors: renderModel.errors ?? [],
-    hasWatermark: hasWatermark(components),
-    layout: renderModel.page?.layout ?? renderModel.layout ?? 'default',
+    contents: page.contents ?? false,
+    print: page.print ?? false,
+    watermark,
+    hasWatermark: Boolean(watermark) || componentsHaveWatermark(components),
+    layout: page.layout ?? renderModel.layout ?? 'default',
     ...(transportMetadata && { transportMetadata })
   }
 }

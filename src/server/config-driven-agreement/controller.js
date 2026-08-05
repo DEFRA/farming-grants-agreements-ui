@@ -13,7 +13,10 @@ export const renderConfigDrivenAgreement = (
   const resolvedRenderModel = renderModel ?? {}
   const components =
     resolvedRenderModel.components ?? resolvedRenderModel.content ?? []
-  validateComponents(components, request.logger)
+  const sectionComponents = (resolvedRenderModel.sections ?? []).flatMap(
+    (section) => section.components ?? []
+  )
+  validateComponents([...components, ...sectionComponents], request.logger)
 
   const baseUrl = getBaseUrl(request)
   const queryAuthentication = getQueryAuthentication(request)
