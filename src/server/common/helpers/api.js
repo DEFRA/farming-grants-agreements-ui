@@ -42,8 +42,7 @@ const buildUrl = ({
   agreementId,
   method,
   queryParams,
-  actionName,
-  jwtPayload
+  actionName
 }) => {
   if (backend === GAS) {
     const gasUrl = config.get('gasBackend.url')
@@ -163,8 +162,7 @@ const requestBackend = async (
       agreementId,
       method,
       queryParams,
-      actionName,
-      jwtPayload
+      actionName
     })
     const headers = getHeaders({
       backend,
