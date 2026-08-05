@@ -174,7 +174,7 @@ describe('apiRequest error handling', () => {
     const result = await apiRequest({
       ...baseRequest,
       agreementId: undefined,
-      queryParams: { existing: 'param' },
+      queryParams: { mode: 'print' },
       jwtPayload,
       backend: 'gas'
     })
@@ -185,7 +185,10 @@ describe('apiRequest error handling', () => {
       expect.stringContaining('http://gas-api/agreements/current?'),
       expect.objectContaining({
         headers: expect.objectContaining({
-          Authorization: 'Bearer gas-token'
+          Authorization: 'Bearer gas-token',
+          'x-agreement-code': 'GAS001',
+          'x-agreement-client-ref': 'REF123',
+          'x-agreement-sbi': '123456789'
         })
       })
     )
@@ -199,17 +202,20 @@ describe('apiRequest error handling', () => {
 
     const url = globalThis.fetch.mock.calls[0][0]
     const searchParams = new URLSearchParams(url.split('?')[1])
-    expect(searchParams.get('existing')).toBe('param')
-    expect(searchParams.get('code')).toBe('GAS001')
-    expect(searchParams.get('clientRef')).toBe('REF123')
-    expect(searchParams.get('sbi')).toBe('123456789')
+    expect(searchParams.get('mode')).toBe('print')
+    expect(searchParams.has('code')).toBe(false)
+    expect(searchParams.has('clientRef')).toBe(false)
+    expect(searchParams.has('sbi')).toBe(false)
 
     mockConfig.get = originalGet
   })
 
   test('constructs gas backend URL correctly for by-number GET', async () => {
     const jwtPayload = {
-      grantCode: 'GAS001'
+      source: 'defra',
+      grantCode: 'GAS001',
+      clientRef: 'REF123',
+      sbi: '123456789'
     }
 
     const mockConfig = (await import('#~/config/config.js')).config
@@ -237,19 +243,29 @@ describe('apiRequest error handling', () => {
     expect(result).toEqual({ data: 'gas-data', source: 'gas' })
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      'http://gas-api/agreements/GAS123',
+      'http://gas-api/agreements/GAS123/document',
       expect.objectContaining({
         headers: expect.objectContaining({
-          Authorization: 'Bearer gas-token'
+          Authorization: 'Bearer gas-token',
+          'x-agreement-source': 'defra',
+          'x-agreement-code': 'GAS001',
+          'x-agreement-sbi': '123456789'
         })
       })
     )
+
+    const fetchArgs = globalThis.fetch.mock.calls[0][1]
+    expect(fetchArgs.headers).not.toHaveProperty('x-agreement-client-ref')
 
     mockConfig.get = originalGet
   })
 
   test('constructs gas backend URL correctly for POST', async () => {
-    const jwtPayload = { grantCode: 'GAS001' }
+    const jwtPayload = {
+      source: 'defra',
+      grantCode: 'GAS001',
+      sbi: '123456789'
+    }
 
     const mockConfig = (await import('#~/config/config.js')).config
     const originalGet = mockConfig.get
@@ -281,7 +297,10 @@ describe('apiRequest error handling', () => {
       expect.any(String),
       expect.objectContaining({
         headers: expect.objectContaining({
-          Authorization: 'Bearer gas-token'
+          Authorization: 'Bearer gas-token',
+          'x-agreement-source': 'defra',
+          'x-agreement-code': 'GAS001',
+          'x-agreement-sbi': '123456789'
         })
       })
     )

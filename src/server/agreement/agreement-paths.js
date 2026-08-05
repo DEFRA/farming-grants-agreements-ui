@@ -8,7 +8,8 @@ import { encryptedAuthQueryName } from './agreement-request.js'
 
 const absoluteUrlPattern = /^[a-z][a-z\d+.-]*:/i
 const agreementPathPattern =
-  /^\/agreements\/([^/]+?)(?:\/actions\/([^/]+))?\/?$/
+  /^\/agreements\/([^/]+?)(?:\/(?:document|actions\/([^/]+)))?\/?$/
+const currentAgreementPath = '/agreements/current'
 const unsupportedLocationHeaderMessage =
   'GAS returned an unsupported Location header'
 
@@ -29,6 +30,10 @@ const isSafeSegment = (segment) =>
   !/%(?:2f|5c)/i.test(segment)
 
 const getAgreementSegments = (pathname) => {
+  if (pathname === currentAgreementPath) {
+    return []
+  }
+
   const match = agreementPathPattern.exec(pathname)
   if (!match || !isSafeSegment(match[1]) || !isSafeSegment(match[2] ?? 'x')) {
     return undefined
@@ -156,10 +161,11 @@ export const translateGasAgreementLocation = (
 ) => {
   const gasLocation = getGasLocation(location)
   const isCurrentAgreement =
-    gasLocation.segments.length === 1 &&
-    [agreementId, encodeURIComponent(agreementId)].includes(
-      gasLocation.segments[0]
-    )
+    gasLocation.segments.length === 0 ||
+    (gasLocation.segments.length === 1 &&
+      [agreementId, encodeURIComponent(agreementId)].includes(
+        gasLocation.segments[0]
+      ))
 
   if (!isCurrentAgreement) {
     throw Boom.badGateway(

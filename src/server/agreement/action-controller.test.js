@@ -127,7 +127,10 @@ describe('generic GAS Agreement action routes', () => {
       {
         method: 'GET',
         headers: {
-          Authorization: 'Bearer gas-service-token'
+          Authorization: 'Bearer gas-service-token',
+          'x-agreement-source': 'defra',
+          'x-agreement-code': 'generic-gas-grant',
+          'x-agreement-sbi': '123456789'
         },
         signal: expect.any(AbortSignal),
         redirect: 'manual'
@@ -154,6 +157,22 @@ describe('generic GAS Agreement action routes', () => {
     expect(response.result).toContain(
       'This content is owned completely by GAS.'
     )
+  })
+
+  test('does not expose GAS actions to Caseworking', async () => {
+    extractJwtPayload.mockReturnValue({
+      source: 'entra',
+      grantCode: 'generic-gas-grant'
+    })
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/AGR_42/actions/accept',
+      headers: { 'x-encrypted-auth': 'caseworking-auth' }
+    })
+
+    expect(response.statusCode).toBe(404)
+    expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 
   test('renders a GAS POST href as a form containing the page fields', async () => {
@@ -520,7 +539,10 @@ describe('generic GAS Agreement action routes', () => {
         'Content-Type': 'application/json',
         'If-Match': '"AGR_42:7"',
         'Idempotency-Key': idempotencyKey,
-        Authorization: 'Bearer gas-service-token'
+        Authorization: 'Bearer gas-service-token',
+        'x-agreement-source': 'defra',
+        'x-agreement-code': 'generic-gas-grant',
+        'x-agreement-sbi': '123456789'
       },
       body: JSON.stringify({
         values: {
@@ -556,10 +578,10 @@ describe('generic GAS Agreement action routes', () => {
     }
     globalThis.fetch
       .mockResolvedValueOnce(
-        gasRedirectResponse(303, 'http://gas.internal:3102/agreements/AGR_42')
+        gasRedirectResponse(303, 'http://gas.internal:3102/agreements/current')
       )
       .mockResolvedValueOnce(
-        gasRedirectResponse(303, 'http://gas.internal:3102/agreements/AGR_42')
+        gasRedirectResponse(303, 'http://gas.internal:3102/agreements/current')
       )
 
     const submit = () =>
@@ -579,8 +601,8 @@ describe('generic GAS Agreement action routes', () => {
 
     expect(firstResponse.statusCode).toBe(303)
     expect(secondResponse.statusCode).toBe(303)
-    expect(firstResponse.headers.location).toBe('/agreement/AGR_42')
-    expect(secondResponse.headers.location).toBe('/agreement/AGR_42')
+    expect(firstResponse.headers.location).toBe('/agreement')
+    expect(secondResponse.headers.location).toBe('/agreement')
     expect(globalThis.fetch).toHaveBeenCalledTimes(2)
 
     for (const [, options] of globalThis.fetch.mock.calls) {
@@ -597,7 +619,7 @@ describe('generic GAS Agreement action routes', () => {
 
   test('a stale 412 becomes a GET redirect to the translated current Agreement page', async () => {
     globalThis.fetch.mockResolvedValueOnce(
-      gasRedirectResponse(412, '/agreements/AGR_42?view=latest')
+      gasRedirectResponse(412, '/agreements/current')
     )
 
     const response = await server.inject({
@@ -617,7 +639,7 @@ describe('generic GAS Agreement action routes', () => {
 
     expect(response.statusCode).toBe(303)
     expect(response.headers.location).toBe(
-      '/agreement/AGR_42?view=latest&x-encrypted-auth=query-auth'
+      '/agreement?x-encrypted-auth=query-auth'
     )
     expect(globalThis.fetch).toHaveBeenCalledTimes(1)
     expect(globalThis.fetch.mock.calls[0][0]).toBe(

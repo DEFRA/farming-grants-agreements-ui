@@ -70,6 +70,28 @@ describe('buildViewModel', () => {
     expect(model.actions[0].href).toBe('/agreement/PMF123/actions/accept')
   })
 
+  it('translates an agreement document link and preserves query authentication', () => {
+    const model = buildViewModel(
+      {
+        components: [
+          {
+            component: 'url',
+            href: '/agreements/PMF123/document',
+            text: 'View your agreement'
+          }
+        ]
+      },
+      '/agreement',
+      { queryAuthentication: 'signed-token' }
+    )
+
+    expect(model.components).toContainEqual({
+      component: 'url',
+      href: '/agreement/PMF123?x-encrypted-auth=signed-token',
+      text: 'View your agreement'
+    })
+  })
+
   it('preserves an absolute Agreements UI base URL', () => {
     const model = buildViewModel(
       {
