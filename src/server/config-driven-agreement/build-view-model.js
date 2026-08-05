@@ -198,7 +198,7 @@ const buildSections = (sections, baseUrl, queryAuthentication) =>
 
 const buildPageViewModel = (renderModel, page) => ({
   pageTitle: page.title ?? renderModel.title ?? 'Agreement',
-  contents: page.contents ?? false,
+  showContents: page.contents ?? false,
   print: page.print ?? false,
   watermark: page.watermark,
   layout: page.layout ?? renderModel.layout ?? 'default'

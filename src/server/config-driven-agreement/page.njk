@@ -75,10 +75,10 @@
     <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
 
     <div class="govuk-grid-row">
-      {% if contents or print %}
+      {% if showContents or print %}
         <div class="govuk-grid-column-one-quarter">
-          <nav role="navigation"{% if contents %} aria-labelledby="document-contents-title"{% else %} aria-label="Document controls"{% endif %}>
-            {% if contents %}
+          <nav role="navigation"{% if showContents %} aria-labelledby="document-contents-title"{% else %} aria-label="Document controls"{% endif %}>
+            {% if showContents %}
               <div id="contents">
                 <p id="document-contents-title" class="govuk-body-s">Contents</p>
                 <ul class="govuk-list toc">
@@ -104,7 +104,7 @@
         </div>
       {% endif %}
 
-      <div class="{{ 'govuk-grid-column-three-quarters' if contents or print else 'govuk-grid-column-full' }}">
+      <div class="{{ 'govuk-grid-column-three-quarters' if showContents or print else 'govuk-grid-column-full' }}">
         {% for section in sections %}
           <section aria-labelledby="{{ section.id }}">
             <h2 id="{{ section.id }}" class="govuk-heading-l">{{ loop.index }}. {{ section.title }}</h2>

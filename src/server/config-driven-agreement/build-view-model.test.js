@@ -12,7 +12,7 @@ describe('buildViewModel', () => {
       actions: [],
       hasFormAction: false,
       errors: [],
-      contents: false,
+      showContents: false,
       print: false,
       watermark: undefined,
       layout: 'default'
@@ -71,7 +71,7 @@ describe('buildViewModel', () => {
       actions: [],
       hasFormAction: false,
       errors,
-      contents: true,
+      showContents: true,
       print: true,
       watermark,
       layout: 'document'
