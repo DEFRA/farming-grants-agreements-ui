@@ -13,7 +13,6 @@
 {% from "./line-break.njk" import defraLineBreak %}
 {% from "./warning-text.njk" import defraWarningText %}
 {% from "./notification-banner.njk" import defraNotificationBanner %}
-{% from "./watermark.njk" import defraWatermark %}
 {% from "./panel.njk" import defraPanel %}
 {% from "./checkboxes.njk" import defraCheckboxes %}
 
@@ -50,8 +49,6 @@
     {{ defraWarningText(params) }}
   {% elif component == "notification-banner" %}
     {{ defraNotificationBanner(params, renderDefraComponent) }}
-  {% elif component == "watermark" %}
-    {{ defraWatermark(params) }}
   {% elif component == "panel" %}
     {{ defraPanel(params, renderDefraComponent) }}
   {% elif component == "checkboxes" %}

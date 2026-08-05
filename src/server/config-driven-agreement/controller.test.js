@@ -19,7 +19,13 @@ describe('configDrivenAgreementController', () => {
     request = {
       pre: {
         data: {
-          components: [{ component: 'paragraph', text: 'Hello' }]
+          components: [{ component: 'paragraph', text: 'Hello' }],
+          sections: [
+            {
+              id: 'payments',
+              components: [{ component: 'table', rows: [] }]
+            }
+          ]
         }
       },
       logger: { error: vi.fn() }
@@ -38,7 +44,10 @@ describe('configDrivenAgreementController', () => {
     const result = configDrivenAgreementController.handler(request, h)
 
     expect(validateComponents).toHaveBeenCalledWith(
-      request.pre.data.components,
+      [
+        ...request.pre.data.components,
+        ...request.pre.data.sections[0].components
+      ],
       request.logger
     )
     expect(buildViewModel).toHaveBeenCalledWith(

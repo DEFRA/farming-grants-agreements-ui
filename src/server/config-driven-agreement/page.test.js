@@ -51,14 +51,26 @@ const defaultModel = {
 
 const documentModel = {
   ...defaultModel,
-  page: { ...defaultModel.page, layout: 'document' },
-  components: [
-    ...agreementContent,
+  page: {
+    ...defaultModel.page,
+    layout: 'document',
+    contents: true,
+    print: true,
+    watermark: {
+      text: 'DRAFT'
+    }
+  },
+  components: agreementContent,
+  sections: [
     {
-      component: 'watermark',
-      text: 'DRAFT',
-      header: 'Draft Agreement',
-      classes: 'custom-watermark'
+      id: 'agreement-overview',
+      title: 'Agreement overview',
+      components: [{ component: 'paragraph', text: 'Overview details' }]
+    },
+    {
+      id: 'payment-schedule',
+      title: 'Payment schedule',
+      components: [{ component: 'paragraph', text: '6 November 2026 - £320' }]
     }
   ],
   actions: []
@@ -75,6 +87,32 @@ describe('config-driven GAS agreement page', () => {
     expect($('.govuk-grid-column-two-thirds')).toHaveLength(0)
   })
 
+  test('renders document sections with a contents sidebar and print control', () => {
+    const $ = renderGasAgreement(documentModel)
+    const $contents = $('#contents')
+
+    expect($contents.find('a')).toHaveLength(2)
+    expect($contents.find('a').first().attr('href')).toBe('#agreement-overview')
+    expect($contents.find('a').last().text().trim()).toBe('2. Payment schedule')
+    expect($('#agreement-overview').text().trim()).toBe('1. Agreement overview')
+    expect($('#payment-schedule').text().trim()).toBe('2. Payment schedule')
+    expect($('.govuk-grid-column-three-quarters')).toHaveLength(1)
+    expect($('[data-module="print-link"]').text().trim()).toBe(
+      'Print this page'
+    )
+  })
+
+  test('renders document sections full width when controls are disabled', () => {
+    const $ = renderGasAgreement({
+      ...documentModel,
+      page: { ...documentModel.page, contents: false, print: false }
+    })
+
+    expect($('#contents')).toHaveLength(0)
+    expect($('[data-module="print-link"]')).toHaveLength(0)
+    expect($('section').parent('.govuk-grid-column-full')).toHaveLength(1)
+  })
+
   test('uses the default two-thirds layout without watermark styling', () => {
     const $ = renderGasAgreement(defaultModel)
 
@@ -83,17 +121,13 @@ describe('config-driven GAS agreement page', () => {
     expect($('body').hasClass('view-agreement-has-watermark')).toBe(false)
   })
 
-  test('renders an accessible-hidden watermark from top-level config', () => {
+  test('renders an accessible-hidden page watermark', () => {
     const $ = renderGasAgreement(documentModel)
     const $watermark = $('.print-watermark')
-    const $header = $('.print-watermark-header')
 
     expect($('body').hasClass('view-agreement-has-watermark')).toBe(true)
     expect($watermark.text().trim()).toBe('DRAFT')
-    expect($watermark.hasClass('custom-watermark')).toBe(true)
     expect($watermark.attr('aria-hidden')).toBe('true')
-    expect($header.text().trim()).toBe('Draft Agreement')
-    expect($header.attr('aria-hidden')).toBe('true')
   })
 
   test('keeps ordinary page components outside action forms', () => {

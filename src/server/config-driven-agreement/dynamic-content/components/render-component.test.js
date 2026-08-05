@@ -87,7 +87,6 @@ describe('Agreement component renderer', () => {
       { title: 'Important', items: [] },
       '.govuk-notification-banner'
     ],
-    ['watermark', { text: 'Draft' }, '.print-watermark'],
     ['panel', { title: 'Complete', text: 'Done' }, '.govuk-panel']
   ])('renders the registered %s component', (component, params, selector) => {
     const $ = load(renderComponent({ component, ...params }))
