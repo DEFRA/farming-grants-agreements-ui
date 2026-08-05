@@ -38,6 +38,10 @@ export const getGasActionAuthentication = (request) => {
     throw Boom.notFound('Agreement action not found')
   }
 
+  if (jwtPayload.source !== 'defra') {
+    throw Boom.notFound('Agreement action not found')
+  }
+
   return { jwtPayload }
 }
 
