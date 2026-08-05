@@ -8,34 +8,72 @@ describe('buildViewModel', () => {
       pageTitle: 'Agreement',
       agreement: undefined,
       components: [],
+      sections: [],
       actions: [],
       hasFormAction: false,
       errors: [],
-      hasWatermark: false,
+      showContents: false,
+      print: false,
+      watermark: undefined,
       layout: 'default'
     })
   })
 
   it('uses the GAS page model fields', () => {
     const agreement = { agreementNumber: 'PMF123' }
-    const components = [{ component: 'watermark' }]
+    const components = [{ component: 'heading', text: 'Agreement' }]
+    const watermark = { text: 'DRAFT' }
     const errors = [{ href: '#confirm', text: 'Confirm the agreement' }]
 
     expect(
       buildViewModel({
         agreement,
-        page: { title: 'Your agreement', layout: 'document' },
+        page: {
+          title: 'Your agreement',
+          layout: 'document',
+          contents: true,
+          print: true,
+          watermark
+        },
         components,
+        sections: [
+          {
+            id: 'payment-schedule',
+            title: 'Payment schedule',
+            components: [
+              {
+                component: 'url',
+                href: '/agreements/PMF123/document',
+                text: 'View payment'
+              }
+            ]
+          }
+        ],
         errors
       })
     ).toEqual({
       pageTitle: 'Your agreement',
       agreement,
       components,
+      sections: [
+        {
+          id: 'payment-schedule',
+          title: 'Payment schedule',
+          components: [
+            {
+              component: 'url',
+              href: '/PMF123',
+              text: 'View payment'
+            }
+          ]
+        }
+      ],
       actions: [],
       hasFormAction: false,
       errors,
-      hasWatermark: true,
+      showContents: true,
+      print: true,
+      watermark,
       layout: 'document'
     })
   })

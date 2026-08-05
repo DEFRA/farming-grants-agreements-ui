@@ -1,4 +1,4 @@
-{% set bodyClasses = "config-driven-agreement-page" ~ (" view-agreement-has-watermark" if hasWatermark else "") %}
+{% set bodyClasses = "config-driven-agreement-page" ~ (" view-agreement-has-watermark" if watermark else "") %}
 {% set mainClasses = "" %}
 
 {% extends "layouts/page.njk" %}
@@ -7,6 +7,7 @@
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "config-driven-agreement/dynamic-content/macro.njk" import dynamicContent %}
+{% from "config-driven-agreement/document/watermark.njk" import defraWatermark %}
 
 {% block content %}
   <div class="govuk-grid-row">
@@ -16,6 +17,10 @@
           titleText: "There is a problem",
           errorList: errors
         }) }}
+      {% endif %}
+
+      {% if watermark %}
+        {{ defraWatermark(watermark) }}
       {% endif %}
 
       {% if not hasFormAction %}
@@ -65,4 +70,54 @@
       {% endfor %}
     </div>
   </div>
+
+  {% if layout == 'document' and sections.length %}
+    <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+
+    <div class="govuk-grid-row">
+      {% if showContents or print %}
+        <div class="govuk-grid-column-one-quarter">
+          <nav role="navigation"{% if showContents %} aria-labelledby="document-contents-title"{% else %} aria-label="Document controls"{% endif %}>
+            {% if showContents %}
+              <div id="contents">
+                <p id="document-contents-title" class="govuk-body-s">Contents</p>
+                <ul class="govuk-list toc">
+                  {% for section in sections %}
+                    <li><a href="#{{ section.id }}">{{ loop.index }}. {{ section.title }}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+
+            {% if print %}
+              <div class="gem-c-print-link govuk-!-display-none-print govuk-!-margin-bottom-6 print-btn">
+                <button
+                  type="button"
+                  class="govuk-link govuk-body-s gem-c-print-link__button"
+                  data-module="print-link"
+                  style="--print-icon-url: url('{{ getAssetPath(baseUrl, 'images/govuk-icon-print.png') }}');">
+                  Print this page
+                </button>
+              </div>
+            {% endif %}
+          </nav>
+        </div>
+      {% endif %}
+
+      <div class="{{ 'govuk-grid-column-three-quarters' if showContents or print else 'govuk-grid-column-full' }}">
+        {% for section in sections %}
+          <section aria-labelledby="{{ section.id }}">
+            <h2 id="{{ section.id }}" class="govuk-heading-l">{{ loop.index }}. {{ section.title }}</h2>
+            {{ dynamicContent(section.components) }}
+          </section>
+        {% endfor %}
+      </div>
+    </div>
+
+    <noscript>
+      <style>
+        .print-btn { display: none !important; }
+      </style>
+    </noscript>
+  {% endif %}
 {% endblock %}
