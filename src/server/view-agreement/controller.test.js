@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { MatchersV2 } from '@pact-foundation/pact'
 
 import { createServer } from '#~/server/server.js'
@@ -482,6 +483,15 @@ describe('viewAgreementController agreement ended', () => {
       'view-agreement/agreement-ended',
       expect.objectContaining({ pageTitle: 'Agreement ended' })
     )
+  })
+
+  test('does not render a nested main landmark', () => {
+    const template = readFileSync(
+      new URL('./agreement-ended.njk', import.meta.url),
+      'utf8'
+    )
+
+    expect(template).not.toContain('role="main"')
   })
 
   test('renders FPTT grant-specific template when status is accepted', async () => {
