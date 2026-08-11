@@ -46,7 +46,7 @@ const extractJwtPayload = (authToken) => {
           clientRef: payload.clientRef,
           grantCode: payload.grantCode
         },
-        'JWT payload extracted'
+        `JWT payload extracted`
       )
     }
 
