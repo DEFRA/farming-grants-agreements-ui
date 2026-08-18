@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import Boom from '@hapi/boom'
 import { agreementController } from './controller.js'
 import { apiRequest, GAS, getBackend } from '#~/server/common/helpers/api.js'
@@ -8,6 +10,7 @@ import {
   getGasActionAuthentication
 } from './action-controller.js'
 import {
+  encryptedAuthQueryName,
   getAgreementAuthentication,
   getGasQueryParams
 } from './agreement-request.js'
@@ -39,14 +42,54 @@ const assertSupportedGasMode = (backend, mode) => {
   }
 }
 
+const getAuthTokenFingerprint = (token) =>
+  typeof token === 'string'
+    ? createHash('sha256').update(token).digest('hex').slice(0, 16)
+    : null
+
+const getRawAuthHeaders = (request) => {
+  const rawHeaders = request.raw?.req?.rawHeaders ?? []
+
+  return rawHeaders.flatMap((name, index) =>
+    index % 2 === 0 && name.toLowerCase() === encryptedAuthQueryName
+      ? [rawHeaders[index + 1]]
+      : []
+  )
+}
+
 const getAgreementData = async (request) => {
   const { agreementId = '' } = request.params
   const method = getAgreementMethod(request.payload)
   const authToken = getAgreementAuthentication(request)
 
-  const jwtPayload = extractJwtPayload(authToken)
+  const jwtPayload = extractJwtPayload(authToken, request.logger)
 
   if (!jwtPayload) {
+    const rawAuthHeaders = getRawAuthHeaders(request)
+    const isStringToken = typeof authToken === 'string'
+
+    request.logger.warn(
+      {
+        requestId: request.info.id,
+        xCdpRequestId: request.headers?.['x-cdp-request-id'],
+        hasAuthHeader: Boolean(request.headers?.[encryptedAuthQueryName]),
+        hasAuthQuery: Boolean(request.query?.[encryptedAuthQueryName]),
+        authTokenType: typeof authToken,
+        authTokenLength: isStringToken ? authToken.length : null,
+        authTokenFingerprint: getAuthTokenFingerprint(authToken),
+        authTokenSegmentCount: isStringToken
+          ? authToken.split('.').length
+          : null,
+        authTokenHasOuterWhitespace: isStringToken
+          ? authToken !== authToken.trim()
+          : null,
+        rawAuthHeaderCount: rawAuthHeaders.length,
+        rawAuthHeaderLengths: rawAuthHeaders.map((header) => header.length),
+        rawAuthHeaderFingerprints: rawAuthHeaders.map(getAuthTokenFingerprint)
+      },
+      'Agreement JWT authentication failed'
+    )
+
     throw Boom.unauthorized(
       'Your account is not authorised to view/accept this offer agreement'
     )

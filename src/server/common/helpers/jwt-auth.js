@@ -10,13 +10,13 @@ const logger = createLogger()
  * @param {string} authToken - The JWT token to verify and decode
  * @returns {payload|null} The JWT payload object from the token or null if invalid/missing
  */
-const extractJwtPayload = (authToken) => {
+const extractJwtPayload = (authToken, requestLogger = logger) => {
   if (!authToken || authToken.trim() === '') {
-    logger.error('No JWT token provided')
+    requestLogger.error('No JWT token provided')
     return null
   }
 
-  logger.info(
+  requestLogger.info(
     {
       tokenLength: authToken.length,
       isJwtFormat: authToken.startsWith('eyJ') && authToken.includes('.')
@@ -26,7 +26,9 @@ const extractJwtPayload = (authToken) => {
 
   try {
     const decoded = Jwt.token.decode(authToken)
-    logger.info('JWT token decoded successfully, attempting verification')
+    requestLogger.info(
+      'JWT token decoded successfully, attempting verification'
+    )
 
     // Verify the token against the secret
     Jwt.token.verify(decoded, {
@@ -34,11 +36,11 @@ const extractJwtPayload = (authToken) => {
       algorithms: ['HS256']
     })
 
-    logger.info('JWT token verified successfully')
+    requestLogger.info('JWT token verified successfully')
     const payload = decoded?.decoded?.payload || null
 
     if (payload) {
-      logger.info(
+      requestLogger.info(
         {
           hasSbi: !!payload.sbi,
           hasSource: !!payload.source,
@@ -52,7 +54,10 @@ const extractJwtPayload = (authToken) => {
 
     return payload
   } catch (jwtError) {
-    logger.error(jwtError, `Invalid JWT token provided: ${jwtError.message}`)
+    requestLogger.error(
+      jwtError,
+      `Invalid JWT token provided: ${jwtError.message}`
+    )
     return null
   }
 }
