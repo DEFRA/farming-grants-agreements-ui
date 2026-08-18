@@ -76,9 +76,14 @@ describe('GAS public agreement rendering', () => {
     expect(printResponse.statusCode).toBe(200)
     expect(extractJwtPayload).toHaveBeenNthCalledWith(
       1,
-      'caseworking-header-auth'
+      'caseworking-header-auth',
+      expect.anything()
     )
-    expect(extractJwtPayload).toHaveBeenNthCalledWith(2, 'pdf-query-auth')
+    expect(extractJwtPayload).toHaveBeenNthCalledWith(
+      2,
+      'pdf-query-auth',
+      expect.anything()
+    )
     expect(globalThis.fetch).toHaveBeenNthCalledWith(
       1,
       gasAgreementDocumentApiUrls.view,
