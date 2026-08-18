@@ -125,6 +125,22 @@ describe('jwt-auth', () => {
       )
     })
 
+    test('uses a request logger when provided', () => {
+      const requestLogger = {
+        error: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn()
+      }
+      setupMockJwt({ sbi: '123456', source: 'defra' })
+
+      extractJwtPayload('eyJ.valid.token', requestLogger)
+
+      expect(requestLogger.info).toHaveBeenCalledWith(
+        'JWT token verified successfully'
+      )
+      expect(getMockLogger().info).not.toHaveBeenCalled()
+    })
+
     test('should return null and log error if Jwt.token.decode fails', () => {
       const mockError = new Error('Decode error')
       setupMockJwt(null, mockError)

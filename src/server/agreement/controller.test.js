@@ -156,7 +156,10 @@ describe('#agreementController', () => {
       })
 
       expect(response.statusCode).toBe(statusCodes.ok)
-      expect(extractJwtPayload).toHaveBeenCalledWith('caseworking-header-auth')
+      expect(extractJwtPayload).toHaveBeenCalledWith(
+        'caseworking-header-auth',
+        expect.anything()
+      )
       expect(fetch).toHaveBeenCalledWith(gasAgreementDocumentApiUrls.view, {
         headers: {
           Authorization: 'Bearer mock-gas-token',
@@ -200,7 +203,10 @@ describe('#agreementController', () => {
       })
 
       expect(response.statusCode).toBe(statusCodes.ok)
-      expect(extractJwtPayload).toHaveBeenCalledWith('pdf-query-auth')
+      expect(extractJwtPayload).toHaveBeenCalledWith(
+        'pdf-query-auth',
+        expect.anything()
+      )
       expect(fetch).toHaveBeenCalledWith(gasAgreementDocumentApiUrls.print, {
         headers: {
           Authorization: 'Bearer mock-gas-token',
