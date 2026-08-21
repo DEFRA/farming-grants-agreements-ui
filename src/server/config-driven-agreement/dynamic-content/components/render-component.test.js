@@ -75,7 +75,14 @@ describe('Agreement component renderer', () => {
     ],
     ['unordered-list', { items: [{ text: 'Item' }] }, 'ul'],
     ['ordered-list', { items: [{ text: 'Item' }] }, 'ol'],
-    ['table', { rows: [[{ text: 'Cell' }]] }, '.govuk-table'],
+    [
+      'table',
+      {
+        classes: 'govuk-table--small-text-until-tablet',
+        rows: [[{ text: 'Cell' }]]
+      },
+      '.govuk-table.govuk-table--small-text-until-tablet'
+    ],
     ['container', { items: [{ text: 'Item' }] }, '.defra-container'],
     [
       'details',
