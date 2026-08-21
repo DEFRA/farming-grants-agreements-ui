@@ -60,6 +60,19 @@ describe('Agreement component renderer', () => {
       { rows: [{ label: 'Agreement', text: 'PMF123' }] },
       '.govuk-summary-list'
     ],
+    [
+      'description-list',
+      {
+        classes: 'dataset-info',
+        rows: [
+          {
+            label: { text: 'Agreement', classes: 'label' },
+            value: { text: 'WMP123', classes: 'value' }
+          }
+        ]
+      },
+      'dl.dataset-info > dt.label + dd.value'
+    ],
     ['unordered-list', { items: [{ text: 'Item' }] }, 'ul'],
     ['ordered-list', { items: [{ text: 'Item' }] }, 'ol'],
     ['table', { rows: [[{ text: 'Cell' }]] }, '.govuk-table'],
