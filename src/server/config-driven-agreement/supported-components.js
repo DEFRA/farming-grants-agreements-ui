@@ -2,6 +2,7 @@ export const supportedComponents = [
   'accordion',
   'checkboxes',
   'container',
+  'description-list',
   'details',
   'heading',
   'line-break',
