@@ -334,14 +334,10 @@ describe('#agreementController', () => {
       )
     })
 
-    test('uses the legacy backend when the JWT has no grant code', async () => {
-      extractJwtPayload.mockReturnValue({ source: 'entra' })
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({})
-      })
+    test('rejects the request when the JWT has no grant code', async () => {
+      extractJwtPayload.mockReturnValue({ source: 'defra' })
 
-      await server.inject({
+      const response = await server.inject({
         method: 'GET',
         url: '/',
         headers: {
@@ -349,13 +345,8 @@ describe('#agreementController', () => {
         }
       })
 
-      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/', {
-        headers: {
-          'x-encrypted-auth': 'mock-auth'
-        },
-        method: 'GET',
-        signal: expect.any(AbortSignal)
-      })
+      expect(response.statusCode).toBe(statusCodes.unauthorized)
+      expect(fetch).not.toHaveBeenCalled()
     })
 
     test('should call the backend API using x-encrypted-auth from query if header is missing', async () => {
