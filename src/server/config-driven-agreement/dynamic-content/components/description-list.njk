@@ -1,0 +1,10 @@
+{% macro defraDescriptionList(params) %}
+  {%- set classes = params.classes or '' %}
+
+  <dl{% if classes %} class="{{ classes }}"{% endif %}>
+    {% for row in params.rows or [] %}
+      <dt{% if row.label.classes %} class="{{ row.label.classes }}"{% endif %}>{{ row.label.text }}</dt>
+      <dd{% if row.value.classes %} class="{{ row.value.classes }}"{% endif %}>{{ row.value.text }}</dd>
+    {% endfor %}
+  </dl>
+{% endmacro %}

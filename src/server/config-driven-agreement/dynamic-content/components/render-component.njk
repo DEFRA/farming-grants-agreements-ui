@@ -4,6 +4,7 @@
 {% from "./status.njk" import defraStatus %}
 {% from "./heading.njk" import defraHeading %}
 {% from "./summary-list.njk" import defraSummaryList %}
+{% from "./description-list.njk" import defraDescriptionList %}
 {% from "./unordered-list.njk" import defraUnorderedList %}
 {% from "./ordered-list.njk" import defraOrderedList %}
 {% from "./table.njk" import defraTable %}
@@ -31,6 +32,8 @@
     {{ defraHeading(params) }}
   {% elif component == "summary-list" %}
     {{ defraSummaryList(params, renderDefraComponent) }}
+  {% elif component == "description-list" %}
+    {{ defraDescriptionList(params) }}
   {% elif component == "unordered-list" %}
     {{ defraUnorderedList(params, renderDefraComponent) }}
   {% elif component == "ordered-list" %}
