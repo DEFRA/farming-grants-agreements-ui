@@ -9,8 +9,14 @@ const LEGACY = 'legacy'
 const logger = createLogger()
 
 export const getBackend = (jwtPayload) => {
+  const grantCode = jwtPayload?.grantCode
+
+  if (typeof grantCode !== 'string' || !grantCode.trim()) {
+    throw Boom.unauthorized('Agreement grant code is missing')
+  }
+
   const allowedGrantCodes = config.get('gasBackend.allowedGrantCodes')
-  return allowedGrantCodes.includes(jwtPayload?.grantCode) ? GAS : LEGACY
+  return allowedGrantCodes.includes(grantCode) ? GAS : LEGACY
 }
 
 const appendQueryParams = (url, queryParams) => {

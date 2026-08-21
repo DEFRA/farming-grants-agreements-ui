@@ -8,7 +8,7 @@ import {
   vi
 } from 'vitest'
 
-import { apiRequest, gasActionRequest } from './api.js'
+import { apiRequest, gasActionRequest, getBackend } from './api.js'
 
 vi.mock('./jwt-auth.js', () => ({
   extractJwtPayload: vi.fn(),
@@ -16,6 +16,17 @@ vi.mock('./jwt-auth.js', () => ({
 }))
 
 const originalFetch = globalThis.fetch
+
+describe('getBackend', () => {
+  test.each([undefined, null, '', ' '])(
+    'does not default to legacy when grantCode is %j',
+    (grantCode) => {
+      expect(() => getBackend({ grantCode })).toThrow(
+        'Agreement grant code is missing'
+      )
+    }
+  )
+})
 
 const createErrorResponse = (overrides = {}) => ({
   ok: false,
