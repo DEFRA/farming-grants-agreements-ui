@@ -12,7 +12,7 @@ export const getBackend = (jwtPayload) => {
   const grantCode = jwtPayload?.grantCode
 
   if (typeof grantCode !== 'string' || !grantCode.trim()) {
-    throw Boom.unauthorized('Agreement grant context is missing')
+    throw Boom.unauthorized('Agreement grant code is missing')
   }
 
   const allowedGrantCodes = config.get('gasBackend.allowedGrantCodes')

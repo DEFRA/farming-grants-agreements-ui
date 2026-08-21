@@ -22,7 +22,7 @@ describe('getBackend', () => {
     'does not default to legacy when grantCode is %j',
     (grantCode) => {
       expect(() => getBackend({ grantCode })).toThrow(
-        'Agreement grant context is missing'
+        'Agreement grant code is missing'
       )
     }
   )
