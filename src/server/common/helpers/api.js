@@ -88,6 +88,10 @@ const getHeaders = ({
 }) => {
   const headers = {
     ...(backend === LEGACY && { 'x-encrypted-auth': auth }),
+    // FGP-1307: forward the verified caller token to GAS (alongside the
+    // existing service bearer and x-agreement-* headers) so GAS can verify the
+    // caller independently. Additive/backwards-compatible for now.
+    ...(backend === GAS && auth && { 'x-encrypted-auth': auth }),
     ...(backend === GAS &&
       getGasAgreementHeaders(agreementContext, includeClientRef)),
     ...(method.toUpperCase() === 'POST' && {
@@ -208,7 +212,8 @@ export const gasActionRequest = async ({
   etag,
   idempotencyKey,
   queryParams,
-  jwtPayload
+  jwtPayload,
+  auth
 }) =>
   requestBackend(
     {
@@ -218,6 +223,7 @@ export const gasActionRequest = async ({
       body,
       backend: GAS,
       jwtPayload,
+      auth,
       queryParams,
       transportHeaders: {
         ...(etag !== undefined && { 'If-Match': etag }),

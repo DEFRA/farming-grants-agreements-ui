@@ -125,6 +125,53 @@ describe('jwt-auth', () => {
       )
     })
 
+    test('should warn (but still accept) when hardened FGP-1307 claims are missing', () => {
+      const mockPayload = { sbi: '123456', source: 'defra' }
+      setupMockJwt(mockPayload)
+
+      const result = extractJwtPayload('eyJ.legacy.token')
+
+      expect(result).toEqual(mockPayload)
+      expect(getMockLogger().warn).toHaveBeenCalledWith(
+        { missingClaims: ['iss', 'aud', 'sub'] },
+        'Caller token is missing hardened claims (FGP-1307); accepted for now'
+      )
+    })
+
+    test('should not warn when a fully hardened token targets agreements-ui', () => {
+      const mockPayload = {
+        sbi: '123456',
+        source: 'defra',
+        iss: 'grants-ui',
+        aud: ['agreements-ui', 'gas'],
+        sub: '123456'
+      }
+      setupMockJwt(mockPayload)
+
+      const result = extractJwtPayload('eyJ.hardened.token')
+
+      expect(result).toEqual(mockPayload)
+      expect(getMockLogger().warn).not.toHaveBeenCalled()
+    })
+
+    test('should warn when the token audience excludes agreements-ui', () => {
+      const mockPayload = {
+        sbi: '123456',
+        source: 'defra',
+        iss: 'grants-ui',
+        aud: ['gas'],
+        sub: '123456'
+      }
+      setupMockJwt(mockPayload)
+
+      extractJwtPayload('eyJ.wrongaud.token')
+
+      expect(getMockLogger().warn).toHaveBeenCalledWith(
+        { aud: ['gas'] },
+        'Caller token audience does not include agreements-ui (FGP-1307); accepted for now'
+      )
+    })
+
     test('should return null and log error if Jwt.token.decode fails', () => {
       const mockError = new Error('Decode error')
       setupMockJwt(null, mockError)

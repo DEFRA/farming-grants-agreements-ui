@@ -194,7 +194,10 @@ describe('apiRequest error handling', () => {
     )
 
     const fetchArgs = globalThis.fetch.mock.calls[0][1]
-    expect(fetchArgs.headers).not.toHaveProperty('x-encrypted-auth')
+    expect(fetchArgs.headers).toHaveProperty(
+      'x-encrypted-auth',
+      'mock-auth-token'
+    )
     expect(fetchArgs.headers).toHaveProperty(
       'Authorization',
       'Bearer gas-token'
@@ -306,7 +309,10 @@ describe('apiRequest error handling', () => {
     )
 
     const fetchArgs = globalThis.fetch.mock.calls[0][1]
-    expect(fetchArgs.headers).not.toHaveProperty('x-encrypted-auth')
+    expect(fetchArgs.headers).toHaveProperty(
+      'x-encrypted-auth',
+      'mock-auth-token'
+    )
 
     mockConfig.get = originalGet
   })

@@ -42,7 +42,7 @@ export const getGasActionAuthentication = (request) => {
     throw Boom.notFound('Agreement action not found')
   }
 
-  return { jwtPayload }
+  return { jwtPayload, auth: authToken }
 }
 
 const requireEtag = (etag) => {
@@ -63,12 +63,13 @@ const renderActionPage = (request, h, pageModel, etag, idempotencyKey) =>
 export const agreementActionController = {
   async get(request, h) {
     const { agreementId, actionName } = request.params
-    const { jwtPayload } = request.pre.actionAuthentication
+    const { jwtPayload, auth } = request.pre.actionAuthentication
     const response = await gasActionRequest({
       agreementId,
       actionName,
       queryParams: getGasQueryParams(request),
-      jwtPayload
+      jwtPayload,
+      auth
     })
 
     return renderActionPage(request, h, response.pageModel, response.etag)
@@ -76,7 +77,7 @@ export const agreementActionController = {
 
   async post(request, h) {
     const { agreementId, actionName } = request.params
-    const { jwtPayload } = request.pre.actionAuthentication
+    const { jwtPayload, auth } = request.pre.actionAuthentication
     const { etag, idempotencyKey, values } = extractActionSubmission(
       request.payload
     )
@@ -88,7 +89,8 @@ export const agreementActionController = {
       etag,
       idempotencyKey,
       queryParams: getGasQueryParams(request),
-      jwtPayload
+      jwtPayload,
+      auth
     })
 
     if (response.status === statusCodes.unprocessableEntity) {

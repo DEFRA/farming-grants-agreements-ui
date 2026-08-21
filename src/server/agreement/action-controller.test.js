@@ -127,6 +127,7 @@ describe('generic GAS Agreement action routes', () => {
       {
         method: 'GET',
         headers: {
+          'x-encrypted-auth': 'query-auth',
           Authorization: 'Bearer gas-service-token',
           'x-agreement-source': 'defra',
           'x-agreement-code': 'generic-gas-grant',
@@ -539,6 +540,7 @@ describe('generic GAS Agreement action routes', () => {
         'Content-Type': 'application/json',
         'If-Match': '"AGR_42:7"',
         'Idempotency-Key': idempotencyKey,
+        'x-encrypted-auth': 'header-auth',
         Authorization: 'Bearer gas-service-token',
         'x-agreement-source': 'defra',
         'x-agreement-code': 'generic-gas-grant',
@@ -555,7 +557,10 @@ describe('generic GAS Agreement action routes', () => {
       signal: expect.any(AbortSignal),
       redirect: 'manual'
     })
-    expect(fetchOptions.headers).not.toHaveProperty('x-encrypted-auth')
+    expect(fetchOptions.headers).toHaveProperty(
+      'x-encrypted-auth',
+      'header-auth'
+    )
 
     const $ = load(response.result)
     expect(response.result).toContain('GAS validation heading')
