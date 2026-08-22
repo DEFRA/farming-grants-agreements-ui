@@ -87,7 +87,8 @@ describe('GAS public agreement rendering', () => {
           Authorization: 'Bearer mock-gas-token',
           'x-agreement-source': 'entra',
           'x-agreement-code': gasGrantCode,
-          'x-agreement-sbi': '300000000'
+          'x-agreement-sbi': '300000000',
+          'x-encrypted-auth': 'caseworking-header-auth'
         },
         method: 'GET'
       })
@@ -100,7 +101,8 @@ describe('GAS public agreement rendering', () => {
           Authorization: 'Bearer mock-gas-token',
           'x-agreement-source': 'entra',
           'x-agreement-code': gasGrantCode,
-          'x-agreement-sbi': '300000000'
+          'x-agreement-sbi': '300000000',
+          'x-encrypted-auth': 'pdf-query-auth'
         },
         method: 'GET'
       })

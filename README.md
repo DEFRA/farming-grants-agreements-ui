@@ -235,6 +235,12 @@ Requirements:
 - The `source` claim must be one of `defra` (farmer) or `entra` (case worker).
 - When `source=defra`, you can include an `sbi` claim to test farmer-scoped endpoints.
 
+> **Caller-token hardening (FGP-1307):** incoming tokens are validated in warn-only
+> mode. A missing `exp`, an audience that excludes `agreements-ui`, or an `iss`
+> outside the producer allowlist is logged but still accepted. The allowlist is
+> configured via `CALLER_TOKEN_ALLOWED_ISSUERS` (comma-separated, defaults to
+> `grants-ui,fg-cw-frontend,agreements-pdf`).
+
 - The script validates `--source` and will exit with an error if the value is not `defra` or `entra` or if the secret is missing.
 
 Sample token for farmer's (`source=defra`) data:
