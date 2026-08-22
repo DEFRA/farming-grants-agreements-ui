@@ -7,12 +7,13 @@ const logger = createLogger()
 // FGP-1307: caller-token hardening. Producers now add registered claims
 // (iss/aud/sub) and a short exp. We validate them in a backwards-compatible
 // ("warn-only") mode: expiry is already enforced by Jwt.token.verify when an
-// exp claim is present, while missing/mismatched iss/aud/sub are logged but not
-// rejected so legacy tokens keep working until enforcement lands.
+// exp claim is present, while a missing exp, missing/mismatched iss/aud/sub, or
+// an issuer outside the agreed producer allowlist are logged but not rejected
+// so legacy tokens keep working until enforcement lands.
 const EXPECTED_AUDIENCE = 'agreements-ui'
 
 const warnOnCallerClaims = (payload) => {
-  const missing = ['iss', 'aud', 'sub'].filter(
+  const missing = ['iss', 'aud', 'sub', 'exp'].filter(
     (claim) => payload[claim] == null
   )
   if (missing.length > 0) {
@@ -22,7 +23,7 @@ const warnOnCallerClaims = (payload) => {
     )
   }
 
-  const { aud } = payload
+  const { aud, iss } = payload
   const audienceMatches =
     aud === EXPECTED_AUDIENCE ||
     (Array.isArray(aud) && aud.includes(EXPECTED_AUDIENCE))
@@ -30,6 +31,18 @@ const warnOnCallerClaims = (payload) => {
     logger.warn(
       { aud },
       'Caller token audience does not include agreements-ui (FGP-1307); accepted for now'
+    )
+  }
+
+  const allowedIssuers = config.get('callerTokenAllowedIssuers') || []
+  if (
+    iss != null &&
+    allowedIssuers.length > 0 &&
+    !allowedIssuers.includes(iss)
+  ) {
+    logger.warn(
+      { iss },
+      'Caller token issuer is not in the allowed producers list (FGP-1307); accepted for now'
     )
   }
 }
@@ -73,9 +86,8 @@ const extractJwtPayload = (authToken) => {
         {
           hasSbi: !!payload.sbi,
           hasSource: !!payload.source,
-          source: payload.source,
-          clientRef: payload.clientRef,
-          grantCode: payload.grantCode
+          hasClientRef: !!payload.clientRef,
+          hasGrantCode: !!payload.grantCode
         },
         'JWT payload extracted'
       )

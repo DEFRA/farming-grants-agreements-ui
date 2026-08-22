@@ -295,6 +295,12 @@ export const config = convict({
     default: null,
     env: 'AGREEMENTS_JWT_SECRET'
   },
+  callerTokenAllowedIssuers: {
+    doc: 'Producer issuers (iss) allowed to call agreements-ui (FGP-1307 warn-only allowlist)',
+    format: Array,
+    default: ['grants-ui', 'fg-cw-frontend', 'agreements-pdf'],
+    env: 'CALLER_TOKEN_ALLOWED_ISSUERS'
+  },
   snsTopicArnAudit: {
     doc: 'SNS Topic ARN for audit events',
     format: String,
