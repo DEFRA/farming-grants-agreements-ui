@@ -301,12 +301,6 @@ export const config = convict({
     default: ['grants-ui', 'fg-cw-frontend', 'agreements-pdf'],
     env: 'CALLER_TOKEN_ALLOWED_ISSUERS'
   },
-  callerTokenMaxLifetimeSeconds: {
-    doc: 'Maximum agreed caller-token lifetime (exp - iat) in seconds; longer-lived tokens are warned about (FGP-1307 warn-only)',
-    format: Number,
-    default: 300,
-    env: 'CALLER_TOKEN_MAX_LIFETIME_SECONDS'
-  },
   snsTopicArnAudit: {
     doc: 'SNS Topic ARN for audit events',
     format: String,

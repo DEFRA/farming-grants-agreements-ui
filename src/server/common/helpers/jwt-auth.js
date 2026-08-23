@@ -13,6 +13,11 @@ const logger = createLogger()
 // so legacy tokens keep working until enforcement lands.
 const EXPECTED_AUDIENCE = 'agreements-ui'
 
+// FGP-1307: the agreed caller-token lifetime is a fixed security rule (a short,
+// single-request token). It is a code constant rather than configuration so it
+// cannot drift between environments.
+const MAX_CALLER_TOKEN_LIFETIME_SECONDS = 300
+
 const missingClaimsWarning = (payload) => {
   const missing = ['iss', 'aud', 'sub', 'exp', 'iat'].filter(
     (claim) => payload[claim] == null
@@ -39,7 +44,7 @@ const lifetimeWarning = (payload) => {
     return null
   }
   const lifetimeSeconds = exp - iat
-  const maxLifetimeSeconds = config.get('callerTokenMaxLifetimeSeconds')
+  const maxLifetimeSeconds = MAX_CALLER_TOKEN_LIFETIME_SECONDS
   return lifetimeSeconds <= 0 || lifetimeSeconds > maxLifetimeSeconds
     ? {
         data: { lifetimeSeconds, maxLifetimeSeconds },

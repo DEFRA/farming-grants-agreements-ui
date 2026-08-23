@@ -240,10 +240,10 @@ Requirements:
 > outside the agreed range, an audience that excludes `agreements-ui`, or an `iss`
 > outside the producer allowlist is logged but still accepted. The allowlist is
 > configured via `CALLER_TOKEN_ALLOWED_ISSUERS` (comma-separated, defaults to
-> `grants-ui,fg-cw-frontend,agreements-pdf`); the maximum agreed lifetime is
-> configured via `CALLER_TOKEN_MAX_LIFETIME_SECONDS` (defaults to `300`).
-> Invalid tokens are logged with only `errorType`/`errorMessage` — never the raw
-> error object or the token itself.
+> `grants-ui,fg-cw-frontend,agreements-pdf`); the maximum agreed lifetime is a
+> fixed code constant of 300 seconds (5 minutes), not configuration, so it cannot
+> drift between environments. Invalid tokens are logged with only
+> `errorType`/`errorMessage` — never the raw error object or the token itself.
 
 - The script validates `--source` and will exit with an error if the value is not `defra` or `entra` or if the secret is missing.
 

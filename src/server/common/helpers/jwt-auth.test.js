@@ -12,7 +12,6 @@ vi.mock('#~/config/config.js', () => ({
       if (key === 'callerTokenAllowedIssuers') {
         return ['grants-ui', 'fg-cw-frontend', 'agreements-pdf']
       }
-      if (key === 'callerTokenMaxLifetimeSeconds') return 300
       if (key === 'log') {
         return { enabled: true, level: 'info', redact: [], format: 'ecs' }
       }
@@ -45,7 +44,6 @@ describe('jwt-auth', () => {
       if (key === 'callerTokenAllowedIssuers') {
         return ['grants-ui', 'fg-cw-frontend', 'agreements-pdf']
       }
-      if (key === 'callerTokenMaxLifetimeSeconds') return 300
       if (key === 'log') {
         return { enabled: true, level: 'info', redact: [], format: 'ecs' }
       }
