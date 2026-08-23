@@ -9,9 +9,6 @@ vi.mock('#~/config/config.js', () => ({
     get: vi.fn((key) => {
       if (key === 'featureFlags.isJwtEnabled') return true
       if (key === 'jwtSecret') return 'mock-jwt-secret'
-      if (key === 'callerTokenAllowedIssuers') {
-        return ['grants-ui', 'fg-cw-frontend', 'agreements-pdf']
-      }
       if (key === 'log') {
         return { enabled: true, level: 'info', redact: [], format: 'ecs' }
       }
@@ -41,9 +38,6 @@ describe('jwt-auth', () => {
     config.get.mockImplementation((key) => {
       if (key === 'featureFlags.isJwtEnabled') return isJwtEnabled
       if (key === 'jwtSecret') return 'mock-jwt-secret'
-      if (key === 'callerTokenAllowedIssuers') {
-        return ['grants-ui', 'fg-cw-frontend', 'agreements-pdf']
-      }
       if (key === 'log') {
         return { enabled: true, level: 'info', redact: [], format: 'ecs' }
       }

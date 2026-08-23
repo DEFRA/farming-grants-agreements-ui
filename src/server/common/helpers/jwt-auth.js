@@ -18,6 +18,12 @@ const EXPECTED_AUDIENCE = 'agreements-ui'
 // cannot drift between environments.
 const MAX_CALLER_TOKEN_LIFETIME_SECONDS = 300
 
+const ALLOWED_ISSUERS = Object.freeze([
+  'grants-ui',
+  'fg-cw-frontend',
+  'agreements-pdf'
+])
+
 const missingClaimsWarning = (payload) => {
   const missing = ['iss', 'aud', 'sub', 'exp', 'iat'].filter(
     (claim) => payload[claim] == null
@@ -70,10 +76,7 @@ const audienceWarning = (payload) => {
 
 const issuerWarning = (payload) => {
   const { iss } = payload
-  const allowedIssuers = config.get('callerTokenAllowedIssuers') || []
-  return iss != null &&
-    allowedIssuers.length > 0 &&
-    !allowedIssuers.includes(iss)
+  return iss != null && !ALLOWED_ISSUERS.includes(iss)
     ? {
         data: { iss },
         message:
