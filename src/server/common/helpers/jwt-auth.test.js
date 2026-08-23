@@ -12,6 +12,7 @@ vi.mock('#~/config/config.js', () => ({
       if (key === 'callerTokenAllowedIssuers') {
         return ['grants-ui', 'fg-cw-frontend', 'agreements-pdf']
       }
+      if (key === 'callerTokenMaxLifetimeSeconds') return 300
       if (key === 'log') {
         return { enabled: true, level: 'info', redact: [], format: 'ecs' }
       }
@@ -44,6 +45,7 @@ describe('jwt-auth', () => {
       if (key === 'callerTokenAllowedIssuers') {
         return ['grants-ui', 'fg-cw-frontend', 'agreements-pdf']
       }
+      if (key === 'callerTokenMaxLifetimeSeconds') return 300
       if (key === 'log') {
         return { enabled: true, level: 'info', redact: [], format: 'ecs' }
       }
@@ -139,7 +141,7 @@ describe('jwt-auth', () => {
 
       expect(result).toEqual(mockPayload)
       expect(getMockLogger().warn).toHaveBeenCalledWith(
-        { missingClaims: ['iss', 'aud', 'sub', 'exp'] },
+        { missingClaims: ['iss', 'aud', 'sub', 'exp', 'iat'] },
         'Caller token is missing hardened claims (FGP-1307); accepted for now'
       )
     })
@@ -151,6 +153,7 @@ describe('jwt-auth', () => {
         iss: 'grants-ui',
         aud: ['agreements-ui', 'gas'],
         sub: '123456',
+        iat: 1893455700,
         exp: 1893456000
       }
       setupMockJwt(mockPayload)
@@ -167,7 +170,8 @@ describe('jwt-auth', () => {
         source: 'defra',
         iss: 'grants-ui',
         aud: ['agreements-ui', 'gas'],
-        sub: '123456'
+        sub: '123456',
+        iat: 1893455700
       }
       setupMockJwt(mockPayload)
 
@@ -179,6 +183,87 @@ describe('jwt-auth', () => {
       )
     })
 
+    test('should warn when the token has no iat claim', () => {
+      const mockPayload = {
+        sbi: '123456',
+        source: 'defra',
+        iss: 'grants-ui',
+        aud: ['agreements-ui', 'gas'],
+        sub: '123456',
+        exp: 1893456000
+      }
+      setupMockJwt(mockPayload)
+
+      extractJwtPayload('eyJ.noiat.token')
+
+      expect(getMockLogger().warn).toHaveBeenCalledWith(
+        { missingClaims: ['iat'] },
+        'Caller token is missing hardened claims (FGP-1307); accepted for now'
+      )
+    })
+
+    test('should warn when iat is not numeric', () => {
+      const mockPayload = {
+        sbi: '123456',
+        source: 'defra',
+        iss: 'grants-ui',
+        aud: ['agreements-ui', 'gas'],
+        sub: '123456',
+        iat: '1893455700',
+        exp: 1893456000
+      }
+      setupMockJwt(mockPayload)
+
+      extractJwtPayload('eyJ.badiat.token')
+
+      expect(getMockLogger().warn).toHaveBeenCalledWith(
+        { iatType: 'string' },
+        'Caller token iat is not a numeric claim (FGP-1307); accepted for now'
+      )
+    })
+
+    test('should warn when the token lifetime exceeds the agreed maximum', () => {
+      const iat = 1893455700
+      const mockPayload = {
+        sbi: '123456',
+        source: 'defra',
+        iss: 'grants-ui',
+        aud: ['agreements-ui', 'gas'],
+        sub: '123456',
+        iat,
+        exp: iat + 60 * 60 * 24 * 365 // one year
+      }
+      setupMockJwt(mockPayload)
+
+      extractJwtPayload('eyJ.longlived.token')
+
+      expect(getMockLogger().warn).toHaveBeenCalledWith(
+        { lifetimeSeconds: 60 * 60 * 24 * 365, maxLifetimeSeconds: 300 },
+        'Caller token lifetime (exp - iat) is outside the agreed range (FGP-1307); accepted for now'
+      )
+    })
+
+    test('should warn when the token lifetime is not positive', () => {
+      const iat = 1893456000
+      const mockPayload = {
+        sbi: '123456',
+        source: 'defra',
+        iss: 'grants-ui',
+        aud: ['agreements-ui', 'gas'],
+        sub: '123456',
+        iat,
+        exp: iat - 10
+      }
+      setupMockJwt(mockPayload)
+
+      extractJwtPayload('eyJ.negativelifetime.token')
+
+      expect(getMockLogger().warn).toHaveBeenCalledWith(
+        { lifetimeSeconds: -10, maxLifetimeSeconds: 300 },
+        'Caller token lifetime (exp - iat) is outside the agreed range (FGP-1307); accepted for now'
+      )
+    })
+
     test('should warn when the token issuer is not in the allowed producers list', () => {
       const mockPayload = {
         sbi: '123456',
@@ -186,6 +271,7 @@ describe('jwt-auth', () => {
         iss: 'rogue-service',
         aud: ['agreements-ui', 'gas'],
         sub: '123456',
+        iat: 1893455700,
         exp: 1893456000
       }
       setupMockJwt(mockPayload)
@@ -208,6 +294,7 @@ describe('jwt-auth', () => {
           iss,
           aud: ['agreements-ui', 'gas'],
           sub: '123456',
+          iat: 1893455700,
           exp: 1893456000
         }
         setupMockJwt(mockPayload)
@@ -244,8 +331,8 @@ describe('jwt-auth', () => {
 
       expect(result).toBeNull()
       expect(getMockLogger().error).toHaveBeenCalledWith(
-        mockError,
-        'Invalid JWT token provided: Decode error'
+        { errorType: 'Error', errorMessage: 'Decode error' },
+        'Invalid JWT token provided'
       )
     })
 
@@ -260,9 +347,42 @@ describe('jwt-auth', () => {
 
       expect(result).toBeNull()
       expect(getMockLogger().error).toHaveBeenCalledWith(
-        mockError,
-        'Invalid JWT token provided: Verify error'
+        { errorType: 'Error', errorMessage: 'Verify error' },
+        'Invalid JWT token provided'
       )
+    })
+
+    test('should not log token material when a decode error carries JWT artifacts', () => {
+      const rawToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJzYmkiOiIxMjM0NTYiLCJjbGllbnRSZWYiOiJDTElFTlQtUkVGLTk5OSJ9.sig-abc'
+      // Simulate an @hapi/jwt error carrying token artifacts / decoded payload.
+      const jwtError = new Error('Invalid token')
+      jwtError.name = 'TokenError'
+      jwtError.artifacts = {
+        token: rawToken,
+        decoded: { payload: { clientRef: 'CLIENT-REF-999', sbi: '123456' } }
+      }
+      jwtError.token = rawToken
+      setupMockJwt(null, jwtError)
+
+      const result = extractJwtPayload(rawToken)
+
+      expect(result).toBeNull()
+
+      const errorCall = getMockLogger().error.mock.calls.find(
+        ([, msg]) => msg === 'Invalid JWT token provided'
+      )
+      expect(errorCall).toBeDefined()
+      expect(errorCall[0]).toEqual({
+        errorType: 'TokenError',
+        errorMessage: 'Invalid token'
+      })
+
+      // Nothing logged for this error should contain token material.
+      const serialised = JSON.stringify(getMockLogger().error.mock.calls)
+      expect(serialised).not.toContain(rawToken)
+      expect(serialised).not.toContain('CLIENT-REF-999')
+      expect(serialised).not.toContain('sig-abc')
     })
 
     test('should log only non-identifying payload presence flags', () => {

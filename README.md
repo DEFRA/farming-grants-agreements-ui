@@ -236,10 +236,14 @@ Requirements:
 - When `source=defra`, you can include an `sbi` claim to test farmer-scoped endpoints.
 
 > **Caller-token hardening (FGP-1307):** incoming tokens are validated in warn-only
-> mode. A missing `exp`, an audience that excludes `agreements-ui`, or an `iss`
+> mode. A missing `exp`/`iat`, a non-numeric `iat`, a token lifetime (`exp - iat`)
+> outside the agreed range, an audience that excludes `agreements-ui`, or an `iss`
 > outside the producer allowlist is logged but still accepted. The allowlist is
 > configured via `CALLER_TOKEN_ALLOWED_ISSUERS` (comma-separated, defaults to
-> `grants-ui,fg-cw-frontend,agreements-pdf`).
+> `grants-ui,fg-cw-frontend,agreements-pdf`); the maximum agreed lifetime is
+> configured via `CALLER_TOKEN_MAX_LIFETIME_SECONDS` (defaults to `300`).
+> Invalid tokens are logged with only `errorType`/`errorMessage` — never the raw
+> error object or the token itself.
 
 - The script validates `--source` and will exit with an error if the value is not `defra` or `entra` or if the secret is missing.
 

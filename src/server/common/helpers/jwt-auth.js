@@ -5,15 +5,16 @@ import { createLogger } from '#~/server/common/helpers/logging/logger.js'
 const logger = createLogger()
 
 // FGP-1307: caller-token hardening. Producers now add registered claims
-// (iss/aud/sub) and a short exp. We validate them in a backwards-compatible
+// (iss/aud/sub) and a short iat/exp. We validate them in a backwards-compatible
 // ("warn-only") mode: expiry is already enforced by Jwt.token.verify when an
-// exp claim is present, while a missing exp, missing/mismatched iss/aud/sub, or
-// an issuer outside the agreed producer allowlist are logged but not rejected
+// exp claim is present, while a missing exp/iat, a non-numeric iat, a token
+// lifetime (exp - iat) outside the agreed range, missing/mismatched iss/aud/sub,
+// or an issuer outside the agreed producer allowlist are logged but not rejected
 // so legacy tokens keep working until enforcement lands.
 const EXPECTED_AUDIENCE = 'agreements-ui'
 
 const warnOnCallerClaims = (payload) => {
-  const missing = ['iss', 'aud', 'sub', 'exp'].filter(
+  const missing = ['iss', 'aud', 'sub', 'exp', 'iat'].filter(
     (claim) => payload[claim] == null
   )
   if (missing.length > 0) {
@@ -23,7 +24,24 @@ const warnOnCallerClaims = (payload) => {
     )
   }
 
-  const { aud, iss } = payload
+  const { aud, iss, exp, iat } = payload
+
+  if (iat != null && typeof iat !== 'number') {
+    logger.warn(
+      { iatType: typeof iat },
+      'Caller token iat is not a numeric claim (FGP-1307); accepted for now'
+    )
+  } else if (typeof iat === 'number' && typeof exp === 'number') {
+    const lifetimeSeconds = exp - iat
+    const maxLifetimeSeconds = config.get('callerTokenMaxLifetimeSeconds')
+    if (lifetimeSeconds <= 0 || lifetimeSeconds > maxLifetimeSeconds) {
+      logger.warn(
+        { lifetimeSeconds, maxLifetimeSeconds },
+        'Caller token lifetime (exp - iat) is outside the agreed range (FGP-1307); accepted for now'
+      )
+    }
+  }
+
   const audienceMatches =
     aud === EXPECTED_AUDIENCE ||
     (Array.isArray(aud) && aud.includes(EXPECTED_AUDIENCE))
@@ -95,7 +113,17 @@ const extractJwtPayload = (authToken) => {
 
     return payload
   } catch (jwtError) {
-    logger.error(jwtError, `Invalid JWT token provided: ${jwtError.message}`)
+    // FGP-1307: never pass the raw error or authToken to the logger. @hapi/jwt
+    // decode errors can carry token artifacts (artifacts.token, raw segments,
+    // decoded payload) which pino-pretty would serialise. Log only explicitly
+    // selected, non-sensitive fields.
+    logger.error(
+      {
+        errorType: jwtError?.name ?? 'Error',
+        errorMessage: jwtError?.message
+      },
+      'Invalid JWT token provided'
+    )
     return null
   }
 }
