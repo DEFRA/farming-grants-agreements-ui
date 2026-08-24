@@ -86,7 +86,8 @@ describe('#agreementController', () => {
       )
 
       const fetchArgs = fetch.mock.calls[0][1]
-      expect(fetchArgs.headers).not.toHaveProperty('x-encrypted-auth')
+      // FGP-1307: the verified caller token is now forwarded to GAS.
+      expect(fetchArgs.headers).toHaveProperty('x-encrypted-auth', 'mock-auth')
     })
 
     test('should call the GAS backend by agreement number when grantCode is "pigs-might-fly" and agreementId is provided', async () => {
@@ -161,6 +162,7 @@ describe('#agreementController', () => {
         headers: {
           Authorization: 'Bearer mock-gas-token',
           'x-agreement-source': 'entra',
+          'x-encrypted-auth': 'caseworking-header-auth',
           'x-agreement-code': gasGrantCode,
           'x-agreement-sbi': '300000000'
         },
@@ -203,6 +205,7 @@ describe('#agreementController', () => {
       expect(extractJwtPayload).toHaveBeenCalledWith('pdf-query-auth')
       expect(fetch).toHaveBeenCalledWith(gasAgreementDocumentApiUrls.print, {
         headers: {
+          'x-encrypted-auth': 'pdf-query-auth',
           Authorization: 'Bearer mock-gas-token',
           'x-agreement-source': 'defra',
           'x-agreement-code': gasGrantCode,
