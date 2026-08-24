@@ -235,6 +235,17 @@ Requirements:
 - The `source` claim must be one of `defra` (farmer) or `entra` (case worker).
 - When `source=defra`, you can include an `sbi` claim to test farmer-scoped endpoints.
 
+> **Caller-token hardening (FGP-1307):** incoming tokens are validated in warn-only
+> mode. A missing `exp`/`iat`, a non-numeric `iat`, a token lifetime (`exp - iat`)
+> outside the agreed range, an audience that excludes `agreements-ui`, or an `iss`
+> outside the producer allowlist is logged but still accepted. Both the producer
+> allowlist (`grants-ui`, `fg-cw-frontend`, `agreements-pdf`) and the maximum
+> agreed lifetime (300 seconds / 5 minutes) are fixed code constants, not
+> configuration — the same values apply in every environment, so there is nothing
+> to set in `cdp-app-config` and the allowlist cannot be misconfigured to an empty
+> "accept any issuer" list. Invalid tokens are logged with only
+> `errorType`/`errorMessage` — never the raw error object or the token itself.
+
 - The script validates `--source` and will exit with an error if the value is not `defra` or `entra` or if the secret is missing.
 
 Sample token for farmer's (`source=defra`) data:
