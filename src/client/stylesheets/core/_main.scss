@@ -75,6 +75,10 @@ a:link,
 }
 
 @media print {
+  .app-main-wrapper {
+    padding-bottom: 0 !important;
+  }
+
   .govuk-header,
   .govuk-footer,
   .govuk-phase-banner,
