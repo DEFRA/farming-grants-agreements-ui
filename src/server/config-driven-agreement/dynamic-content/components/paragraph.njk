@@ -7,7 +7,7 @@
   <p{% if id %} id="{{ id }}"{% endif %}{% if classes %} class="{{ classes }}"{% endif %}>
     {%- if items.length > 0 -%}
       {%- for item in items -%}
-        {{ renderDefraComponent(item) }}
+        {{ renderDefraComponent(item) | trim }}
       {%- endfor -%}
     {%- else -%}
       {{ value | escape }}
