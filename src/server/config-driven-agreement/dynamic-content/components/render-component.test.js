@@ -139,6 +139,18 @@ describe('Agreement component renderer', () => {
     ).toEqual(['span', 'br', 'span'])
   })
 
+  it('adds the GOV.UK summary text class to details summaries', () => {
+    const $ = load(
+      renderComponent({
+        component: 'details',
+        summaryItems: [{ text: 'Summary' }],
+        items: [{ text: 'Details' }]
+      })
+    )
+
+    expect($('summary > .govuk-details__summary-text')).toHaveLength(1)
+  })
+
   it.each([
     ['text', { text: 'Text' }, 'body'],
     ['paragraph', { text: 'Paragraph' }, 'p.govuk-body'],
