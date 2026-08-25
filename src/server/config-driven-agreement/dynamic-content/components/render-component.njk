@@ -16,6 +16,10 @@
 {% from "./notification-banner.njk" import defraNotificationBanner %}
 {% from "./panel.njk" import defraPanel %}
 {% from "./checkboxes.njk" import defraCheckboxes %}
+{% from "./grid-row.njk" import defraGridRow %}
+{% from "./grid-column.njk" import defraGridColumn %}
+{% from "./form.njk" import defraForm %}
+{% from "./button.njk" import defraButton %}
 
 {% macro renderDefraComponent(params) %}
   {%- set component = params.component or 'text' %}
@@ -56,5 +60,13 @@
     {{ defraPanel(params, renderDefraComponent) }}
   {% elif component == "checkboxes" %}
     {{ defraCheckboxes(params) }}
+  {% elif component == "grid-row" %}
+    {{ defraGridRow(params, renderDefraComponent) }}
+  {% elif component == "grid-column" %}
+    {{ defraGridColumn(params, renderDefraComponent) }}
+  {% elif component == "form" %}
+    {{ defraForm(params, renderDefraComponent) }}
+  {% elif component == "button" %}
+    {{ defraButton(params) }}
   {% endif %}
 {% endmacro %}

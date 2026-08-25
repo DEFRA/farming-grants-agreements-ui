@@ -1,0 +1,10 @@
+{% macro defraForm(params, renderDefraComponent) %}
+  <form method="{{ params.method or 'POST' }}" action="{{ params.formAction }}">
+    {% for field in params.hiddenFields or [] %}
+      <input type="hidden" name="{{ field.name }}" value="{{ field.value }}">
+    {% endfor %}
+    {% for component in params.components or [] %}
+      {{ renderDefraComponent(component) }}
+    {% endfor %}
+  </form>
+{% endmacro %}

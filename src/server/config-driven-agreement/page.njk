@@ -3,73 +3,29 @@
 
 {% extends "layouts/page.njk" %}
 
-{% from "govuk/components/button/macro.njk" import govukButton %}
-{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "config-driven-agreement/dynamic-content/macro.njk" import dynamicContent %}
 {% from "config-driven-agreement/document/watermark.njk" import defraWatermark %}
 
 {% block content %}
-  <div class="govuk-grid-row">
-    <div class="{{ 'govuk-grid-column-full' if layout == 'document' else 'govuk-grid-column-two-thirds' }}">
-      {% if errors.length %}
-        {{ govukErrorSummary({
-          titleText: "There is a problem",
-          errorList: errors
-        }) }}
-      {% endif %}
-
-      {% if watermark %}
-        {{ defraWatermark(watermark) }}
-      {% endif %}
-
-      {% if not hasFormAction %}
-        {{ dynamicContent(components) }}
-      {% endif %}
-
-      {% for action in actions %}
-        {% if not action.renderAsForm %}
-          {{ govukButton({
-            text: action.text,
-            href: action.href,
-            classes: action.classes
+  {% if errors.length or watermark %}
+    <div class="govuk-grid-row">
+      <div class="{{ 'govuk-grid-column-full' if layout == 'document' else 'govuk-grid-column-two-thirds' }}">
+        {% if errors.length %}
+          {{ govukErrorSummary({
+            titleText: "There is a problem",
+            errorList: errors
           }) }}
-        {% else %}
-          <form method="{{ action.method or 'POST' }}" action="{{ action.action or action.href }}">
-            {% if hasFormAction %}
-              {{ dynamicContent(components) }}
-            {% endif %}
-
-            {% if transportMetadata %}
-              <input type="hidden" name="{{ transportMetadata.etag.name }}" value="{{ transportMetadata.etag.value }}">
-              <input type="hidden" name="{{ transportMetadata.idempotencyKey.name }}" value="{{ transportMetadata.idempotencyKey.value }}">
-            {% endif %}
-
-            {% for field in action.fields %}
-              <input type="hidden" name="{{ field.name }}" value="{{ field.value }}">
-            {% endfor %}
-
-            {% if action.checkbox %}
-              {{ govukCheckboxes({
-                name: action.checkbox.name,
-                errorMessage: action.checkbox.errorMessage,
-                items: [{
-                  value: action.checkbox.value,
-                  text: action.checkbox.text,
-                  checked: action.checkbox.checked
-                }]
-              }) }}
-            {% endif %}
-
-            {{ govukButton({
-              text: action.text,
-              classes: action.classes
-            }) }}
-          </form>
         {% endif %}
-      {% endfor %}
+
+        {% if watermark %}
+          {{ defraWatermark(watermark) }}
+        {% endif %}
+      </div>
     </div>
-  </div>
+  {% endif %}
+
+  {{ dynamicContent(components) }}
 
   {% if layout == 'document' and sections.length %}
     <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">

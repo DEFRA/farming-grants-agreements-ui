@@ -49,6 +49,60 @@ describe('Agreement component renderer', () => {
     )
   })
 
+  it('renders an explicit grid tree', () => {
+    const $ = load(
+      renderComponent({
+        component: 'grid-row',
+        components: [
+          {
+            component: 'grid-column',
+            width: 'full',
+            components: [{ component: 'paragraph', text: 'Grid content' }]
+          }
+        ]
+      })
+    )
+
+    expect($('.govuk-grid-row > .govuk-grid-column-full > p').text()).toBe(
+      'Grid content'
+    )
+  })
+
+  it.each([
+    [{ href: '/accept', text: 'Accept agreement' }, 'a', '/accept'],
+    [{ text: 'Accept agreement', submit: true }, 'button', undefined]
+  ])('renders a resolved button', (params, element, href) => {
+    const $ = load(renderComponent({ component: 'button', ...params }))
+    const button = $(`${element}.govuk-button`)
+
+    expect(button).toHaveLength(1)
+    expect(button.text().trim()).toBe('Accept agreement')
+    expect(button.attr('href')).toBe(href)
+  })
+
+  it('renders only configured children and hidden fields inside a form', () => {
+    const html = environment.renderString(
+      `{% from "config-driven-agreement/dynamic-content/components/render-component.njk" import renderDefraComponent %}{{ renderDefraComponent(component) }}<p id="after">After</p>`,
+      {
+        component: {
+          component: 'form',
+          method: 'POST',
+          formAction: '/accept',
+          hiddenFields: [{ name: 'etag', value: 'version-1' }],
+          components: [{ component: 'button', text: 'Accept', submit: true }]
+        }
+      }
+    )
+    const $ = load(html)
+
+    expect($('form').attr('method')).toBe('POST')
+    expect($('form').attr('action')).toBe('/accept')
+    expect($('form input[name="etag"]').attr('value')).toBe('version-1')
+    expect($('form > button[type="submit"]')).toHaveLength(1)
+    expect($('form #after')).toHaveLength(0)
+    expect($('form + #after')).toHaveLength(1)
+  })
+
   it('does not insert a space before punctuation in adjacent text', () => {
     const $ = load(
       renderComponent({

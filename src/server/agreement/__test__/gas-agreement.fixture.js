@@ -13,7 +13,12 @@ export const gasAgreementDocumentApiUrls = {
 }
 
 export const gasViewPageModel = {
-  page: { title: 'GAS managed agreement', layout: 'document' },
+  page: {
+    title: 'GAS managed agreement',
+    layout: 'document',
+    contents: true,
+    print: true
+  },
   agreement: {
     agreementNumber: gasAgreementNumber,
     code: 'GAS-ONLY',
@@ -21,25 +26,61 @@ export const gasViewPageModel = {
   },
   components: [
     {
-      component: 'heading',
-      level: 1,
-      text: 'Pigs Might Fly agreement'
-    },
+      component: 'grid-row',
+      components: [
+        {
+          component: 'grid-column',
+          width: 'full',
+          components: [
+            {
+              component: 'heading',
+              level: 1,
+              text: 'Pigs Might Fly agreement'
+            },
+            {
+              component: 'paragraph',
+              text: 'This content came from the complete GAS page model.'
+            },
+            {
+              component: 'summary-list',
+              title: 'Agreement details',
+              rows: [
+                { label: 'Agreement number', text: gasAgreementNumber },
+                { label: 'Status supplied by GAS', text: 'Terminated' }
+              ]
+            },
+            { component: 'button', actionId: 'accept-offer' }
+          ]
+        }
+      ]
+    }
+  ],
+  sections: [
     {
-      component: 'paragraph',
-      text: 'This content came from the complete GAS page model.'
-    },
-    {
-      component: 'summary-list',
-      title: 'Agreement details',
-      rows: [
-        { label: 'Agreement number', text: gasAgreementNumber },
-        { label: 'Status supplied by GAS', text: 'Terminated' }
+      id: 'agreement-terms',
+      title: 'Agreement terms',
+      components: [
+        {
+          component: 'grid-row',
+          components: [
+            {
+              component: 'grid-column',
+              width: 'full',
+              components: [
+                {
+                  component: 'paragraph',
+                  text: 'Section content supplied by GAS.'
+                }
+              ]
+            }
+          ]
+        }
       ]
     }
   ],
   actions: [
     {
+      name: 'accept-offer',
       href: `/agreements/${gasAgreementNumber}/actions/accept-offer`,
       text: 'GAS provided action'
     }

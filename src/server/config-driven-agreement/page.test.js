@@ -38,6 +38,13 @@ const renderGasAgreement = (renderModel) => {
   return load(renderedPage)
 }
 
+const gridTree = (components, width = 'two-thirds') => [
+  {
+    component: 'grid-row',
+    components: [{ component: 'grid-column', width, components }]
+  }
+]
+
 const agreementContent = [
   { component: 'heading', level: 1, text: 'Your agreement' },
   { component: 'paragraph', text: 'Agreement details' }
@@ -45,7 +52,7 @@ const agreementContent = [
 
 const defaultModel = {
   page: { title: 'Your agreement' },
-  components: agreementContent,
+  components: gridTree(agreementContent),
   actions: []
 }
 
@@ -60,17 +67,23 @@ const documentModel = {
       text: 'DRAFT'
     }
   },
-  components: agreementContent,
+  components: gridTree(agreementContent, 'full'),
   sections: [
     {
       id: 'agreement-overview',
       title: 'Agreement overview',
-      components: [{ component: 'paragraph', text: 'Overview details' }]
+      components: gridTree(
+        [{ component: 'paragraph', text: 'Overview details' }],
+        'full'
+      )
     },
     {
       id: 'payment-schedule',
       title: 'Payment schedule',
-      components: [{ component: 'paragraph', text: '6 November 2026 - £320' }]
+      components: gridTree(
+        [{ component: 'paragraph', text: '6 November 2026 - £320' }],
+        'full'
+      )
     }
   ],
   actions: []
@@ -79,7 +92,7 @@ const documentModel = {
 describe('config-driven GAS agreement page', () => {
   test('renders document content in the full-width layout', () => {
     const $ = renderGasAgreement(documentModel)
-    const $content = $('.govuk-grid-column-full')
+    const $content = $('h1').closest('.govuk-grid-column-full')
 
     expect($content).toHaveLength(1)
     expect($content.find('h1').text().trim()).toBe('Your agreement')
@@ -130,18 +143,48 @@ describe('config-driven GAS agreement page', () => {
     expect($watermark.attr('aria-hidden')).toBe('true')
   })
 
-  test('keeps ordinary page components outside action forms', () => {
+  test('renders a GET action as the configured button in tree order', () => {
     const $ = renderGasAgreement({
       ...defaultModel,
-      components: [
-        {
-          component: 'checkboxes',
-          name: 'confirm',
-          items: [{ value: 'confirmed', text: 'Confirm agreement' }]
-        }
-      ],
+      components: gridTree([
+        { component: 'paragraph', text: 'Before action' },
+        { component: 'button', actionId: 'accept' },
+        { component: 'details', summaryItems: [{ text: 'Help' }], items: [] }
+      ]),
       actions: [
         {
+          name: 'accept',
+          href: '/agreements/PMF123/actions/accept',
+          text: 'Accept agreement'
+        }
+      ]
+    })
+
+    expect($('p + a.govuk-button').text().trim()).toBe('Accept agreement')
+    expect($('a.govuk-button + details')).toHaveLength(1)
+  })
+
+  test('renders a POST button inside its form and following content outside', () => {
+    const $ = renderGasAgreement({
+      ...defaultModel,
+      components: gridTree([
+        {
+          component: 'form',
+          actionId: 'accept',
+          components: [
+            {
+              component: 'checkboxes',
+              name: 'confirm',
+              items: [{ value: 'confirmed', text: 'Confirm agreement' }]
+            },
+            { component: 'button', actionId: 'accept' }
+          ]
+        },
+        { component: 'paragraph', text: 'After the form' }
+      ]),
+      actions: [
+        {
+          name: 'accept',
           method: 'POST',
           action: '/agreement',
           text: 'Continue'
@@ -149,7 +192,9 @@ describe('config-driven GAS agreement page', () => {
       ]
     })
 
-    expect($('input[name="confirm"]')).toHaveLength(1)
-    expect($('form input[name="confirm"]')).toHaveLength(0)
+    expect($('form input[name="confirm"]')).toHaveLength(1)
+    expect($('form button[type="submit"]').text().trim()).toBe('Continue')
+    expect($('form p')).toHaveLength(0)
+    expect($('form + p').text().trim()).toBe('After the form')
   })
 })
