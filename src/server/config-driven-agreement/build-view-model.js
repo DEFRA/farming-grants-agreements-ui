@@ -225,23 +225,55 @@ const buildHiddenFields = (action, transportMetadata) => [
     : [transportMetadata.etag, transportMetadata.idempotencyKey])
 ]
 
-const resolveComponentActions = (
-  value,
-  actionsByName,
-  references,
-  transportMetadata,
-  enclosingFormActionId
-) => {
+const resolveForm = (value, context) => {
+  const action = context.actionsByName.get(value.actionId)
+  if (!action?.renderAsForm || context.enclosingFormActionId) {
+    invalidActionBindings()
+  }
+
+  context.references.get(value.actionId).forms += 1
+
+  return {
+    ...value,
+    components: resolveComponentActions(value.components ?? [], {
+      ...context,
+      enclosingFormActionId: value.actionId
+    }),
+    method: action.method ?? 'POST',
+    formAction: action.action ?? action.href,
+    hiddenFields: buildHiddenFields(action, context.transportMetadata)
+  }
+}
+
+const resolveButton = (value, context) => {
+  const action = context.actionsByName.get(value.actionId)
+  if (!action) {
+    invalidActionBindings()
+  }
+
+  context.references.get(value.actionId).buttons += 1
+
+  const isInsideForm = context.enclosingFormActionId !== undefined
+  if (
+    action.renderAsForm !== isInsideForm ||
+    (action.renderAsForm && context.enclosingFormActionId !== value.actionId)
+  ) {
+    invalidActionBindings()
+  }
+
+  return {
+    ...value,
+    text: action.text,
+    ...(value.classes || action.classes
+      ? { classes: value.classes ?? action.classes }
+      : {}),
+    ...(action.renderAsForm ? { submit: true } : { href: action.href })
+  }
+}
+
+const resolveComponentActions = (value, context) => {
   if (Array.isArray(value)) {
-    return value.map((item) =>
-      resolveComponentActions(
-        item,
-        actionsByName,
-        references,
-        transportMetadata,
-        enclosingFormActionId
-      )
-    )
+    return value.map((item) => resolveComponentActions(item, context))
   }
 
   if (!value || typeof value !== 'object') {
@@ -249,65 +281,17 @@ const resolveComponentActions = (
   }
 
   if (value.component === 'form') {
-    const action = actionsByName.get(value.actionId)
-    if (!action?.renderAsForm || enclosingFormActionId) {
-      invalidActionBindings()
-    }
-
-    references.get(value.actionId).forms += 1
-    const components = resolveComponentActions(
-      value.components ?? [],
-      actionsByName,
-      references,
-      transportMetadata,
-      value.actionId
-    )
-
-    return {
-      ...value,
-      components,
-      method: action.method ?? 'POST',
-      formAction: action.action ?? action.href,
-      hiddenFields: buildHiddenFields(action, transportMetadata)
-    }
+    return resolveForm(value, context)
   }
 
   if (value.component === 'button') {
-    const action = actionsByName.get(value.actionId)
-    if (!action) {
-      invalidActionBindings()
-    }
-
-    const referencesForAction = references.get(value.actionId)
-    referencesForAction.buttons += 1
-
-    if (action.renderAsForm !== (enclosingFormActionId !== undefined)) {
-      invalidActionBindings()
-    }
-    if (action.renderAsForm && enclosingFormActionId !== value.actionId) {
-      invalidActionBindings()
-    }
-
-    return {
-      ...value,
-      text: action.text,
-      ...(value.classes || action.classes
-        ? { classes: value.classes ?? action.classes }
-        : {}),
-      ...(action.renderAsForm ? { submit: true } : { href: action.href })
-    }
+    return resolveButton(value, context)
   }
 
   return Object.fromEntries(
     Object.entries(value).map(([name, childValue]) => [
       name,
-      resolveComponentActions(
-        childValue,
-        actionsByName,
-        references,
-        transportMetadata,
-        enclosingFormActionId
-      )
+      resolveComponentActions(childValue, context)
     ])
   )
 }
@@ -318,7 +302,11 @@ const resolveActions = (components, sections, actions, transportMetadata) => {
     actions.map(({ name }) => [name, { buttons: 0, forms: 0 }])
   )
   const resolve = (value) =>
-    resolveComponentActions(value, actionsByName, references, transportMetadata)
+    resolveComponentActions(value, {
+      actionsByName,
+      references,
+      transportMetadata
+    })
   const resolvedComponents = resolve(components)
   const resolvedSections = sections.map((section) => ({
     ...section,
