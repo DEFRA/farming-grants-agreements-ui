@@ -49,6 +49,96 @@ describe('Agreement component renderer', () => {
     )
   })
 
+  it('does not insert a space before punctuation in adjacent text', () => {
+    const $ = load(
+      renderComponent({
+        component: 'paragraph',
+        items: [
+          { component: 'text', text: 'Alex Farmer' },
+          { component: 'text', text: ', of Example Farm' }
+        ]
+      })
+    )
+
+    expect($('p').text()).toBe('Alex Farmer, of Example Farm')
+  })
+
+  it('does not insert a space between a link and following punctuation', () => {
+    const $ = load(
+      renderComponent({
+        component: 'paragraph',
+        items: [
+          { component: 'text', text: 'Read ' },
+          { component: 'url', text: 'the terms', href: '/terms' },
+          { component: 'text', text: ', then continue.' }
+        ]
+      })
+    )
+
+    expect($('p').text()).toBe('Read the terms, then continue.')
+  })
+
+  it('preserves configured spaces around a link', () => {
+    const $ = load(
+      renderComponent({
+        component: 'paragraph',
+        items: [
+          { component: 'text', text: 'Read ' },
+          { component: 'url', text: 'terms', href: '/x' },
+          { component: 'text', text: ' now' }
+        ]
+      })
+    )
+
+    expect($('p').text()).toBe('Read terms now')
+  })
+
+  it('keeps URL labels escaped and link attributes unchanged', () => {
+    const $ = load(
+      renderComponent({
+        component: 'paragraph',
+        items: [
+          {
+            component: 'url',
+            text: 'Terms & <em>Conditions</em>',
+            href: '/terms?farm=A&B',
+            target: '_blank'
+          }
+        ]
+      })
+    )
+    const link = $('a')
+
+    expect(link.text()).toBe('Terms & <em>Conditions</em>')
+    expect(link.attr('href')).toBe('/terms?farm=A&B')
+    expect(link.attr('target')).toBe('_blank')
+    expect(link.attr('rel')).toBe('noopener noreferrer')
+    expect(link.find('em')).toHaveLength(0)
+  })
+
+  it('preserves a semantic line break between inline text components', () => {
+    const $ = load(
+      renderComponent({
+        component: 'paragraph',
+        items: [
+          { component: 'text', text: 'A' },
+          { component: 'line-break' },
+          { component: 'text', text: 'B' }
+        ]
+      })
+    )
+    const paragraph = $('p')
+
+    expect(paragraph.children('span')).toHaveLength(2)
+    expect(paragraph.children('br')).toHaveLength(1)
+    expect(
+      paragraph
+        .children()
+        .map((_index, element) => element.tagName)
+        .get()
+    ).toEqual(['span', 'br', 'span'])
+  })
+
   it.each([
     ['text', { text: 'Text' }, 'body'],
     ['paragraph', { text: 'Paragraph' }, 'p.govuk-body'],
