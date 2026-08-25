@@ -1,5 +1,6 @@
 export const supportedComponents = [
   'accordion',
+  'actions',
   'checkboxes',
   'container',
   'description-list',

@@ -19,6 +19,123 @@ describe('buildViewModel', () => {
     })
   })
 
+  it('keeps a page without an actions slot or width on the legacy path', () => {
+    const model = buildViewModel({
+      components: [{ component: 'paragraph', text: 'Agreement details' }]
+    })
+
+    expect(model).not.toHaveProperty('contentRegions')
+  })
+
+  it('places actions between content regions at the configured slot', () => {
+    const heading = { component: 'heading', text: 'Payments' }
+    const details = { component: 'details', text: 'Update details' }
+
+    const model = buildViewModel({
+      components: [heading, { component: 'actions' }, details]
+    })
+
+    expect(model.contentRegions).toEqual([
+      { kind: 'content', width: 'two-thirds', components: [heading] },
+      { kind: 'actions' },
+      { kind: 'content', width: 'two-thirds', components: [details] }
+    ])
+  })
+
+  it('places actions after content when the slot is last', () => {
+    const paragraph = { component: 'paragraph', text: 'Agreement details' }
+
+    const model = buildViewModel({
+      components: [paragraph, { component: 'actions' }]
+    })
+
+    expect(model.contentRegions).toEqual([
+      { kind: 'content', width: 'two-thirds', components: [paragraph] },
+      { kind: 'actions' }
+    ])
+  })
+
+  it('groups contiguous content by width and defaults to two-thirds', () => {
+    const heading = { component: 'heading', text: 'Payments' }
+    const paragraph = { component: 'paragraph', text: 'Payment details' }
+    const table = { component: 'table', width: 'full' }
+    const details = { component: 'details', text: 'Update details' }
+
+    const model = buildViewModel({
+      components: [heading, paragraph, table, details]
+    })
+
+    expect(model.contentRegions).toEqual([
+      {
+        kind: 'content',
+        width: 'two-thirds',
+        components: [heading, paragraph]
+      },
+      { kind: 'content', width: 'full', components: [table] },
+      { kind: 'content', width: 'two-thirds', components: [details] },
+      { kind: 'actions' }
+    ])
+  })
+
+  it('rejects more than one actions slot', () => {
+    expect(() =>
+      buildViewModel({
+        components: [{ component: 'actions' }, { component: 'actions' }]
+      })
+    ).toThrow('Agreement page defines more than one actions slot')
+  })
+
+  it.each([
+    {
+      description: 'inside a component',
+      renderModel: {
+        components: [
+          {
+            component: 'container',
+            items: [{ component: 'actions' }]
+          }
+        ]
+      }
+    },
+    {
+      description: 'inside a document section',
+      renderModel: {
+        components: [{ component: 'paragraph', text: 'Overview' }],
+        sections: [
+          {
+            components: [{ component: 'actions' }]
+          }
+        ]
+      }
+    }
+  ])('rejects an actions slot $description', ({ renderModel }) => {
+    expect(() => buildViewModel(renderModel)).toThrow(
+      'Agreement actions slot must be a top-level page component'
+    )
+  })
+
+  it('rejects an actions slot on a document page', () => {
+    expect(() =>
+      buildViewModel({
+        page: { layout: 'document' },
+        components: [{ component: 'actions' }]
+      })
+    ).toThrow('Agreement actions slot is not supported on document pages')
+  })
+
+  it('rejects an actions slot on a form page', () => {
+    expect(() =>
+      buildViewModel(
+        {
+          components: [{ component: 'actions' }],
+          actions: [{ method: 'POST', text: 'Accept' }]
+        },
+        '/',
+        { transportMetadata: {} }
+      )
+    ).toThrow('Agreement actions slot is not supported on form pages')
+  })
+
   it('uses the GAS page model fields', () => {
     const agreement = { agreementNumber: 'PMF123' }
     const components = [{ component: 'heading', text: 'Agreement' }]

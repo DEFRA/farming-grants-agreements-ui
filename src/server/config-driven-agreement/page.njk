@@ -53,44 +53,8 @@
   {% endfor %}
 {% endmacro %}
 
-{% macro renderSegment(segment) %}
-  {% set groups = [] %}
-  {% set group = [] %}
-  {% set groupIsFullWidth = false %}
-  {% for component in segment %}
-    {% set componentIsFullWidth = component.layout == 'full-width' %}
-    {% if loop.first or componentIsFullWidth == groupIsFullWidth %}
-      {% set group = (group.push(component), group) %}
-    {% else %}
-      {% set groups = (groups.push({ components: group, isFullWidth: groupIsFullWidth }), groups) %}
-      {% set group = [component] %}
-    {% endif %}
-    {% set groupIsFullWidth = componentIsFullWidth %}
-    {% if loop.last %}
-      {% set groups = (groups.push({ components: group, isFullWidth: groupIsFullWidth }), groups) %}
-    {% endif %}
-  {% endfor %}
-
-  {% for group in groups %}
-    <div class="govuk-grid-row">
-      <div class="{{ 'govuk-grid-column-full' if group.isFullWidth else 'govuk-grid-column-two-thirds' }}">
-        {{ dynamicContent(group.components) }}
-      </div>
-    </div>
-  {% endfor %}
-{% endmacro %}
-
-{% set useSegmentedLayout = false %}
-{% if layout != 'document' and not hasFormAction %}
-  {% for component in components %}
-    {% if component.insertActionsAfter or component.layout == 'full-width' %}
-      {% set useSegmentedLayout = true %}
-    {% endif %}
-  {% endfor %}
-{% endif %}
-
 {% block content %}
-  {%- if not useSegmentedLayout %}
+  {%- if not contentRegions %}
   <div class="govuk-grid-row">
     <div class="{{ 'govuk-grid-column-full' if layout == 'document' else 'govuk-grid-column-two-thirds' }}">
       {% if errors.length %}
@@ -129,31 +93,23 @@
       </div>
     {% endif %}
 
-    {% set componentsBeforeActions = [] %}
-    {% set componentsAfterActions = [] %}
-    {% set foundActionInsertionPoint = false %}
-    {% for component in components %}
-      {% if foundActionInsertionPoint %}
-        {% set componentsAfterActions = (componentsAfterActions.push(component), componentsAfterActions) %}
-      {% else %}
-        {% set componentsBeforeActions = (componentsBeforeActions.push(component), componentsBeforeActions) %}
-        {% if component.insertActionsAfter %}
-          {% set foundActionInsertionPoint = true %}
+    {% for region in contentRegions %}
+      {% if region.kind == 'actions' %}
+        {% if actions.length %}
+          <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+              {{ renderActions(actions, hasFormAction, components, transportMetadata) }}
+            </div>
+          </div>
         {% endif %}
+      {% else %}
+        <div class="govuk-grid-row">
+          <div class="{{ 'govuk-grid-column-full' if region.width == 'full' else 'govuk-grid-column-two-thirds' }}">
+            {{ dynamicContent(region.components) }}
+          </div>
+        </div>
       {% endif %}
     {% endfor %}
-
-    {{ renderSegment(componentsBeforeActions) }}
-
-    {% if actions.length %}
-      <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-          {{ renderActions(actions, hasFormAction, components, transportMetadata) }}
-        </div>
-      </div>
-    {% endif %}
-
-    {{ renderSegment(componentsAfterActions) }}
   {%- endif %}
 
   {% if layout == 'document' and sections.length %}

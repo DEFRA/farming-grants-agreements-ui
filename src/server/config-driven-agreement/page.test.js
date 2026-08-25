@@ -84,10 +84,7 @@ const documentModel = {
       text: 'DRAFT'
     }
   },
-  components: [
-    { ...agreementContent[0], layout: 'full-width' },
-    { ...agreementContent[1], insertActionsAfter: true }
-  ],
+  components: agreementContent,
   sections: [
     {
       id: 'agreement-overview',
@@ -169,13 +166,14 @@ describe('config-driven GAS agreement page', () => {
     expect($watermark.attr('aria-hidden')).toBe('true')
   })
 
-  test('inserts actions after the first flagged component', () => {
+  test('renders actions between the table and details at the actions slot', () => {
     const $ = renderGasAgreement({
       ...defaultModel,
       components: [
         { component: 'heading', level: 1, text: 'Your agreement' },
-        { ...tableComponent, insertActionsAfter: true },
-        { ...detailsComponent, insertActionsAfter: true }
+        { ...tableComponent, width: 'full' },
+        { component: 'actions' },
+        detailsComponent
       ],
       actions: [continueAction]
     })
@@ -190,12 +188,13 @@ describe('config-driven GAS agreement page', () => {
     ).toHaveLength(1)
   })
 
-  test('does not emit a trailing row when the final component is flagged', () => {
+  test('does not emit a trailing row when the actions slot is last', () => {
     const $ = renderGasAgreement({
       ...defaultModel,
       components: [
         { component: 'heading', level: 1, text: 'Your agreement' },
-        { ...tableComponent, insertActionsAfter: true }
+        tableComponent,
+        { component: 'actions' }
       ],
       actions: [continueAction]
     })
@@ -206,10 +205,10 @@ describe('config-driven GAS agreement page', () => {
     ).toHaveLength(1)
   })
 
-  test('does not emit a leading row without errors or a watermark', () => {
+  test('does not emit an empty actions row', () => {
     const $ = renderGasAgreement({
       ...defaultModel,
-      components: [{ ...tableComponent, layout: 'full-width' }]
+      components: [{ ...tableComponent, width: 'full' }]
     })
 
     expect($('#main-content > .govuk-grid-row')).toHaveLength(1)
@@ -220,13 +219,13 @@ describe('config-driven GAS agreement page', () => {
     ).toHaveLength(1)
   })
 
-  test('groups contiguous components by their opted-in widths', () => {
+  test('renders contiguous full-width and two-thirds regions', () => {
     const $ = renderGasAgreement({
       ...defaultModel,
       components: [
         { component: 'heading', level: 1, text: 'Your agreement' },
         { component: 'paragraph', text: 'Agreement details' },
-        { ...tableComponent, layout: 'full-width' },
+        { ...tableComponent, width: 'full' },
         detailsComponent,
         { component: 'paragraph', text: 'After details' }
       ]
@@ -245,7 +244,7 @@ describe('config-driven GAS agreement page', () => {
     expect(columns.eq(2).find('details, p')).toHaveLength(2)
   })
 
-  test('keeps flagged form pages on the legacy form path with transport metadata', () => {
+  test('keeps unconfigured form pages on the legacy form path with transport metadata', () => {
     const transportMetadata = {
       etag: { name: 'etag', value: 'agreement-etag' },
       idempotencyKey: {
@@ -256,10 +255,7 @@ describe('config-driven GAS agreement page', () => {
     const $ = renderGasAgreement(
       {
         ...defaultModel,
-        components: [
-          { ...tableComponent, insertActionsAfter: true, layout: 'full-width' },
-          detailsComponent
-        ],
+        components: [tableComponent, detailsComponent],
         actions: [continueAction]
       },
       transportMetadata
@@ -277,6 +273,19 @@ describe('config-driven GAS agreement page', () => {
     expect($('input[name="idempotencyKey"]').val()).toBe(
       'agreement-idempotency-key'
     )
+  })
+
+  test('keeps unconfigured action placement on the legacy markup path', () => {
+    const $ = renderGasAgreement({
+      ...defaultModel,
+      components: [tableComponent, detailsComponent],
+      actions: [continueAction]
+    })
+    const $column = $('#main-content > .govuk-grid-row > div')
+
+    expect($('#main-content > .govuk-grid-row')).toHaveLength(1)
+    expect($column.children('table, details, form')).toHaveLength(3)
+    expect($column.children().last().is('form')).toBe(true)
   })
 
   test('keeps ordinary page components outside action forms', () => {
