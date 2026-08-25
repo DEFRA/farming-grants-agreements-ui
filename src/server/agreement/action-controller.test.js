@@ -176,23 +176,32 @@ describe('generic GAS Agreement action routes', () => {
     expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 
-  test('renders a GAS POST href as a form containing the page fields', async () => {
+  test('GET renders configured navigation and confirmation behaviour for an arbitrary operation', async () => {
     globalThis.fetch.mockResolvedValueOnce(
       gasPageResponse(
         actionPageModel({
+          page: {
+            title: 'Review an agreement decision',
+            backLink: { href: '/agreements/AGR_42' }
+          },
           components: [
+            { component: 'heading', level: 1, text: 'Review decision' },
             {
               component: 'checkboxes',
               name: 'confirm',
               items: [{ value: 'confirmed', text: 'Confirm agreement' }]
+            },
+            {
+              component: 'details',
+              summaryItems: [{ component: 'text', text: 'Need help?' }],
+              items: [{ component: 'paragraph', text: 'Contact support.' }]
             }
           ],
           actions: [
             {
-              name: 'accept',
               method: 'POST',
-              href: '/agreements/AGR_42/actions/accept',
-              text: 'Accept agreement offer'
+              href: '/agreements/AGR_42/actions/complete-review',
+              text: 'Complete review'
             }
           ]
         }),
@@ -202,7 +211,7 @@ describe('generic GAS Agreement action routes', () => {
 
     const response = await server.inject({
       method: 'GET',
-      url: '/AGR_42/actions/accept',
+      url: '/AGR_42/actions/unrelated-route?x-encrypted-auth=query-auth',
       headers: { 'x-base-url': '/agreement' }
     })
 
@@ -210,35 +219,31 @@ describe('generic GAS Agreement action routes', () => {
     const form = $('form')
 
     expect(response.statusCode).toBe(200)
+    expect($('a.govuk-back-link').attr('href')).toBe(
+      '/agreement/AGR_42?x-encrypted-auth=query-auth'
+    )
     expect(form).toHaveLength(1)
     expect(form.attr('method')).toBe('POST')
-    expect(form.attr('action')).toBe('/agreement/AGR_42/actions/accept')
+    expect(form.attr('action')).toBe(
+      '/agreement/AGR_42/actions/complete-review?x-encrypted-auth=query-auth'
+    )
     expect(form.find('input[name="confirm"]')).toHaveLength(1)
     expect(form.find('input[name="__agreementsUiEtag"]')).toHaveLength(1)
-    expect(form.find('button[type="submit"]').attr('name')).toBeUndefined()
+    expect(form.find('button#accept-offer-button')).toHaveLength(1)
+    expect(form.next().is('details.govuk-details')).toBe(true)
+    expect($('script[src*="accept-offer"]')).toHaveLength(1)
     expect($('a.govuk-button')).toHaveLength(0)
   })
 
-  test('keeps GAS controls inside the POST form when the page has a secondary link', async () => {
+  test('GET keeps an unconfigured non-confirmation action page unenhanced', async () => {
     globalThis.fetch.mockResolvedValueOnce(
       gasPageResponse(
         actionPageModel({
           components: [
             {
               component: 'checkboxes',
-              name: 'confirm',
-              items: [{ value: 'confirmed', text: 'Confirm agreement' }]
-            }
-          ],
-          actions: [
-            {
-              method: 'POST',
-              href: '/agreements/AGR_42/actions/accept',
-              text: 'Accept agreement offer'
-            },
-            {
-              href: '/agreements/AGR_42',
-              text: 'Return to agreement'
+              name: 'acknowledgements',
+              items: [{ value: 'understood', text: 'I understand' }]
             }
           ]
         }),
@@ -248,17 +253,66 @@ describe('generic GAS Agreement action routes', () => {
 
     const response = await server.inject({
       method: 'GET',
-      url: '/AGR_42/actions/accept',
+      url: '/AGR_42/actions/review-anything',
+      headers: { 'x-base-url': '/agreement' }
+    })
+
+    const $ = load(response.result)
+
+    expect(response.statusCode).toBe(200)
+    expect($('form input[name="acknowledgements"]')).toHaveLength(1)
+    expect($('a.govuk-back-link')).toHaveLength(0)
+    expect($('#accept-offer-button')).toHaveLength(0)
+    expect($('script[src$="/accept-offer.js"]')).toHaveLength(0)
+  })
+
+  test('keeps trailing details immediately after a different operation form and before a secondary action', async () => {
+    globalThis.fetch.mockResolvedValueOnce(
+      gasPageResponse(
+        actionPageModel({
+          components: [
+            {
+              component: 'checkboxes',
+              name: 'confirm',
+              items: [{ value: 'confirmed', text: 'Confirm agreement' }]
+            },
+            {
+              component: 'details',
+              summaryItems: [{ component: 'text', text: 'Update details' }],
+              items: [{ component: 'paragraph', text: 'Ask for an update.' }]
+            }
+          ],
+          actions: [
+            {
+              method: 'POST',
+              href: '/agreements/AGR_42/actions/authorise-terms',
+              text: 'Authorise terms'
+            },
+            {
+              href: '/agreements/AGR_42/actions/request-changes',
+              text: 'Request changes'
+            }
+          ]
+        }),
+        '"AGR_42:7"'
+      )
+    )
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/AGR_42/actions/another-unrelated-route',
       headers: { 'x-base-url': '/agreement' }
     })
 
     const $ = load(response.result)
     const postForm = $('form[method="POST"]')
+    const details = postForm.next()
 
     expect(response.statusCode).toBe(200)
     expect(postForm).toHaveLength(1)
     expect(postForm.find('input[name="confirm"]')).toHaveLength(1)
-    expect($('a:contains("Return to agreement")')).toHaveLength(1)
+    expect(details.is('details.govuk-details')).toBe(true)
+    expect(details.next('a.govuk-button').text().trim()).toBe('Request changes')
   })
 
   test('rejects a GAS action page containing more than one form', async () => {
@@ -504,9 +558,30 @@ describe('generic GAS Agreement action routes', () => {
   test('POST parses browser form values, removes transport metadata and renders the complete 422 model', async () => {
     const idempotencyKey = '9ea924aa-45e9-43a7-888e-c25054ea658c'
     const validationModel = actionPageModel({
+      page: {
+        title: 'Validate a decision',
+        backLink: { href: '/agreements/AGR_42' }
+      },
       components: [
         { component: 'heading', level: 1, text: 'GAS validation heading' },
-        { component: 'paragraph', text: 'GAS validation explanation' }
+        { component: 'paragraph', text: 'GAS validation explanation' },
+        {
+          component: 'checkboxes',
+          name: 'confirm',
+          items: [{ value: 'confirmed', text: 'Confirm this decision' }]
+        },
+        {
+          component: 'details',
+          summaryItems: [{ component: 'text', text: 'Validation help' }],
+          items: [{ component: 'paragraph', text: 'Contact support.' }]
+        }
+      ],
+      actions: [
+        {
+          method: 'POST',
+          href: '/agreements/AGR_42/actions/record-decision',
+          text: 'Record decision'
+        }
       ],
       errors: [{ href: '#unusual-field', text: 'GAS supplied error text' }]
     })
@@ -566,6 +641,10 @@ describe('generic GAS Agreement action routes', () => {
     expect(response.result).toContain('GAS validation heading')
     expect(response.result).toContain('GAS validation explanation')
     expect(response.result).toContain('GAS supplied error text')
+    expect($('a.govuk-back-link').attr('href')).toBe('/agreement/AGR_42')
+    expect($('form input[name="confirm"]')).toHaveLength(1)
+    expect($('form').next().is('details.govuk-details')).toBe(true)
+    expect($('#accept-offer-button')).toHaveLength(1)
     expect($(`input[name="${actionTransportFieldNames.etag}"]`).val()).toBe(
       '"AGR_42:8"'
     )

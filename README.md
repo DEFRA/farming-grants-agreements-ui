@@ -225,6 +225,23 @@ farming-grants-agreements-ui-redis-1                           "docker-entrypoin
 Pass the JWT token as `x-encrypted-auth` in the request header or query string.
 When both are present, the header takes priority.
 
+### Config-driven action pages
+
+For config-driven action pages, Agreements UI optionally consumes the resolved
+`page.backLink.href` supplied in the GAS page model. The value must be an
+internal agreement path; when it is supported, Agreements UI translates it to
+its public proxy path and preserves query authentication. A missing or
+unsupported value does not render a Back link.
+
+GAS resolves this metadata and each grant configuration separately opts pages
+into it; Agreements UI does not construct a Back target from the action, route,
+or grant type.
+
+A POST form containing a `checkboxes` component named `confirm` uses the
+existing confirmation enhancement. Components after that checkbox render after
+the form; pages without that confirmation contract retain ordinary form
+rendering and do not load the enhancement.
+
 ### Generating a JWT for API calls (scripts/gen-auth-header.js)
 
 Use the helper script to generate a valid token that this API will accept.

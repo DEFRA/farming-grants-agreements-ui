@@ -38,6 +38,27 @@ const renderGasAgreement = (renderModel) => {
   return load(renderedPage)
 }
 
+const renderPageViewModel = (model) => {
+  const environment = nunjucksConfig.options.compileOptions.environment
+  return load(
+    environment.render('config-driven-agreement/page.njk', {
+      ...nunjucksConfig.options.context,
+      getAssetPath: (_baseUrl, asset) => `/assets/${asset}`,
+      buildUrl: (url) => url,
+      agreement,
+      baseUrl: '/',
+      errors: [],
+      components: [],
+      formComponents: [],
+      postActionComponents: [],
+      sections: [],
+      actions: [],
+      layout: 'default',
+      ...model
+    })
+  )
+}
+
 const agreementContent = [
   { component: 'heading', level: 1, text: 'Your agreement' },
   { component: 'paragraph', text: 'Agreement details' }
@@ -128,6 +149,96 @@ describe('config-driven GAS agreement page', () => {
     expect($('body').hasClass('view-agreement-has-watermark')).toBe(true)
     expect($watermark.text().trim()).toBe('DRAFT')
     expect($watermark.attr('aria-hidden')).toBe('true')
+  })
+
+  test('renders a configured Back link inside main and before the heading', () => {
+    const $ = renderPageViewModel({
+      backHref: '/agreement/AGR-123?x-encrypted-auth=signed-token',
+      components: agreementContent
+    })
+    const $main = $('main#main-content')
+    const $backLink = $main.find('a.govuk-back-link')
+
+    expect($backLink).toHaveLength(1)
+    expect($backLink.attr('href')).toBe(
+      '/agreement/AGR-123?x-encrypted-auth=signed-token'
+    )
+    expect($main.find('a.govuk-back-link, h1').first().is('a')).toBe(true)
+  })
+
+  test('keeps confirmation controls together and trailing content ahead of later actions', () => {
+    const $ = renderPageViewModel({
+      hasFormAction: true,
+      hasConfirmationCheckbox: true,
+      formComponents: [
+        { component: 'heading', level: 1, text: 'Review the agreement' },
+        {
+          component: 'checkboxes',
+          name: 'confirm',
+          items: [{ value: 'confirmed', text: 'Confirm agreement' }]
+        }
+      ],
+      postActionComponents: [
+        {
+          component: 'details',
+          summaryItems: [{ component: 'text', text: 'Need help?' }],
+          items: [{ component: 'paragraph', text: 'Contact us.' }]
+        }
+      ],
+      transportMetadata: {
+        etag: { name: '__etag', value: 'version-7' },
+        idempotencyKey: { name: '__key', value: 'request-1' }
+      },
+      actions: [
+        {
+          renderAsForm: true,
+          method: 'POST',
+          action: '/agreement/AGR-123/actions/finalise',
+          fields: [{ name: 'operation', value: 'finalise' }],
+          text: 'Finalise agreement'
+        },
+        {
+          renderAsForm: false,
+          href: '/agreement/AGR-123/actions/other',
+          text: 'Do something else'
+        }
+      ]
+    })
+    const $form = $('form')
+    const $details = $('details.govuk-details')
+
+    expect($form.find('input[name="confirm"]')).toHaveLength(1)
+    expect($form.find('input[name="__etag"]').val()).toBe('version-7')
+    expect($form.find('input[name="__key"]').val()).toBe('request-1')
+    expect($form.find('input[name="operation"]').val()).toBe('finalise')
+    expect($form.find('button#accept-offer-button')).toHaveLength(1)
+    expect($form.next()[0]).toBe($details[0])
+    expect($details.next('a.govuk-button').text().trim()).toBe(
+      'Do something else'
+    )
+    expect($('script[src$="/accept-offer.js"]')).toHaveLength(1)
+  })
+
+  test('does not add confirmation behaviour or navigation to an unconfigured page', () => {
+    const $ = renderPageViewModel({
+      hasFormAction: true,
+      formComponents: [
+        { component: 'heading', level: 1, text: 'Other operation' },
+        { component: 'checkboxes', name: 'approve', items: [] }
+      ],
+      actions: [
+        {
+          renderAsForm: true,
+          method: 'POST',
+          action: '/agreement/AGR-123/actions/other',
+          text: 'Continue'
+        }
+      ]
+    })
+
+    expect($('a.govuk-back-link')).toHaveLength(0)
+    expect($('#accept-offer-button')).toHaveLength(0)
+    expect($('script[src$="/accept-offer.js"]')).toHaveLength(0)
   })
 
   test('keeps ordinary page components outside action forms', () => {

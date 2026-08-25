@@ -204,6 +204,43 @@ const buildPageViewModel = (renderModel, page) => ({
   layout: page.layout ?? renderModel.layout ?? 'default'
 })
 
+const buildBackHref = (page, baseUrl, queryAuthentication) => {
+  try {
+    const backHref = translateAgreementPath(
+      page.backLink?.href,
+      baseUrl,
+      queryAuthentication
+    )
+
+    return backHref ? { backHref } : {}
+  } catch {
+    return {}
+  }
+}
+
+const partitionConfirmationForm = (components, hasFormAction) => {
+  const confirmationIndex = hasFormAction
+    ? components.findIndex(
+        (component) =>
+          component?.component === 'checkboxes' && component.name === 'confirm'
+      )
+    : -1
+
+  if (confirmationIndex === -1) {
+    return {
+      formComponents: components,
+      postActionComponents: [],
+      hasConfirmationCheckbox: false
+    }
+  }
+
+  return {
+    formComponents: components.slice(0, confirmationIndex + 1),
+    postActionComponents: components.slice(confirmationIndex + 1),
+    hasConfirmationCheckbox: true
+  }
+}
+
 const includeTransportMetadata = (transportMetadata) =>
   transportMetadata === undefined ? {} : { transportMetadata }
 
@@ -225,10 +262,18 @@ export const buildViewModel = (
     validateActionForm(actions)
   }
 
+  const translatedComponents = buildComponentUrls(
+    components,
+    baseUrl,
+    queryAuthentication
+  )
+
   return {
     ...buildPageViewModel(renderModel, page),
+    ...buildBackHref(page, baseUrl, queryAuthentication),
     agreement: renderModel.agreement,
-    components: buildComponentUrls(components, baseUrl, queryAuthentication),
+    components: translatedComponents,
+    ...partitionConfirmationForm(translatedComponents, hasFormAction),
     sections: buildSections(
       renderModel.sections ?? [],
       baseUrl,

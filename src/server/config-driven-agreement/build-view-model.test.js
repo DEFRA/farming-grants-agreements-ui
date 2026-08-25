@@ -8,9 +8,12 @@ describe('buildViewModel', () => {
       pageTitle: 'Agreement',
       agreement: undefined,
       components: [],
+      formComponents: [],
+      postActionComponents: [],
       sections: [],
       actions: [],
       hasFormAction: false,
+      hasConfirmationCheckbox: false,
       errors: [],
       showContents: false,
       print: false,
@@ -55,6 +58,8 @@ describe('buildViewModel', () => {
       pageTitle: 'Your agreement',
       agreement,
       components,
+      formComponents: components,
+      postActionComponents: [],
       sections: [
         {
           id: 'payment-schedule',
@@ -70,6 +75,7 @@ describe('buildViewModel', () => {
       ],
       actions: [],
       hasFormAction: false,
+      hasConfirmationCheckbox: false,
       errors,
       showContents: true,
       print: true,
@@ -90,6 +96,113 @@ describe('buildViewModel', () => {
         layout: 'custom'
       })
     )
+  })
+
+  describe('configured back link', () => {
+    it('translates a resolved agreement path using the base path and query authentication', () => {
+      const model = buildViewModel(
+        {
+          page: { backLink: { href: '/agreements/AGR-123?from=offer' } }
+        },
+        '/agreement',
+        { queryAuthentication: 'signed-token' }
+      )
+
+      expect(model.backHref).toBe(
+        '/agreement/AGR-123?from=offer&x-encrypted-auth=signed-token'
+      )
+    })
+
+    it('preserves an absolute Agreements UI base URL', () => {
+      const model = buildViewModel(
+        { page: { backLink: { href: '/agreements/AGR-123' } } },
+        'https://agreements.example/agreement'
+      )
+
+      expect(model.backHref).toBe(
+        'https://agreements.example/agreement/AGR-123'
+      )
+    })
+
+    it.each([
+      undefined,
+      '',
+      '/not-an-agreement',
+      'https://example.com/agreements/AGR-123',
+      'javascript:alert(1)',
+      42
+    ])('omits an unsupported or missing href: %j', (href) => {
+      const model = buildViewModel({ page: { backLink: { href } } })
+
+      expect(model).not.toHaveProperty('backHref')
+    })
+  })
+
+  describe('confirmation form partition', () => {
+    const postAction = {
+      method: 'POST',
+      href: '/agreements/AGR-123/actions/finalise',
+      text: 'Finalise'
+    }
+    const metadata = { transportMetadata: {} }
+    const before = { component: 'paragraph', text: 'Before confirmation' }
+    const confirm = { component: 'checkboxes', name: 'confirm', items: [] }
+    const after = { component: 'details', summaryItems: [], items: [] }
+
+    it('partitions at the first configured confirmation checkbox', () => {
+      const duplicate = { ...confirm, items: [{ value: 'again' }] }
+      const model = buildViewModel(
+        {
+          components: [before, confirm, after, duplicate],
+          actions: [postAction]
+        },
+        '/',
+        metadata
+      )
+
+      expect(model.formComponents).toEqual([before, confirm])
+      expect(model.postActionComponents).toEqual([after, duplicate])
+      expect(model.hasConfirmationCheckbox).toBe(true)
+    })
+
+    it.each([
+      { component: 'checkboxes', name: 'agreement-confirmation' },
+      { component: 'paragraph', name: 'confirm', text: 'Not a checkbox' },
+      { component: 'checkboxes' }
+    ])('does not partition a non-matching component: %j', (component) => {
+      const components = [component]
+      const model = buildViewModel(
+        { components, actions: [postAction] },
+        '/',
+        metadata
+      )
+
+      expect(model.formComponents).toEqual(components)
+      expect(model.postActionComponents).toEqual([])
+      expect(model.hasConfirmationCheckbox).toBe(false)
+    })
+
+    it('does not enhance malformed null and undefined component entries', () => {
+      const components = [null, undefined]
+      const model = buildViewModel(
+        { components, actions: [postAction] },
+        '/',
+        metadata
+      )
+
+      expect(model.formComponents).toEqual(components)
+      expect(model.postActionComponents).toEqual([])
+      expect(model.hasConfirmationCheckbox).toBe(false)
+    })
+
+    it('does not partition without a transport-backed POST form', () => {
+      const components = [before, confirm, after]
+      const model = buildViewModel({ components, actions: [postAction] })
+
+      expect(model.formComponents).toEqual(components)
+      expect(model.postActionComponents).toEqual([])
+      expect(model.hasConfirmationCheckbox).toBe(false)
+    })
   })
 
   it('translates a GAS action href to the Agreements UI path', () => {

@@ -1,8 +1,10 @@
 {% set bodyClasses = "config-driven-agreement-page" ~ (" view-agreement-has-watermark" if watermark else "") %}
 {% set mainClasses = "" %}
+{% set pageScript = "accept-offer.js" if hasConfirmationCheckbox else null %}
 
 {% extends "layouts/page.njk" %}
 
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
@@ -10,6 +12,14 @@
 {% from "config-driven-agreement/document/watermark.njk" import defraWatermark %}
 
 {% block content %}
+  {% if backHref %}
+    {{ govukBackLink({
+      text: "Back",
+      href: backHref,
+      classes: "govuk-!-margin-bottom-0"
+    }) }}
+  {% endif %}
+
   <div class="govuk-grid-row">
     <div class="{{ 'govuk-grid-column-full' if layout == 'document' else 'govuk-grid-column-two-thirds' }}">
       {% if errors.length %}
@@ -37,7 +47,7 @@
         {% else %}
           <form method="{{ action.method or 'POST' }}" action="{{ action.action or action.href }}">
             {% if hasFormAction %}
-              {{ dynamicContent(components) }}
+              {{ dynamicContent(formComponents) }}
             {% endif %}
 
             {% if transportMetadata %}
@@ -63,9 +73,14 @@
 
             {{ govukButton({
               text: action.text,
-              classes: action.classes
+              classes: action.classes,
+              attributes: {
+                id: "accept-offer-button" if hasConfirmationCheckbox else null
+              }
             }) }}
           </form>
+
+          {{ dynamicContent(postActionComponents) }}
         {% endif %}
       {% endfor %}
     </div>
