@@ -65,6 +65,22 @@ describe('buildViewModel', () => {
     })
   })
 
+  it('uses the navigation URL policy for button links', () => {
+    const model = buildViewModel(
+      {
+        components: componentTree([
+          { component: 'button', text: 'Read guidance', href: 'guidance' }
+        ])
+      },
+      '/agreement',
+      { queryAuthentication: 'signed-token' }
+    )
+
+    expect(model.components[0].components[0].components[0].href).toBe(
+      '/agreement/guidance?x-encrypted-auth=signed-token'
+    )
+  })
+
   it('rewrites resolved form and component URLs and injects request transport fields', () => {
     const model = buildViewModel(
       {

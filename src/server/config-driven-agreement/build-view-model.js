@@ -68,7 +68,7 @@ const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
   )
 }
 
-const buildActionHref = (baseUrl, href, queryAuthentication, allowExternal) => {
+const buildAgreementActionHref = (baseUrl, href, queryAuthentication) => {
   if (typeof href !== 'string' || !href) {
     throw Boom.badGateway(unsupportedActionUrlMessage)
   }
@@ -80,10 +80,6 @@ const buildActionHref = (baseUrl, href, queryAuthentication, allowExternal) => {
   )
   if (translatedAgreementPath) {
     return translatedAgreementPath
-  }
-
-  if (allowExternal && isAbsoluteUrl(href)) {
-    return returnAllowedExternalUrl(href)
   }
 
   throw Boom.badGateway(unsupportedActionUrlMessage)
@@ -111,7 +107,7 @@ const buildUrlComponent = (component, baseUrl, queryAuthentication) => {
     : { ...component, params: { ...urlParams, href: rewrittenHref } }
 }
 
-const buildActionComponent = (
+const adaptComponentTransport = (
   component,
   baseUrl,
   queryAuthentication,
@@ -120,11 +116,10 @@ const buildActionComponent = (
   if (component.component === 'form') {
     return {
       ...component,
-      formAction: buildActionHref(
+      formAction: buildAgreementActionHref(
         baseUrl,
         component.formAction,
-        queryAuthentication,
-        false
+        queryAuthentication
       ),
       hiddenFields: appendTransportFields(
         component.hiddenFields,
@@ -133,15 +128,15 @@ const buildActionComponent = (
     }
   }
 
-  if (component.component === 'button' && component.href) {
-    return {
-      ...component,
-      href: buildActionHref(baseUrl, component.href, queryAuthentication, true)
-    }
+  if (component.component === 'url') {
+    return buildUrlComponent(component, baseUrl, queryAuthentication)
   }
 
-  return component.component === 'url'
-    ? buildUrlComponent(component, baseUrl, queryAuthentication)
+  return component.href
+    ? {
+        ...component,
+        href: buildProxiedPath(baseUrl, component.href, queryAuthentication)
+      }
     : component
 }
 
@@ -173,7 +168,7 @@ const buildComponentUrls = (
     ])
   )
 
-  return buildActionComponent(
+  return adaptComponentTransport(
     component,
     baseUrl,
     queryAuthentication,
