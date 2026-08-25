@@ -96,6 +96,55 @@ const appendTransportFields = (fields, transportMetadata) => [
     : [transportMetadata.etag, transportMetadata.idempotencyKey])
 ]
 
+const buildUrlComponent = (component, baseUrl, queryAuthentication) => {
+  const urlParams = component.params ?? component
+  const href = urlParams.href
+
+  if (!href) {
+    return component
+  }
+
+  const rewrittenHref = buildProxiedPath(baseUrl, href, queryAuthentication)
+
+  return urlParams === component
+    ? { ...component, href: rewrittenHref }
+    : { ...component, params: { ...urlParams, href: rewrittenHref } }
+}
+
+const buildActionComponent = (
+  component,
+  baseUrl,
+  queryAuthentication,
+  transportMetadata
+) => {
+  if (component.component === 'form') {
+    return {
+      ...component,
+      formAction: buildActionHref(
+        baseUrl,
+        component.formAction,
+        queryAuthentication,
+        false
+      ),
+      hiddenFields: appendTransportFields(
+        component.hiddenFields,
+        transportMetadata
+      )
+    }
+  }
+
+  if (component.component === 'button' && component.href) {
+    return {
+      ...component,
+      href: buildActionHref(baseUrl, component.href, queryAuthentication, true)
+    }
+  }
+
+  return component.component === 'url'
+    ? buildUrlComponent(component, baseUrl, queryAuthentication)
+    : component
+}
+
 const buildComponentUrls = (
   value,
   baseUrl,
@@ -112,7 +161,7 @@ const buildComponentUrls = (
     return value
   }
 
-  const transformedValue = Object.fromEntries(
+  const component = Object.fromEntries(
     Object.entries(value).map(([name, childValue]) => [
       name,
       buildComponentUrls(
@@ -124,54 +173,12 @@ const buildComponentUrls = (
     ])
   )
 
-  if (transformedValue.component === 'form') {
-    return {
-      ...transformedValue,
-      formAction: buildActionHref(
-        baseUrl,
-        transformedValue.formAction,
-        queryAuthentication,
-        false
-      ),
-      hiddenFields: appendTransportFields(
-        transformedValue.hiddenFields,
-        transportMetadata
-      )
-    }
-  }
-
-  if (transformedValue.component === 'button' && transformedValue.href) {
-    return {
-      ...transformedValue,
-      href: buildActionHref(
-        baseUrl,
-        transformedValue.href,
-        queryAuthentication,
-        true
-      )
-    }
-  }
-
-  if (transformedValue.component !== 'url') {
-    return transformedValue
-  }
-
-  const urlParams =
-    transformedValue.params &&
-    typeof transformedValue.params === 'object' &&
-    !Array.isArray(transformedValue.params)
-      ? transformedValue.params
-      : transformedValue
-
-  if (!urlParams.href) {
-    return transformedValue
-  }
-
-  const href = buildProxiedPath(baseUrl, urlParams.href, queryAuthentication)
-
-  return urlParams === transformedValue
-    ? { ...transformedValue, href }
-    : { ...transformedValue, params: { ...urlParams, href } }
+  return buildActionComponent(
+    component,
+    baseUrl,
+    queryAuthentication,
+    transportMetadata
+  )
 }
 
 const buildSections = (
