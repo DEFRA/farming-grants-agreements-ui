@@ -49,7 +49,11 @@ export const gasViewPageModel = {
                 { label: 'Status supplied by GAS', text: 'Terminated' }
               ]
             },
-            { component: 'button', actionId: 'accept-offer' }
+            {
+              component: 'button',
+              href: `/agreements/${gasAgreementNumber}/actions/accept-offer`,
+              text: 'GAS provided action'
+            }
           ]
         }
       ]
@@ -76,13 +80,6 @@ export const gasViewPageModel = {
           ]
         }
       ]
-    }
-  ],
-  actions: [
-    {
-      name: 'accept-offer',
-      href: `/agreements/${gasAgreementNumber}/actions/accept-offer`,
-      text: 'GAS provided action'
     }
   ],
   availableActions: ['gas-only-action'],

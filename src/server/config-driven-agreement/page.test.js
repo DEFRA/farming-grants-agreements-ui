@@ -52,8 +52,7 @@ const agreementContent = [
 
 const defaultModel = {
   page: { title: 'Your agreement' },
-  components: gridTree(agreementContent),
-  actions: []
+  components: gridTree(agreementContent)
 }
 
 const documentModel = {
@@ -85,8 +84,7 @@ const documentModel = {
         'full'
       )
     }
-  ],
-  actions: []
+  ]
 }
 
 describe('config-driven GAS agreement page', () => {
@@ -148,16 +146,13 @@ describe('config-driven GAS agreement page', () => {
       ...defaultModel,
       components: gridTree([
         { component: 'paragraph', text: 'Before action' },
-        { component: 'button', actionId: 'accept' },
-        { component: 'details', summaryItems: [{ text: 'Help' }], items: [] }
-      ]),
-      actions: [
         {
-          name: 'accept',
+          component: 'button',
           href: '/agreements/PMF123/actions/accept',
           text: 'Accept agreement'
-        }
-      ]
+        },
+        { component: 'details', summaryItems: [{ text: 'Help' }], items: [] }
+      ])
     })
 
     expect($('p + a.govuk-button').text().trim()).toBe('Accept agreement')
@@ -170,26 +165,20 @@ describe('config-driven GAS agreement page', () => {
       components: gridTree([
         {
           component: 'form',
-          actionId: 'accept',
+          method: 'POST',
+          formAction: '/agreements/PMF123/actions/accept',
+          hiddenFields: [],
           components: [
             {
               component: 'checkboxes',
               name: 'confirm',
               items: [{ value: 'confirmed', text: 'Confirm agreement' }]
             },
-            { component: 'button', actionId: 'accept' }
+            { component: 'button', text: 'Continue', submit: true }
           ]
         },
         { component: 'paragraph', text: 'After the form' }
-      ]),
-      actions: [
-        {
-          name: 'accept',
-          method: 'POST',
-          action: '/agreement',
-          text: 'Continue'
-        }
-      ]
+      ])
     })
 
     expect($('form input[name="confirm"]')).toHaveLength(1)

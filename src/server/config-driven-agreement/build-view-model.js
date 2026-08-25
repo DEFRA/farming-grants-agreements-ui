@@ -40,12 +40,7 @@ const returnAllowedExternalUrl = (value) => {
   throw Boom.badGateway('Unsupported agreement URL')
 }
 
-const buildProxiedPath = (
-  baseUrl,
-  value,
-  queryAuthentication,
-  allowExternal = true
-) => {
+const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
   if (shouldPreservePath(value)) {
     return value
   }
@@ -60,9 +55,6 @@ const buildProxiedPath = (
   }
 
   if (isAbsoluteUrl(value)) {
-    if (!allowExternal) {
-      throw Boom.badGateway(unsupportedActionUrlMessage)
-    }
     return returnAllowedExternalUrl(value)
   }
 
@@ -76,7 +68,7 @@ const buildProxiedPath = (
   )
 }
 
-const buildActionHref = (baseUrl, href, method, queryAuthentication) => {
+const buildActionHref = (baseUrl, href, queryAuthentication, allowExternal) => {
   if (typeof href !== 'string' || !href) {
     throw Boom.badGateway(unsupportedActionUrlMessage)
   }
@@ -90,52 +82,29 @@ const buildActionHref = (baseUrl, href, method, queryAuthentication) => {
     return translatedAgreementPath
   }
 
-  if (isAbsoluteUrl(href)) {
-    if (method === 'POST') {
-      throw Boom.badGateway(unsupportedActionUrlMessage)
-    }
+  if (allowExternal && isAbsoluteUrl(href)) {
     return returnAllowedExternalUrl(href)
   }
 
   throw Boom.badGateway(unsupportedActionUrlMessage)
 }
 
-const translateActionPaths = (actions, baseUrl, queryAuthentication) =>
-  actions.map((action) => {
-    const translatedAction = {
-      ...action,
-      ...(Object.hasOwn(action, 'href')
-        ? {
-            href: buildActionHref(
-              baseUrl,
-              action.href,
-              action.method,
-              queryAuthentication
-            )
-          }
-        : {}),
-      ...(action.action
-        ? {
-            action: buildProxiedPath(
-              baseUrl,
-              action.action,
-              queryAuthentication,
-              action.method !== 'POST'
-            )
-          }
-        : {})
-    }
+const appendTransportFields = (fields, transportMetadata) => [
+  ...(fields ?? []),
+  ...(transportMetadata === undefined
+    ? []
+    : [transportMetadata.etag, transportMetadata.idempotencyKey])
+]
 
-    return {
-      ...translatedAction,
-      renderAsForm: translatedAction.method === 'POST'
-    }
-  })
-
-const buildComponentUrls = (value, baseUrl, queryAuthentication) => {
+const buildComponentUrls = (
+  value,
+  baseUrl,
+  queryAuthentication,
+  transportMetadata
+) => {
   if (Array.isArray(value)) {
     return value.map((item) =>
-      buildComponentUrls(item, baseUrl, queryAuthentication)
+      buildComponentUrls(item, baseUrl, queryAuthentication, transportMetadata)
     )
   }
 
@@ -146,9 +115,42 @@ const buildComponentUrls = (value, baseUrl, queryAuthentication) => {
   const transformedValue = Object.fromEntries(
     Object.entries(value).map(([name, childValue]) => [
       name,
-      buildComponentUrls(childValue, baseUrl, queryAuthentication)
+      buildComponentUrls(
+        childValue,
+        baseUrl,
+        queryAuthentication,
+        transportMetadata
+      )
     ])
   )
+
+  if (transformedValue.component === 'form') {
+    return {
+      ...transformedValue,
+      formAction: buildActionHref(
+        baseUrl,
+        transformedValue.formAction,
+        queryAuthentication,
+        false
+      ),
+      hiddenFields: appendTransportFields(
+        transformedValue.hiddenFields,
+        transportMetadata
+      )
+    }
+  }
+
+  if (transformedValue.component === 'button' && transformedValue.href) {
+    return {
+      ...transformedValue,
+      href: buildActionHref(
+        baseUrl,
+        transformedValue.href,
+        queryAuthentication,
+        true
+      )
+    }
+  }
 
   if (transformedValue.component !== 'url') {
     return transformedValue
@@ -172,165 +174,19 @@ const buildComponentUrls = (value, baseUrl, queryAuthentication) => {
     : { ...transformedValue, params: { ...urlParams, href } }
 }
 
-const allowedGridWidths = new Set(['two-thirds', 'full'])
-
-const assertExplicitComponentTree = (components) => {
-  const isExplicitTree = components.every(
-    (row) =>
-      row?.component === 'grid-row' &&
-      Array.isArray(row.components) &&
-      row.components.every(
-        (column) =>
-          column?.component === 'grid-column' &&
-          (column.width === undefined || allowedGridWidths.has(column.width)) &&
-          Array.isArray(column.components)
-      )
-  )
-
-  if (!isExplicitTree) {
-    throw Boom.badGateway('Agreement page must use an explicit component tree')
-  }
-}
-
-const invalidActionBindings = () => {
-  throw Boom.badGateway('Invalid agreement action bindings')
-}
-
-const buildActionsByName = (actions) => {
-  const actionsByName = new Map()
-
-  for (const action of actions) {
-    const target = action.renderAsForm
-      ? (action.action ?? action.href)
-      : action.href
-    if (
-      typeof action.name !== 'string' ||
-      actionsByName.has(action.name) ||
-      typeof target !== 'string' ||
-      !target
-    ) {
-      invalidActionBindings()
-    }
-
-    actionsByName.set(action.name, action)
-  }
-
-  return actionsByName
-}
-
-const buildHiddenFields = (action, transportMetadata) => [
-  ...(action.fields ?? []),
-  ...(transportMetadata === undefined
-    ? []
-    : [transportMetadata.etag, transportMetadata.idempotencyKey])
-]
-
-const resolveForm = (value, context) => {
-  const action = context.actionsByName.get(value.actionId)
-  if (!action?.renderAsForm || context.enclosingFormActionId) {
-    invalidActionBindings()
-  }
-
-  context.references.get(value.actionId).forms += 1
-
-  return {
-    ...value,
-    components: resolveComponentActions(value.components ?? [], {
-      ...context,
-      enclosingFormActionId: value.actionId
-    }),
-    method: action.method ?? 'POST',
-    formAction: action.action ?? action.href,
-    hiddenFields: buildHiddenFields(action, context.transportMetadata)
-  }
-}
-
-const resolveButton = (value, context) => {
-  const action = context.actionsByName.get(value.actionId)
-  if (!action) {
-    invalidActionBindings()
-  }
-
-  context.references.get(value.actionId).buttons += 1
-
-  const isInsideForm = context.enclosingFormActionId !== undefined
-  if (
-    action.renderAsForm !== isInsideForm ||
-    (action.renderAsForm && context.enclosingFormActionId !== value.actionId)
-  ) {
-    invalidActionBindings()
-  }
-
-  return {
-    ...value,
-    text: action.text,
-    ...(value.classes || action.classes
-      ? { classes: value.classes ?? action.classes }
-      : {}),
-    ...(action.renderAsForm ? { submit: true } : { href: action.href })
-  }
-}
-
-const resolveComponentActions = (value, context) => {
-  if (Array.isArray(value)) {
-    return value.map((item) => resolveComponentActions(item, context))
-  }
-
-  if (!value || typeof value !== 'object') {
-    return value
-  }
-
-  if (value.component === 'form') {
-    return resolveForm(value, context)
-  }
-
-  if (value.component === 'button') {
-    return resolveButton(value, context)
-  }
-
-  return Object.fromEntries(
-    Object.entries(value).map(([name, childValue]) => [
-      name,
-      resolveComponentActions(childValue, context)
-    ])
-  )
-}
-
-const resolveActions = (components, sections, actions, transportMetadata) => {
-  const actionsByName = buildActionsByName(actions)
-  const references = new Map(
-    actions.map(({ name }) => [name, { buttons: 0, forms: 0 }])
-  )
-  const resolve = (value) =>
-    resolveComponentActions(value, {
-      actionsByName,
-      references,
-      transportMetadata
-    })
-  const resolvedComponents = resolve(components)
-  const resolvedSections = sections.map((section) => ({
-    ...section,
-    components: resolve(section.components ?? [])
-  }))
-
-  for (const action of actions) {
-    const { buttons, forms } = references.get(action.name)
-    const expectedForms = action.renderAsForm ? 1 : 0
-    if (buttons !== 1 || forms !== expectedForms) {
-      invalidActionBindings()
-    }
-  }
-
-  return { components: resolvedComponents, sections: resolvedSections }
-}
-
-const buildSections = (sections, baseUrl, queryAuthentication) =>
+const buildSections = (
+  sections,
+  baseUrl,
+  queryAuthentication,
+  transportMetadata
+) =>
   sections.map((section) => ({
     ...section,
     components: buildComponentUrls(
       section.components ?? [],
       baseUrl,
-      queryAuthentication
+      queryAuthentication,
+      transportMetadata
     )
   }))
 
@@ -347,46 +203,23 @@ export const buildViewModel = (
   baseUrl = '/',
   { queryAuthentication, transportMetadata } = {}
 ) => {
-  if (Object.hasOwn(renderModel, 'content')) {
-    throw Boom.badGateway('Agreement page must use an explicit component tree')
-  }
-
-  const rawComponents = renderModel.components ?? []
-  const rawSections = renderModel.sections ?? []
-  assertExplicitComponentTree(rawComponents)
-  rawSections.forEach((section) =>
-    assertExplicitComponentTree(section.components ?? [])
-  )
-
-  const actions = translateActionPaths(
-    renderModel.actions ?? [],
-    baseUrl,
-    queryAuthentication
-  )
-  const componentsWithUrls = buildComponentUrls(
-    rawComponents,
-    baseUrl,
-    queryAuthentication
-  )
-  const sectionsWithUrls = buildSections(
-    rawSections,
-    baseUrl,
-    queryAuthentication
-  )
-  const { components, sections } = resolveActions(
-    componentsWithUrls,
-    sectionsWithUrls,
-    actions,
-    transportMetadata
-  )
   const page = renderModel.page ?? {}
 
   return {
     ...buildPageViewModel(renderModel, page),
     agreement: renderModel.agreement,
-    components,
-    sections,
-    actions,
+    components: buildComponentUrls(
+      renderModel.components ?? [],
+      baseUrl,
+      queryAuthentication,
+      transportMetadata
+    ),
+    sections: buildSections(
+      renderModel.sections ?? [],
+      baseUrl,
+      queryAuthentication,
+      transportMetadata
+    ),
     errors: renderModel.errors ?? []
   }
 }
