@@ -40,6 +40,15 @@ const returnAllowedExternalUrl = (value) => {
   throw Boom.badGateway('Unsupported agreement URL')
 }
 
+const joinBasePath = (baseUrl, value) => {
+  if (!absoluteUrlPattern.test(baseUrl)) {
+    return path.posix.join(baseUrl, value)
+  }
+
+  const base = new URL(baseUrl)
+  return new URL(path.posix.join(base.pathname, value), base).toString()
+}
+
 const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
   if (shouldPreservePath(value)) {
     return value
@@ -63,7 +72,7 @@ const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
   }
 
   return appendQueryAuthentication(
-    path.posix.join(baseUrl, value),
+    joinBasePath(baseUrl, value),
     queryAuthentication
   )
 }

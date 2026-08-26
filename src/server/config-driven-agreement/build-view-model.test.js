@@ -98,6 +98,24 @@ describe('buildViewModel', () => {
     )
   })
 
+  it.each(['guidance', '/guidance'])(
+    'preserves an absolute base URL for navigation link %s',
+    (href) => {
+      const model = buildViewModel(
+        {
+          components: componentTree([
+            { component: 'button', text: 'Read guidance', href }
+          ])
+        },
+        'https://example.com/agreement'
+      )
+
+      expect(model.components[0].components[0].components[0].href).toBe(
+        'https://example.com/agreement/guidance'
+      )
+    }
+  )
+
   it('rewrites resolved form and component URLs and injects request transport fields', () => {
     const model = buildViewModel(
       {
