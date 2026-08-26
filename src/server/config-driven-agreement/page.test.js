@@ -99,6 +99,9 @@ describe('config-driven GAS agreement page', () => {
 
     expect($('a.govuk-back-link').text().trim()).toBe('Back to offer')
     expect($('a.govuk-back-link').attr('href')).toBe('/PMF123')
+    expect($('a.govuk-back-link').hasClass('govuk-!-display-none-print')).toBe(
+      true
+    )
   })
 
   test('renders document content in the full-width layout', () => {

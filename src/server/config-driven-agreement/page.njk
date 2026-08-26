@@ -14,7 +14,7 @@
     {{ govukBackLink({
       text: backLink.text or "Back",
       href: backLink.href,
-      classes: "govuk-!-margin-bottom-0"
+      classes: "govuk-!-margin-bottom-0 govuk-!-display-none-print"
     }) }}
   {% endif %}
 {% endblock %}
@@ -45,7 +45,7 @@
     <div class="govuk-grid-row">
       {% if showContents or print %}
         <div class="govuk-grid-column-one-quarter">
-          <nav role="navigation"{% if showContents %} aria-labelledby="document-contents-title"{% else %} aria-label="Document controls"{% endif %}>
+          <nav class="govuk-!-display-none-print" role="navigation"{% if showContents %} aria-labelledby="document-contents-title"{% else %} aria-label="Document controls"{% endif %}>
             {% if showContents %}
               <div id="contents">
                 <p id="document-contents-title" class="govuk-body-s">Contents</p>

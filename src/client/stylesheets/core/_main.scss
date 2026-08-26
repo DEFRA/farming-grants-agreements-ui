@@ -83,16 +83,6 @@ a:link,
 }
 
 @media print {
-  .govuk-header,
-  .govuk-footer,
-  .govuk-phase-banner,
-  .govuk-back-link,
-  .toc,
-  .gem-c-print-link,
-  nav[role='navigation'] {
-    display: none !important;
-  }
-
   .govuk-width-container {
     padding: 0 !important;
     margin: 0 !important;
@@ -108,11 +98,6 @@ a:link,
 
   .t-and-c-print-only {
     display: block;
-  }
-
-  // Hide sign out link in account bar
-  .defra-account-bar .govuk-link {
-    display: none !important;
   }
 
   // Force the account bar to remain two columns in print
