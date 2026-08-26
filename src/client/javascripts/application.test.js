@@ -76,6 +76,30 @@ describe('application.js', () => {
     expect(createAllMock).toHaveBeenNthCalledWith(6, govukComponents.SkipLink)
   })
 
+  it('progressively enables a form submit control when its requirements are met', async () => {
+    setDomContent(`
+      <form data-submission-requirements='[{"name":"confirm","value":"confirmed"}]'>
+        <input type="checkbox" name="confirm" value="confirmed">
+        <button type="submit">Accept</button>
+      </form>
+    `)
+
+    await loadApplication()
+    document.dispatchEvent(new globalThis.Event('DOMContentLoaded'))
+
+    const checkbox = document.querySelector('input[name="confirm"]')
+    const button = document.querySelector('button[type="submit"]')
+
+    expect(button.disabled).toBe(true)
+    expect(button.getAttribute('aria-disabled')).toBe('true')
+
+    checkbox.checked = true
+    checkbox.dispatchEvent(new globalThis.Event('change', { bubbles: true }))
+
+    expect(button.disabled).toBe(false)
+    expect(button.getAttribute('aria-disabled')).toBe('false')
+  })
+
   it('converts gem print buttons to type button and wires print events', async () => {
     setDomContent(`
       <button class="gem-c-print-link__button" type="submit">Print page</button>

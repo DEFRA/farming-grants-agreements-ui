@@ -88,6 +88,19 @@ const documentModel = {
 }
 
 describe('config-driven GAS agreement page', () => {
+  test('renders the configured Back link in the UI shell before agreement content', () => {
+    const $ = renderGasAgreement({
+      ...defaultModel,
+      page: {
+        ...defaultModel.page,
+        backLink: { text: 'Back to offer', href: '/agreements/PMF123' }
+      }
+    })
+
+    expect($('a.govuk-back-link').text().trim()).toBe('Back to offer')
+    expect($('a.govuk-back-link').attr('href')).toBe('/PMF123')
+  })
+
   test('renders document content in the full-width layout', () => {
     const $ = renderGasAgreement(documentModel)
     const $content = $('h1').closest('.govuk-grid-column-full')
@@ -168,6 +181,7 @@ describe('config-driven GAS agreement page', () => {
           method: 'POST',
           formAction: '/agreements/PMF123/actions/accept',
           hiddenFields: [],
+          submissionRequirements: [{ name: 'confirm', value: 'confirmed' }],
           components: [
             {
               component: 'checkboxes',
@@ -182,6 +196,9 @@ describe('config-driven GAS agreement page', () => {
     })
 
     expect($('form input[name="confirm"]')).toHaveLength(1)
+    expect(JSON.parse($('form').attr('data-submission-requirements'))).toEqual([
+      { name: 'confirm', value: 'confirmed' }
+    ])
     expect($('form button[type="submit"]').text().trim()).toBe('Continue')
     expect($('form p')).toHaveLength(0)
     expect($('form + p').text().trim()).toBe('After the form')

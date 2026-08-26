@@ -3,9 +3,21 @@
 
 {% extends "layouts/page.njk" %}
 
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "config-driven-agreement/dynamic-content/macro.njk" import dynamicContent %}
 {% from "config-driven-agreement/document/watermark.njk" import defraWatermark %}
+
+{% block beforeContent %}
+  {{ super() }}
+  {% if backLink %}
+    {{ govukBackLink({
+      text: backLink.text or "Back",
+      href: backLink.href,
+      classes: "govuk-!-margin-bottom-0"
+    }) }}
+  {% endif %}
+{% endblock %}
 
 {% block content %}
   {% if errors.length or watermark %}

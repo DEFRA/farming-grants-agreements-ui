@@ -200,6 +200,17 @@ const buildPageViewModel = (renderModel, page) => ({
   layout: page.layout ?? renderModel.layout ?? 'default'
 })
 
+const buildBackLink = (backLink, baseUrl, queryAuthentication) => {
+  if (!backLink?.href) {
+    return undefined
+  }
+
+  return {
+    ...backLink,
+    href: buildProxiedPath(baseUrl, backLink.href, queryAuthentication)
+  }
+}
+
 export const buildViewModel = (
   renderModel = {},
   baseUrl = '/',
@@ -209,6 +220,7 @@ export const buildViewModel = (
 
   return {
     ...buildPageViewModel(renderModel, page),
+    backLink: buildBackLink(page.backLink, baseUrl, queryAuthentication),
     agreement: renderModel.agreement,
     components: buildComponentUrls(
       renderModel.components ?? [],

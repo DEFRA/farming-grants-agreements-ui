@@ -24,6 +24,23 @@ describe('buildViewModel', () => {
     })
   })
 
+  it('rewrites a resolved Back link for the agreement UI route', () => {
+    expect(
+      buildViewModel(
+        {
+          page: {
+            backLink: { text: 'Back to offer', href: '/agreements/PMF123' }
+          }
+        },
+        '/agreement',
+        { queryAuthentication: 'signed-token' }
+      ).backLink
+    ).toEqual({
+      text: 'Back to offer',
+      href: '/agreement/PMF123?x-encrypted-auth=signed-token'
+    })
+  })
+
   it('does not consume legacy content or an actions catalogue', () => {
     const model = buildViewModel({
       content: [{ component: 'paragraph', text: 'Legacy content' }],

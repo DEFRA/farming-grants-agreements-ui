@@ -89,6 +89,7 @@ describe('Agreement component renderer', () => {
           method: 'POST',
           formAction: '/accept',
           hiddenFields: [{ name: 'etag', value: 'version-1' }],
+          submissionRequirements: [{ name: 'confirm', value: 'confirmed' }],
           components: [{ component: 'button', text: 'Accept', submit: true }]
         }
       }
@@ -98,6 +99,9 @@ describe('Agreement component renderer', () => {
     expect($('form').attr('method')).toBe('POST')
     expect($('form').attr('action')).toBe('/accept')
     expect($('form input[name="etag"]').attr('value')).toBe('version-1')
+    expect(JSON.parse($('form').attr('data-submission-requirements'))).toEqual([
+      { name: 'confirm', value: 'confirmed' }
+    ])
     expect($('form > button[type="submit"]')).toHaveLength(1)
     expect($('form #after')).toHaveLength(0)
     expect($('form + #after')).toHaveLength(1)
