@@ -238,7 +238,7 @@ describe('Agreement component renderer', () => {
         summaryItems: [{ text: 'Summary' }],
         items: [{ text: 'Details' }]
       },
-      'details.govuk-details'
+      'details.govuk-details > summary > .govuk-details__summary-text'
     ],
     [
       'accordion',
