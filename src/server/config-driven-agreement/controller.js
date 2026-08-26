@@ -11,8 +11,7 @@ export const renderConfigDrivenAgreement = (
   transportMetadata
 ) => {
   const resolvedRenderModel = renderModel ?? {}
-  const components =
-    resolvedRenderModel.components ?? resolvedRenderModel.content ?? []
+  const components = resolvedRenderModel.components ?? []
   const sectionComponents = (resolvedRenderModel.sections ?? []).flatMap(
     (section) => section.components ?? []
   )

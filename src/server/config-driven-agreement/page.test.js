@@ -38,6 +38,13 @@ const renderGasAgreement = (renderModel) => {
   return load(renderedPage)
 }
 
+const gridTree = (components, width = 'two-thirds') => [
+  {
+    component: 'grid-row',
+    components: [{ component: 'grid-column', width, components }]
+  }
+]
+
 const agreementContent = [
   { component: 'heading', level: 1, text: 'Your agreement' },
   { component: 'paragraph', text: 'Agreement details' }
@@ -45,8 +52,7 @@ const agreementContent = [
 
 const defaultModel = {
   page: { title: 'Your agreement' },
-  components: agreementContent,
-  actions: []
+  components: gridTree(agreementContent)
 }
 
 const documentModel = {
@@ -60,26 +66,47 @@ const documentModel = {
       text: 'DRAFT'
     }
   },
-  components: agreementContent,
+  components: gridTree(agreementContent, 'full'),
   sections: [
     {
       id: 'agreement-overview',
       title: 'Agreement overview',
-      components: [{ component: 'paragraph', text: 'Overview details' }]
+      components: gridTree(
+        [{ component: 'paragraph', text: 'Overview details' }],
+        'full'
+      )
     },
     {
       id: 'payment-schedule',
       title: 'Payment schedule',
-      components: [{ component: 'paragraph', text: '6 November 2026 - £320' }]
+      components: gridTree(
+        [{ component: 'paragraph', text: '6 November 2026 - £320' }],
+        'full'
+      )
     }
-  ],
-  actions: []
+  ]
 }
 
 describe('config-driven GAS agreement page', () => {
+  test('renders the configured Back link in the UI shell before agreement content', () => {
+    const $ = renderGasAgreement({
+      ...defaultModel,
+      page: {
+        ...defaultModel.page,
+        backLink: { text: 'Back to offer', href: '/agreements/PMF123' }
+      }
+    })
+
+    expect($('a.govuk-back-link').text().trim()).toBe('Back to offer')
+    expect($('a.govuk-back-link').attr('href')).toBe('/PMF123')
+    expect($('a.govuk-back-link').hasClass('govuk-!-display-none-print')).toBe(
+      true
+    )
+  })
+
   test('renders document content in the full-width layout', () => {
     const $ = renderGasAgreement(documentModel)
-    const $content = $('.govuk-grid-column-full')
+    const $content = $('h1').closest('.govuk-grid-column-full')
 
     expect($content).toHaveLength(1)
     expect($content.find('h1').text().trim()).toBe('Your agreement')
@@ -130,26 +157,53 @@ describe('config-driven GAS agreement page', () => {
     expect($watermark.attr('aria-hidden')).toBe('true')
   })
 
-  test('keeps ordinary page components outside action forms', () => {
+  test('renders a GET action as the configured button in tree order', () => {
     const $ = renderGasAgreement({
       ...defaultModel,
-      components: [
+      components: gridTree([
+        { component: 'paragraph', text: 'Before action' },
         {
-          component: 'checkboxes',
-          name: 'confirm',
-          items: [{ value: 'confirmed', text: 'Confirm agreement' }]
-        }
-      ],
-      actions: [
-        {
-          method: 'POST',
-          action: '/agreement',
-          text: 'Continue'
-        }
-      ]
+          component: 'button',
+          href: '/agreements/PMF123/actions/accept',
+          text: 'Accept agreement'
+        },
+        { component: 'details', summaryItems: [{ text: 'Help' }], items: [] }
+      ])
     })
 
-    expect($('input[name="confirm"]')).toHaveLength(1)
-    expect($('form input[name="confirm"]')).toHaveLength(0)
+    expect($('p + a.govuk-button').text().trim()).toBe('Accept agreement')
+    expect($('a.govuk-button + details')).toHaveLength(1)
+  })
+
+  test('renders a POST button inside its form and following content outside', () => {
+    const $ = renderGasAgreement({
+      ...defaultModel,
+      components: gridTree([
+        {
+          component: 'form',
+          method: 'POST',
+          formAction: '/agreements/PMF123/actions/accept',
+          hiddenFields: [],
+          submissionRequirements: [{ name: 'confirm', value: 'confirmed' }],
+          components: [
+            {
+              component: 'checkboxes',
+              name: 'confirm',
+              items: [{ value: 'confirmed', text: 'Confirm agreement' }]
+            },
+            { component: 'button', text: 'Continue', submit: true }
+          ]
+        },
+        { component: 'paragraph', text: 'After the form' }
+      ])
+    })
+
+    expect($('form input[name="confirm"]')).toHaveLength(1)
+    expect(JSON.parse($('form').attr('data-submission-requirements'))).toEqual([
+      { name: 'confirm', value: 'confirmed' }
+    ])
+    expect($('form button[type="submit"]').text().trim()).toBe('Continue')
+    expect($('form p')).toHaveLength(0)
+    expect($('form + p').text().trim()).toBe('After the form')
   })
 })

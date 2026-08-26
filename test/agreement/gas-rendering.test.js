@@ -114,6 +114,8 @@ describe('GAS public agreement rendering', () => {
     expect(viewResponse.result).toContain('Status supplied by GAS')
     expect(viewResponse.result).toContain('Terminated')
     expect(viewResponse.result).toContain('GAS provided action')
+    expect(viewResponse.result).toContain('Section content supplied by GAS.')
+    expect(viewResponse.result).toContain('govuk-grid-column-full')
     expect(printResponse.result).toContain('Pigs Might Fly agreement')
     expect(printResponse.result).toContain(
       'This content came from the complete GAS page model.'

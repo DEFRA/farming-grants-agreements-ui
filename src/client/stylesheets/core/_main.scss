@@ -33,6 +33,14 @@
   font-weight: bold;
 }
 
+.dataset-info--nowrap-labels {
+  grid-template-columns: max-content 1fr;
+}
+
+.dataset-info--nowrap-labels dt {
+  white-space: nowrap;
+}
+
 .toc {
   font-size: 16px !important;
   position: sticky;
@@ -75,15 +83,6 @@ a:link,
 }
 
 @media print {
-  .govuk-header,
-  .govuk-footer,
-  .govuk-phase-banner,
-  .toc,
-  .gem-c-print-link,
-  nav[role='navigation'] {
-    display: none !important;
-  }
-
   .govuk-width-container {
     padding: 0 !important;
     margin: 0 !important;
@@ -99,11 +98,6 @@ a:link,
 
   .t-and-c-print-only {
     display: block;
-  }
-
-  // Hide sign out link in account bar
-  .defra-account-bar .govuk-link {
-    display: none !important;
   }
 
   // Force the account bar to remain two columns in print
@@ -137,5 +131,9 @@ a:link,
   .dataset-info dt {
     white-space: normal !important;
     word-wrap: break-word;
+  }
+
+  .dataset-info--nowrap-labels dt {
+    white-space: nowrap !important;
   }
 }

@@ -6,16 +6,10 @@
 
   {%- if level < 1 or level > 6 %}{% set level = 1 %}{% endif %}
 
-  {%- set defaultClasses = [
-    "govuk-heading-xl",
-    "govuk-heading-l",
-    "govuk-heading-m",
-    "govuk-heading-s",
-    "govuk-heading-s",
-    "govuk-heading-s"
-  ] %}
+  {%- set defaultSizes = ["xl", "l", "m", "s", "s", "s"] %}
+  {%- set size = params.size or defaultSizes[level-1] %}
 
-  <h{{ level }}{% if id %} id="{{ id }}"{% endif %} class="{{ defaultClasses[level-1] }} {% if classes %} {{ classes }}{% endif %}">
+  <h{{ level }}{% if id %} id="{{ id }}"{% endif %} class="govuk-heading-{{ size }}{% if classes %} {{ classes }}{% endif %}">
     {{ text | escape }}
   </h{{ level }}>
 {% endmacro %}

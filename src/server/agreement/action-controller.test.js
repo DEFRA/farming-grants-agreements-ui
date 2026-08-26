@@ -59,26 +59,37 @@ const gasRedirectResponse = (status, location) => ({
   json: vi.fn()
 })
 
+const gridTree = (components) => [
+  {
+    component: 'grid-row',
+    components: [{ component: 'grid-column', width: 'two-thirds', components }]
+  }
+]
+
+const componentTreeWithButton = (href) =>
+  gridTree([{ component: 'button', href, text: 'Unsafe action' }])
+
 const actionPageModel = (overrides = {}) => ({
   page: { title: 'Configure any agreement operation' },
-  components: [
+  components: gridTree([
     {
       component: 'paragraph',
       text: 'This content is owned completely by GAS.'
-    }
-  ],
-  errors: [],
-  actions: [
+    },
     {
+      component: 'form',
       method: 'POST',
-      action: '/agreements/AGR_42/actions/recalculate-anything',
-      fields: [
+      formAction: '/agreements/AGR_42/actions/recalculate-anything',
+      hiddenFields: [
         { name: 'contactPreference', value: 'email' },
         { name: 'anythingAtAll', value: 'kept exactly' }
       ],
-      text: 'Run arbitrary operation'
+      components: [
+        { component: 'button', text: 'Run arbitrary operation', submit: true }
+      ]
     }
-  ],
+  ]),
+  errors: [],
   ...overrides
 })
 
@@ -180,21 +191,26 @@ describe('generic GAS Agreement action routes', () => {
     globalThis.fetch.mockResolvedValueOnce(
       gasPageResponse(
         actionPageModel({
-          components: [
+          components: gridTree([
             {
-              component: 'checkboxes',
-              name: 'confirm',
-              items: [{ value: 'confirmed', text: 'Confirm agreement' }]
-            }
-          ],
-          actions: [
-            {
-              name: 'accept',
+              component: 'form',
               method: 'POST',
-              href: '/agreements/AGR_42/actions/accept',
-              text: 'Accept agreement offer'
+              formAction: '/agreements/AGR_42/actions/accept',
+              hiddenFields: [],
+              components: [
+                {
+                  component: 'checkboxes',
+                  name: 'confirm',
+                  items: [{ value: 'confirmed', text: 'Confirm agreement' }]
+                },
+                {
+                  component: 'button',
+                  text: 'Accept agreement offer',
+                  submit: true
+                }
+              ]
             }
-          ]
+          ])
         }),
         '"AGR_42:7"'
       )
@@ -223,24 +239,31 @@ describe('generic GAS Agreement action routes', () => {
     globalThis.fetch.mockResolvedValueOnce(
       gasPageResponse(
         actionPageModel({
-          components: [
+          components: gridTree([
             {
-              component: 'checkboxes',
-              name: 'confirm',
-              items: [{ value: 'confirmed', text: 'Confirm agreement' }]
-            }
-          ],
-          actions: [
-            {
+              component: 'form',
               method: 'POST',
-              href: '/agreements/AGR_42/actions/accept',
-              text: 'Accept agreement offer'
+              formAction: '/agreements/AGR_42/actions/accept',
+              hiddenFields: [],
+              components: [
+                {
+                  component: 'checkboxes',
+                  name: 'confirm',
+                  items: [{ value: 'confirmed', text: 'Confirm agreement' }]
+                },
+                {
+                  component: 'button',
+                  text: 'Accept agreement offer',
+                  submit: true
+                }
+              ]
             },
             {
+              component: 'button',
               href: '/agreements/AGR_42',
               text: 'Return to agreement'
             }
-          ]
+          ])
         }),
         '"AGR_42:7"'
       )
@@ -261,90 +284,11 @@ describe('generic GAS Agreement action routes', () => {
     expect($('a:contains("Return to agreement")')).toHaveLength(1)
   })
 
-  test('rejects a GAS action page containing more than one form', async () => {
-    globalThis.fetch.mockResolvedValueOnce(
-      gasPageResponse(
-        actionPageModel({
-          actions: [
-            {
-              method: 'POST',
-              href: '/agreements/AGR_42/actions/accept',
-              text: 'Accept agreement offer'
-            },
-            {
-              method: 'POST',
-              href: '/agreements/AGR_42/actions/decline',
-              text: 'Decline agreement offer'
-            }
-          ]
-        }),
-        '"AGR_42:7"'
-      )
-    )
-
-    const response = await server.inject({
-      method: 'GET',
-      url: '/AGR_42/actions/accept',
-      headers: { 'x-base-url': '/agreement' }
-    })
-
-    expect(response.statusCode).toBe(502)
-  })
-
-  test('rejects a GAS action page that does not contain a form', async () => {
-    globalThis.fetch.mockResolvedValueOnce(
-      gasPageResponse(
-        actionPageModel({
-          actions: [
-            {
-              href: '/agreements/AGR_42',
-              text: 'Return to agreement'
-            }
-          ]
-        }),
-        '"AGR_42:7"'
-      )
-    )
-
-    const response = await server.inject({
-      method: 'GET',
-      url: '/AGR_42/actions/accept',
-      headers: { 'x-base-url': '/agreement' }
-    })
-
-    expect(response.statusCode).toBe(502)
-  })
-
-  test('rejects a GAS action page whose form does not use POST', async () => {
-    globalThis.fetch.mockResolvedValueOnce(
-      gasPageResponse(
-        actionPageModel({
-          actions: [
-            {
-              method: 'GET',
-              action: '/agreements/AGR_42/actions/accept',
-              text: 'Submit agreement action'
-            }
-          ]
-        }),
-        '"AGR_42:7"'
-      )
-    )
-
-    const response = await server.inject({
-      method: 'GET',
-      url: '/AGR_42/actions/accept',
-      headers: { 'x-base-url': '/agreement' }
-    })
-
-    expect(response.statusCode).toBe(502)
-  })
-
   test('translates configured GAS URLs throughout the page and retains external links', async () => {
     globalThis.fetch.mockResolvedValueOnce(
       gasPageResponse(
         actionPageModel({
-          components: [
+          components: gridTree([
             {
               component: 'container',
               items: [
@@ -381,20 +325,23 @@ describe('generic GAS Agreement action routes', () => {
                   text: 'Email agreements'
                 }
               ]
-            }
-          ],
-          actions: [
-            {
-              method: 'POST',
-              action:
-                'http://gas.internal:3102/agreements/AGR_42/actions/recalculate-anything?stage=confirm',
-              text: 'Run operation'
             },
             {
+              component: 'form',
+              method: 'POST',
+              formAction:
+                'http://gas.internal:3102/agreements/AGR_42/actions/recalculate-anything?stage=confirm',
+              hiddenFields: [],
+              components: [
+                { component: 'button', text: 'Run operation', submit: true }
+              ]
+            },
+            {
+              component: 'button',
               href: 'http://example.com/help',
               text: 'External help over HTTP'
             }
-          ]
+          ])
         }),
         '"AGR_42:7"'
       )
@@ -425,15 +372,17 @@ describe('generic GAS Agreement action routes', () => {
   test.each([
     [
       'a JavaScript action href',
-      { actions: [{ href: 'javascript:alert(1)', text: 'Unsafe action' }] }
+      {
+        components: componentTreeWithButton('javascript:alert(1)')
+      }
     ],
     [
       'a protocol-relative action href',
-      { actions: [{ href: '//evil.example/x', text: 'Unsafe action' }] }
+      { components: componentTreeWithButton('//evil.example/x') }
     ],
     [
       'a malformed absolute action href',
-      { actions: [{ href: 'http://', text: 'Malformed action' }] }
+      { components: componentTreeWithButton('http://') }
     ],
     [
       'a JavaScript component URL',
@@ -480,13 +429,14 @@ describe('generic GAS Agreement action routes', () => {
     globalThis.fetch.mockResolvedValueOnce(
       gasPageResponse(
         actionPageModel({
-          actions: [
+          components: gridTree([
             {
+              component: 'form',
               method: 'POST',
-              href: 'https://example.com/collect-agreement-values',
-              text: 'Submit externally'
+              formAction: 'https://example.com/collect-agreement-values',
+              components: []
             }
-          ]
+          ])
         }),
         '"AGR_42:7"'
       )
@@ -504,10 +454,26 @@ describe('generic GAS Agreement action routes', () => {
   test('POST parses browser form values, removes transport metadata and renders the complete 422 model', async () => {
     const idempotencyKey = '9ea924aa-45e9-43a7-888e-c25054ea658c'
     const validationModel = actionPageModel({
-      components: [
+      components: gridTree([
         { component: 'heading', level: 1, text: 'GAS validation heading' },
-        { component: 'paragraph', text: 'GAS validation explanation' }
-      ],
+        { component: 'paragraph', text: 'GAS validation explanation' },
+        {
+          component: 'form',
+          method: 'POST',
+          formAction: '/agreements/AGR_42/actions/recalculate-anything',
+          hiddenFields: [
+            { name: 'contactPreference', value: 'email' },
+            { name: 'anythingAtAll', value: 'kept exactly' }
+          ],
+          components: [
+            {
+              component: 'button',
+              text: 'Run arbitrary operation',
+              submit: true
+            }
+          ]
+        }
+      ]),
       errors: [{ href: '#unusual-field', text: 'GAS supplied error text' }]
     })
     globalThis.fetch.mockResolvedValueOnce(

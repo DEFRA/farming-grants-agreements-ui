@@ -19,11 +19,33 @@ describe('configDrivenAgreementController', () => {
     request = {
       pre: {
         data: {
-          components: [{ component: 'paragraph', text: 'Hello' }],
+          components: [
+            {
+              component: 'grid-row',
+              components: [
+                {
+                  component: 'grid-column',
+                  width: 'two-thirds',
+                  components: [{ component: 'paragraph', text: 'Hello' }]
+                }
+              ]
+            }
+          ],
           sections: [
             {
               id: 'payments',
-              components: [{ component: 'table', rows: [] }]
+              components: [
+                {
+                  component: 'grid-row',
+                  components: [
+                    {
+                      component: 'grid-column',
+                      width: 'full',
+                      components: [{ component: 'table', rows: [] }]
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
