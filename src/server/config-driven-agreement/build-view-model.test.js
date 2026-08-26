@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import { buildViewModel } from './build-view-model.js'
 
+const componentTree = (components) => [
+  {
+    component: 'grid-row',
+    components: [{ component: 'grid-column', width: 'two-thirds', components }]
+  }
+]
+
 describe('buildViewModel', () => {
   it('builds the default view model', () => {
     expect(buildViewModel()).toEqual({
@@ -9,8 +16,6 @@ describe('buildViewModel', () => {
       agreement: undefined,
       components: [],
       sections: [],
-      actions: [],
-      hasFormAction: false,
       errors: [],
       showContents: false,
       print: false,
@@ -19,224 +24,229 @@ describe('buildViewModel', () => {
     })
   })
 
-  it('uses the GAS page model fields', () => {
-    const agreement = { agreementNumber: 'PMF123' }
-    const components = [{ component: 'heading', text: 'Agreement' }]
-    const watermark = { text: 'DRAFT' }
-    const errors = [{ href: '#confirm', text: 'Confirm the agreement' }]
-
+  it('rewrites a resolved Back link for the agreement UI route', () => {
     expect(
-      buildViewModel({
-        agreement,
-        page: {
-          title: 'Your agreement',
-          layout: 'document',
-          contents: true,
-          print: true,
-          watermark
-        },
-        components,
-        sections: [
-          {
-            id: 'payment-schedule',
-            title: 'Payment schedule',
-            components: [
-              {
-                component: 'url',
-                href: '/agreements/PMF123/document',
-                text: 'View payment'
-              }
-            ]
-          }
-        ],
-        errors
-      })
-    ).toEqual({
-      pageTitle: 'Your agreement',
-      agreement,
-      components,
-      sections: [
+      buildViewModel(
         {
-          id: 'payment-schedule',
-          title: 'Payment schedule',
-          components: [
-            {
-              component: 'url',
-              href: '/PMF123',
-              text: 'View payment'
-            }
-          ]
-        }
-      ],
-      actions: [],
-      hasFormAction: false,
-      errors,
-      showContents: true,
-      print: true,
-      watermark,
-      layout: 'document'
+          page: {
+            backLink: { text: 'Back to offer', href: '/agreements/PMF123' }
+          }
+        },
+        '/agreement',
+        { queryAuthentication: 'signed-token' }
+      ).backLink
+    ).toEqual({
+      text: 'Back to offer',
+      href: '/agreement/PMF123?x-encrypted-auth=signed-token'
     })
   })
 
-  it('supports legacy top-level page fields and content', () => {
-    const content = [{ component: 'paragraph', text: 'Hello' }]
+  it('does not consume legacy content or an actions catalogue', () => {
+    const model = buildViewModel({
+      content: [{ component: 'paragraph', text: 'Legacy content' }],
+      actions: [{ name: 'legacy-action' }]
+    })
+
+    expect(model.components).toEqual([])
+    expect(model).not.toHaveProperty('actions')
+  })
+
+  it('passes the resolved GAS component tree through without an action catalogue', () => {
+    const components = componentTree([
+      {
+        component: 'button',
+        text: 'Continue',
+        href: '/agreements/PMF123/actions/continue'
+      }
+    ])
 
     expect(
-      buildViewModel({ title: 'Model title', layout: 'custom', content })
-    ).toEqual(
-      expect.objectContaining({
-        pageTitle: 'Model title',
-        components: content,
-        layout: 'custom'
-      })
-    )
+      buildViewModel(
+        {
+          page: { title: 'Your agreement' },
+          components,
+          errors: []
+        },
+        '/agreement'
+      )
+    ).toMatchObject({
+      pageTitle: 'Your agreement',
+      components: componentTree([
+        {
+          component: 'button',
+          text: 'Continue',
+          href: '/agreement/PMF123/actions/continue'
+        }
+      ]),
+      errors: []
+    })
   })
 
-  it('translates a GAS action href to the Agreements UI path', () => {
+  it('uses the navigation URL policy for button links', () => {
     const model = buildViewModel(
       {
-        actions: [
-          {
-            href: '/agreements/PMF123/actions/accept',
-            text: 'Accept agreement'
-          }
-        ]
-      },
-      '/agreement'
-    )
-
-    expect(model.actions[0].href).toBe('/agreement/PMF123/actions/accept')
-  })
-
-  it('translates an agreement document link and preserves query authentication', () => {
-    const model = buildViewModel(
-      {
-        components: [
-          {
-            component: 'url',
-            href: '/agreements/PMF123/document',
-            text: 'View your agreement'
-          }
-        ]
+        components: componentTree([
+          { component: 'button', text: 'Read guidance', href: 'guidance' }
+        ])
       },
       '/agreement',
       { queryAuthentication: 'signed-token' }
     )
 
-    expect(model.components).toContainEqual({
-      component: 'url',
-      href: '/agreement/PMF123?x-encrypted-auth=signed-token',
-      text: 'View your agreement'
-    })
+    expect(model.components[0].components[0].components[0].href).toBe(
+      '/agreement/guidance?x-encrypted-auth=signed-token'
+    )
   })
 
-  it('preserves an absolute Agreements UI base URL', () => {
+  it.each(['guidance', '/guidance'])(
+    'preserves an absolute base URL for navigation link %s',
+    (href) => {
+      const model = buildViewModel(
+        {
+          components: componentTree([
+            { component: 'button', text: 'Read guidance', href }
+          ])
+        },
+        'https://example.com/agreement'
+      )
+
+      expect(model.components[0].components[0].components[0].href).toBe(
+        'https://example.com/agreement/guidance'
+      )
+    }
+  )
+
+  it('rewrites resolved form and component URLs and injects request transport fields', () => {
     const model = buildViewModel(
       {
-        actions: [
+        components: componentTree([
           {
-            href: '/agreements/PMF123/actions/accept',
-            text: 'Accept agreement'
+            component: 'url',
+            href: '/agreements/PMF123/document',
+            text: 'View agreement'
+          },
+          {
+            component: 'form',
+            method: 'POST',
+            formAction: '/agreements/PMF123/actions/accept',
+            hiddenFields: [{ name: 'source', value: 'offer' }],
+            components: [{ component: 'button', text: 'Accept', submit: true }]
           }
-        ]
+        ])
       },
-      'https://example.com/api'
+      '/agreement',
+      {
+        queryAuthentication: 'signed-token',
+        transportMetadata: {
+          etag: { name: 'etag', value: 'v1' },
+          idempotencyKey: { name: 'key', value: 'id-1' }
+        }
+      }
     )
+    const [url, form] = model.components[0].components[0].components
 
-    expect(model.actions[0].href).toBe(
-      'https://example.com/api/PMF123/actions/accept'
-    )
-  })
-
-  it('preserves a genuine external action href', () => {
-    const model = buildViewModel({
-      actions: [{ href: 'https://example.com/external', text: 'External' }]
+    expect(url.href).toBe('/agreement/PMF123?x-encrypted-auth=signed-token')
+    expect(form).toEqual({
+      component: 'form',
+      method: 'POST',
+      formAction:
+        '/agreement/PMF123/actions/accept?x-encrypted-auth=signed-token',
+      hiddenFields: [
+        { name: 'source', value: 'offer' },
+        { name: 'etag', value: 'v1' },
+        { name: 'key', value: 'id-1' }
+      ],
+      components: [{ component: 'button', text: 'Accept', submit: true }]
     })
-
-    expect(model.actions[0].href).toBe('https://example.com/external')
   })
 
-  it('translates a GAS action href with query parameters', () => {
+  it('rewrites resolved URLs in sections', () => {
     const model = buildViewModel(
       {
-        actions: [
+        sections: [
           {
-            href: '/agreements/PMF123/actions/accept?confirmation=true',
-            text: 'Accept'
+            id: 'terms',
+            components: componentTree([
+              {
+                component: 'url',
+                params: {
+                  href: '/agreements/PMF123/actions/review',
+                  text: 'Review'
+                }
+              }
+            ])
           }
         ]
       },
       '/agreement'
     )
 
-    expect(model.actions[0].href).toBe(
-      '/agreement/PMF123/actions/accept?confirmation=true'
-    )
+    expect(
+      model.sections[0].components[0].components[0].components[0].params.href
+    ).toBe('/agreement/PMF123/actions/review')
   })
 
-  it.each([
-    '/agreement/PMF123/accept',
-    '/agreements/../actions/accept',
-    '/agreements/%2e%2e/actions/accept',
-    '',
-    null,
-    42
-  ])('rejects an unsupported action href: %j', (href) => {
-    expect(() =>
-      buildViewModel({ actions: [{ href, text: 'Accept' }] })
-    ).toThrow('Unsupported agreement action URL')
+  it('does not enforce GAS-owned tree shape, widths or form cardinality', () => {
+    const components = [
+      {
+        component: 'grid-column',
+        width: 'provider-owned-width',
+        components: [
+          {
+            component: 'form',
+            method: 'POST',
+            formAction: '/agreements/PMF123/actions/first',
+            components: []
+          },
+          {
+            component: 'form',
+            method: 'POST',
+            formAction: '/agreements/PMF123/actions/second',
+            components: []
+          }
+        ]
+      }
+    ]
+
+    expect(() => buildViewModel({ components })).not.toThrow()
   })
 
-  it('preserves an action without an href', () => {
-    const model = buildViewModel({ actions: [{ text: 'No href' }] })
+  it.each(['javascript:alert(1)', '//evil.example/x', 'http://'])(
+    'rejects unsafe resolved button URL %s',
+    (href) => {
+      expect(() =>
+        buildViewModel({
+          components: componentTree([
+            { component: 'button', text: 'Unsafe', href }
+          ])
+        })
+      ).toThrow()
+    }
+  )
 
-    expect(model.actions[0]).not.toHaveProperty('href')
-  })
+  it('retains safe external GET links but rejects external form targets', () => {
+    expect(
+      buildViewModel({
+        components: componentTree([
+          {
+            component: 'button',
+            text: 'Guidance',
+            href: 'https://example.com/guidance'
+          }
+        ])
+      }).components[0].components[0].components[0].href
+    ).toBe('https://example.com/guidance')
 
-  it.each([
-    ['#confirm', '#confirm'],
-    ['/agreement', '/agreement'],
-    ['/agreement/PMF123', '/agreement/PMF123'],
-    ['/agreements/PMF123/actions/accept', '/agreement/PMF123/actions/accept']
-  ])('translates a legacy action target %s', (action, expected) => {
-    const model = buildViewModel(
-      { actions: [{ action, method: 'POST', text: 'Accept' }] },
-      '/agreement'
-    )
-
-    expect(model.actions[0].action).toBe(expected)
-  })
-
-  it('rejects an external POST action target', () => {
     expect(() =>
       buildViewModel({
-        actions: [
+        components: componentTree([
           {
-            action: 'https://example.com/collect-agreement-values',
-            method: 'POST',
-            text: 'Submit externally'
+            component: 'form',
+            formAction: 'https://example.com/collect',
+            components: []
           }
-        ]
+        ])
       })
     ).toThrow('Unsupported agreement action URL')
-  })
-
-  it('preserves an absolute base URL for a legacy action target', () => {
-    const model = buildViewModel(
-      {
-        actions: [
-          {
-            action: '/agreements/PMF123/actions/accept',
-            method: 'POST',
-            text: 'Accept'
-          }
-        ]
-      },
-      'https://example.com/api'
-    )
-
-    expect(model.actions[0].action).toBe(
-      'https://example.com/api/PMF123/actions/accept'
-    )
   })
 })

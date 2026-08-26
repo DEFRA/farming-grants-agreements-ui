@@ -76,6 +76,76 @@ describe('application.js', () => {
     expect(createAllMock).toHaveBeenNthCalledWith(6, govukComponents.SkipLink)
   })
 
+  it('progressively enables a form submit control when its requirements are met', async () => {
+    setDomContent(`
+      <form data-submission-requirements='[{"name":"confirm","value":"confirmed"}]'>
+        <input type="checkbox" name="confirm" value="confirmed">
+        <button type="submit">Accept</button>
+      </form>
+    `)
+
+    await loadApplication()
+    document.dispatchEvent(new globalThis.Event('DOMContentLoaded'))
+
+    const checkbox = document.querySelector('input[name="confirm"]')
+    const button = document.querySelector('button[type="submit"]')
+
+    expect(button.disabled).toBe(true)
+    expect(button.getAttribute('aria-disabled')).toBe('true')
+
+    checkbox.checked = true
+    checkbox.dispatchEvent(new globalThis.Event('change', { bubbles: true }))
+
+    expect(button.disabled).toBe(false)
+    expect(button.getAttribute('aria-disabled')).toBe('false')
+  })
+
+  it('supports text and multi-select submission requirements', async () => {
+    setDomContent(`
+      <form data-submission-requirements='[{"name":"declaration","value":"agreed"},{"name":"actions","value":"one"}]'>
+        <input name="unrelated" value="ignored">
+        <input name="declaration" value="">
+        <select name="actions" multiple>
+          <option value="one">One</option>
+          <option value="two">Two</option>
+        </select>
+        <button type="submit">Continue</button>
+      </form>
+    `)
+
+    await loadApplication()
+    document.dispatchEvent(new globalThis.Event('DOMContentLoaded'))
+
+    const declaration = document.querySelector('input[name="declaration"]')
+    const select = document.querySelector('select[name="actions"]')
+    const button = document.querySelector('button[type="submit"]')
+
+    declaration.value = 'agreed'
+    select.options[0].selected = true
+    select.dispatchEvent(new globalThis.Event('change', { bubbles: true }))
+
+    expect(button.disabled).toBe(false)
+  })
+
+  it('leaves malformed requirement metadata without client-side enhancement', async () => {
+    setDomContent(`
+      <form data-submission-requirements='not-json'>
+        <button type="submit">Continue</button>
+      </form>
+      <form data-submission-requirements='{}'>
+        <button type="submit">Continue</button>
+      </form>
+    `)
+
+    await loadApplication()
+    document.dispatchEvent(new globalThis.Event('DOMContentLoaded'))
+
+    expect(document.querySelectorAll('button[type="submit"]')).toHaveLength(2)
+    document
+      .querySelectorAll('button[type="submit"]')
+      .forEach((button) => expect(button.disabled).toBe(false))
+  })
+
   it('converts gem print buttons to type button and wires print events', async () => {
     setDomContent(`
       <button class="gem-c-print-link__button" type="submit">Print page</button>

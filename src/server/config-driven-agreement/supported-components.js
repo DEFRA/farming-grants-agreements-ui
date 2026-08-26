@@ -1,7 +1,11 @@
 export const supportedComponents = [
   'accordion',
+  'button',
   'checkboxes',
   'container',
+  'form',
+  'grid-column',
+  'grid-row',
   'description-list',
   'details',
   'heading',

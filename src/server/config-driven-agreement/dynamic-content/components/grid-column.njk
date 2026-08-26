@@ -1,0 +1,7 @@
+{% macro defraGridColumn(params, renderDefraComponent) %}
+  <div class="govuk-grid-column-{{ params.width or 'two-thirds' }}">
+    {% for component in params.components or [] %}
+      {{ renderDefraComponent(component) }}
+    {% endfor %}
+  </div>
+{% endmacro %}

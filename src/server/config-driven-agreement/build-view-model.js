@@ -40,12 +40,16 @@ const returnAllowedExternalUrl = (value) => {
   throw Boom.badGateway('Unsupported agreement URL')
 }
 
-const buildProxiedPath = (
-  baseUrl,
-  value,
-  queryAuthentication,
-  allowExternal = true
-) => {
+const joinBasePath = (baseUrl, value) => {
+  if (!absoluteUrlPattern.test(baseUrl)) {
+    return path.posix.join(baseUrl, value)
+  }
+
+  const base = new URL(baseUrl)
+  return new URL(path.posix.join(base.pathname, value), base).toString()
+}
+
+const buildProxiedPath = (baseUrl, value, queryAuthentication) => {
   if (shouldPreservePath(value)) {
     return value
   }
@@ -60,9 +64,6 @@ const buildProxiedPath = (
   }
 
   if (isAbsoluteUrl(value)) {
-    if (!allowExternal) {
-      throw Boom.badGateway(unsupportedActionUrlMessage)
-    }
     return returnAllowedExternalUrl(value)
   }
 
@@ -71,12 +72,12 @@ const buildProxiedPath = (
   }
 
   return appendQueryAuthentication(
-    path.posix.join(baseUrl, value),
+    joinBasePath(baseUrl, value),
     queryAuthentication
   )
 }
 
-const buildActionHref = (baseUrl, href, method, queryAuthentication) => {
+const buildAgreementActionHref = (baseUrl, href, queryAuthentication) => {
   if (typeof href !== 'string' || !href) {
     throw Boom.badGateway(unsupportedActionUrlMessage)
   }
@@ -90,63 +91,73 @@ const buildActionHref = (baseUrl, href, method, queryAuthentication) => {
     return translatedAgreementPath
   }
 
-  if (isAbsoluteUrl(href)) {
-    if (method === 'POST') {
-      throw Boom.badGateway(unsupportedActionUrlMessage)
-    }
-    return returnAllowedExternalUrl(href)
-  }
-
   throw Boom.badGateway(unsupportedActionUrlMessage)
 }
 
-const translateActionPaths = (actions, baseUrl, queryAuthentication) =>
-  actions.map((action) => {
-    const translatedAction = {
-      ...action,
-      ...(Object.hasOwn(action, 'href')
-        ? {
-            href: buildActionHref(
-              baseUrl,
-              action.href,
-              action.method,
-              queryAuthentication
-            )
-          }
-        : {}),
-      ...(action.action
-        ? {
-            action: buildProxiedPath(
-              baseUrl,
-              action.action,
-              queryAuthentication,
-              action.method !== 'POST'
-            )
-          }
-        : {})
-    }
+const appendTransportFields = (fields, transportMetadata) => [
+  ...(fields ?? []),
+  ...(transportMetadata === undefined
+    ? []
+    : [transportMetadata.etag, transportMetadata.idempotencyKey])
+]
 
-    return {
-      ...translatedAction,
-      renderAsForm: !translatedAction.href || translatedAction.method === 'POST'
-    }
-  })
+const buildUrlComponent = (component, baseUrl, queryAuthentication) => {
+  const urlParams = component.params ?? component
+  const href = urlParams.href
 
-const validateActionForm = (actions) => {
-  const formActions = actions.filter((action) => action.renderAsForm)
-  const [formAction] = formActions
-  const hasExactlyOnePostForm =
-    formActions.length === 1 && formAction.method === 'POST'
-
-  if (!hasExactlyOnePostForm) {
-    throw Boom.badGateway('GAS action page must contain exactly one POST form')
+  if (!href) {
+    return component
   }
+
+  const rewrittenHref = buildProxiedPath(baseUrl, href, queryAuthentication)
+
+  return urlParams === component
+    ? { ...component, href: rewrittenHref }
+    : { ...component, params: { ...urlParams, href: rewrittenHref } }
 }
 
-const buildComponentUrls = (value, baseUrl, queryAuthentication) => {
+const adaptComponentTransport = (
+  component,
+  baseUrl,
+  queryAuthentication,
+  transportMetadata
+) => {
+  if (component.component === 'form') {
+    return {
+      ...component,
+      formAction: buildAgreementActionHref(
+        baseUrl,
+        component.formAction,
+        queryAuthentication
+      ),
+      hiddenFields: appendTransportFields(
+        component.hiddenFields,
+        transportMetadata
+      )
+    }
+  }
+
+  if (component.component === 'url') {
+    return buildUrlComponent(component, baseUrl, queryAuthentication)
+  }
+
+  return component.href
+    ? {
+        ...component,
+        href: buildProxiedPath(baseUrl, component.href, queryAuthentication)
+      }
+    : component
+}
+
+const buildComponentUrls = (
+  value,
+  baseUrl,
+  queryAuthentication,
+  transportMetadata
+) => {
   if (Array.isArray(value)) {
     return value.map((item) =>
-      buildComponentUrls(item, baseUrl, queryAuthentication)
+      buildComponentUrls(item, baseUrl, queryAuthentication, transportMetadata)
     )
   }
 
@@ -154,45 +165,39 @@ const buildComponentUrls = (value, baseUrl, queryAuthentication) => {
     return value
   }
 
-  const transformedValue = Object.fromEntries(
+  const component = Object.fromEntries(
     Object.entries(value).map(([name, childValue]) => [
       name,
-      buildComponentUrls(childValue, baseUrl, queryAuthentication)
+      buildComponentUrls(
+        childValue,
+        baseUrl,
+        queryAuthentication,
+        transportMetadata
+      )
     ])
   )
 
-  if (transformedValue.component !== 'url') {
-    return transformedValue
-  }
-
-  const urlParams =
-    transformedValue.params &&
-    typeof transformedValue.params === 'object' &&
-    !Array.isArray(transformedValue.params)
-      ? transformedValue.params
-      : transformedValue
-
-  if (!urlParams.href) {
-    return transformedValue
-  }
-
-  const href = buildProxiedPath(baseUrl, urlParams.href, queryAuthentication)
-
-  return urlParams === transformedValue
-    ? { ...transformedValue, href }
-    : { ...transformedValue, params: { ...urlParams, href } }
+  return adaptComponentTransport(
+    component,
+    baseUrl,
+    queryAuthentication,
+    transportMetadata
+  )
 }
 
-const getComponents = (renderModel) =>
-  renderModel.components ?? renderModel.content ?? []
-
-const buildSections = (sections, baseUrl, queryAuthentication) =>
+const buildSections = (
+  sections,
+  baseUrl,
+  queryAuthentication,
+  transportMetadata
+) =>
   sections.map((section) => ({
     ...section,
     components: buildComponentUrls(
       section.components ?? [],
       baseUrl,
-      queryAuthentication
+      queryAuthentication,
+      transportMetadata
     )
   }))
 
@@ -204,39 +209,40 @@ const buildPageViewModel = (renderModel, page) => ({
   layout: page.layout ?? renderModel.layout ?? 'default'
 })
 
-const includeTransportMetadata = (transportMetadata) =>
-  transportMetadata === undefined ? {} : { transportMetadata }
+const buildBackLink = (backLink, baseUrl, queryAuthentication) => {
+  if (!backLink?.href) {
+    return undefined
+  }
+
+  return {
+    ...backLink,
+    href: buildProxiedPath(baseUrl, backLink.href, queryAuthentication)
+  }
+}
 
 export const buildViewModel = (
   renderModel = {},
   baseUrl = '/',
   { queryAuthentication, transportMetadata } = {}
 ) => {
-  const components = getComponents(renderModel)
-  const actions = translateActionPaths(
-    renderModel.actions ?? [],
-    baseUrl,
-    queryAuthentication
-  )
-  const hasFormAction = transportMetadata !== undefined
   const page = renderModel.page ?? {}
-
-  if (hasFormAction) {
-    validateActionForm(actions)
-  }
 
   return {
     ...buildPageViewModel(renderModel, page),
+    backLink: buildBackLink(page.backLink, baseUrl, queryAuthentication),
     agreement: renderModel.agreement,
-    components: buildComponentUrls(components, baseUrl, queryAuthentication),
+    components: buildComponentUrls(
+      renderModel.components ?? [],
+      baseUrl,
+      queryAuthentication,
+      transportMetadata
+    ),
     sections: buildSections(
       renderModel.sections ?? [],
       baseUrl,
-      queryAuthentication
+      queryAuthentication,
+      transportMetadata
     ),
-    actions,
-    hasFormAction,
-    errors: renderModel.errors ?? [],
-    ...includeTransportMetadata(transportMetadata)
+    errors: renderModel.errors ?? []
   }
 }
