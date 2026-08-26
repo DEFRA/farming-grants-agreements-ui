@@ -33,6 +33,14 @@
   font-weight: bold;
 }
 
+.dataset-info--nowrap-labels {
+  grid-template-columns: max-content 1fr;
+}
+
+.dataset-info--nowrap-labels dt {
+  white-space: nowrap;
+}
+
 .toc {
   font-size: 16px !important;
   position: sticky;
@@ -137,5 +145,9 @@ a:link,
   .dataset-info dt {
     white-space: normal !important;
     word-wrap: break-word;
+  }
+
+  .dataset-info--nowrap-labels dt {
+    white-space: nowrap !important;
   }
 }
