@@ -1,7 +1,14 @@
 import Boom from '@hapi/boom'
 import { agreementController } from './controller.js'
-import { apiRequest, GAS, getBackend } from '#~/server/common/helpers/api.js'
+import {
+  apiRequest,
+  GAS,
+  getBackend,
+  LEGACY
+} from '#~/server/common/helpers/api.js'
+import { statusCodes } from '#~/server/common/constants/status-codes.js'
 import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
+import { createLogger } from '#~/server/common/helpers/logging/logger.js'
 import { viewAgreementController } from '#~/server/view-agreement/controller.js'
 import {
   agreementActionController,
@@ -11,6 +18,8 @@ import {
   getAgreementAuthentication,
   getGasQueryParams
 } from './agreement-request.js'
+
+const logger = createLogger()
 
 const getAgreementMethod = (payload) =>
   payload?.action === 'accept-offer' ? 'POST' : 'GET'
@@ -39,6 +48,30 @@ const assertSupportedGasMode = (backend, mode) => {
   }
 }
 
+const shouldUseLegacyFallback = (options, error) =>
+  options.backend === GAS &&
+  options.method === 'GET' &&
+  Boolean(options.agreementId) &&
+  Boom.isBoom(error) &&
+  error.output.statusCode === statusCodes.notFound
+
+const requestAgreement = async (options, request) => {
+  try {
+    return await apiRequest(options)
+  } catch (error) {
+    if (!shouldUseLegacyFallback(options, error)) {
+      throw error
+    }
+
+    logger.info('GAS agreement not found; retrying the legacy backend')
+    return apiRequest({
+      ...options,
+      backend: LEGACY,
+      queryParams: getAgreementQueryParams(request, LEGACY)
+    })
+  }
+}
+
 const getAgreementData = async (request) => {
   const { agreementId = '' } = request.params
   const method = getAgreementMethod(request.payload)
@@ -55,15 +88,18 @@ const getAgreementData = async (request) => {
   const backend = getBackend(jwtPayload)
   assertSupportedGasMode(backend, request.params.mode)
 
-  return apiRequest({
-    agreementId,
-    method,
-    auth: authToken,
-    body: getAgreementBody(method, request.payload),
-    backend,
-    jwtPayload,
-    queryParams: getAgreementQueryParams(request, backend)
-  })
+  return requestAgreement(
+    {
+      agreementId,
+      method,
+      auth: authToken,
+      body: getAgreementBody(method, request.payload),
+      backend,
+      jwtPayload,
+      queryParams: getAgreementQueryParams(request, backend)
+    },
+    request
+  )
 }
 
 const gasActionPre = [

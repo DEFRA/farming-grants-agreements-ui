@@ -5,7 +5,7 @@ import { statusCodes } from '#~/server/common/constants/status-codes.js'
 import { createLogger } from '#~/server/common/helpers/logging/logger.js'
 
 export const GAS = 'gas'
-const LEGACY = 'legacy'
+export const LEGACY = 'legacy'
 const logger = createLogger()
 
 export const getBackend = (jwtPayload) => {

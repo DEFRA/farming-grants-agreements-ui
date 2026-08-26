@@ -181,6 +181,61 @@ describe('#agreementController', () => {
       )
     })
 
+    test('falls back to the legacy backend when a numbered GAS agreement does not exist', async () => {
+      extractJwtPayload.mockReturnValue({
+        source: 'entra',
+        grantCode: gasGrantCode,
+        sbi: '300000000'
+      })
+      fetch
+        .mockResolvedValueOnce({ ok: false, status: statusCodes.notFound })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ agreementData: {} })
+        })
+
+      await server.inject({
+        method: 'GET',
+        url: '/WMP755587340',
+        headers: { 'x-encrypted-auth': 'caseworking-auth' }
+      })
+
+      expect(fetch).toHaveBeenNthCalledWith(
+        1,
+        `${gasBackendUrl}/agreements/WMP755587340/document`,
+        expect.objectContaining({ method: 'GET' })
+      )
+      expect(fetch).toHaveBeenNthCalledWith(
+        2,
+        'http://localhost:3555/WMP755587340',
+        expect.objectContaining({
+          headers: { 'x-encrypted-auth': 'caseworking-auth' },
+          method: 'GET'
+        })
+      )
+    })
+
+    test('does not fall back when GAS denies access', async () => {
+      extractJwtPayload.mockReturnValue({
+        source: 'entra',
+        grantCode: gasGrantCode,
+        sbi: '300000000'
+      })
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: statusCodes.forbidden
+      })
+
+      const response = await server.inject({
+        method: 'GET',
+        url: '/WMP755587340',
+        headers: { 'x-encrypted-auth': 'caseworking-auth' }
+      })
+
+      expect(fetch).toHaveBeenCalledOnce()
+      expect(response.statusCode).toBe(statusCodes.unauthorized)
+    })
+
     test('routes the public print path to the same GAS document', async () => {
       extractJwtPayload.mockReturnValue({
         source: 'defra',
