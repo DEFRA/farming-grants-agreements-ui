@@ -68,6 +68,20 @@ describe('Agreement component renderer', () => {
     )
   })
 
+  it('renders heading size independently from its semantic level', () => {
+    const $ = load(
+      renderComponent({
+        component: 'heading',
+        level: 2,
+        size: 'm',
+        text: 'If you need help'
+      })
+    )
+
+    expect($('h2.govuk-heading-m').text().trim()).toBe('If you need help')
+    expect($('h2').hasClass('govuk-heading-l')).toBe(false)
+  })
+
   it.each([
     [{ href: '/accept', text: 'Accept agreement' }, 'a', '/accept'],
     [{ text: 'Accept agreement', submit: true }, 'button', undefined]
