@@ -34,10 +34,18 @@ vi.mock('#~/server/common/helpers/logging/logger.js', () => {
 describe('jwt-auth', () => {
   const getMockLogger = () => vi.mocked(createLogger)()
 
-  const setupMockConfig = (isJwtEnabled = true) => {
+  const setupMockConfig = (isJwtEnabled = true, overrides = {}) => {
+    const {
+      enforce = false,
+      keyring = {},
+      defaultKid = 'agreements-hs256-1'
+    } = overrides
     config.get.mockImplementation((key) => {
       if (key === 'featureFlags.isJwtEnabled') return isJwtEnabled
       if (key === 'jwtSecret') return 'mock-jwt-secret'
+      if (key === 'jwtDefaultKid') return defaultKid
+      if (key === 'jwtKeyring') return keyring
+      if (key === 'callerTokenEnforce') return enforce
       if (key === 'log') {
         return { enabled: true, level: 'info', redact: [], format: 'ecs' }
       }
@@ -47,7 +55,7 @@ describe('jwt-auth', () => {
     })
   }
 
-  const setupMockJwt = (payload = null, throwError = null) => {
+  const setupMockJwt = (payload = null, throwError = null, header = {}) => {
     if (throwError) {
       Jwt.token.decode = vi.fn().mockImplementation(() => {
         throw throwError
@@ -59,6 +67,7 @@ describe('jwt-auth', () => {
     if (payload) {
       const mockDecoded = {
         decoded: {
+          header,
           payload
         }
       }
@@ -323,7 +332,11 @@ describe('jwt-auth', () => {
 
       expect(result).toBeNull()
       expect(getMockLogger().error).toHaveBeenCalledWith(
-        { errorType: 'Error', errorMessage: 'Decode error' },
+        {
+          errorType: 'Error',
+          errorMessage: 'Decode error',
+          failureCategory: 'structure'
+        },
         'Invalid JWT token provided'
       )
     })
@@ -339,7 +352,41 @@ describe('jwt-auth', () => {
 
       expect(result).toBeNull()
       expect(getMockLogger().error).toHaveBeenCalledWith(
-        { errorType: 'Error', errorMessage: 'Verify error' },
+        {
+          errorType: 'Error',
+          errorMessage: 'Verify error',
+          failureCategory: 'unknown'
+        },
+        'Invalid JWT token provided'
+      )
+    })
+
+    test('should categorise an expired-token failure', () => {
+      Jwt.token.decode = vi.fn().mockReturnValue({ decoded: { payload: {} } })
+      Jwt.token.verify = vi.fn().mockImplementation(() => {
+        throw new Error('Token expired')
+      })
+
+      const result = extractJwtPayload('eyJ.expired.token')
+
+      expect(result).toBeNull()
+      expect(getMockLogger().error).toHaveBeenCalledWith(
+        expect.objectContaining({ failureCategory: 'expired' }),
+        'Invalid JWT token provided'
+      )
+    })
+
+    test('should categorise an invalid-signature failure', () => {
+      Jwt.token.decode = vi.fn().mockReturnValue({ decoded: { payload: {} } })
+      Jwt.token.verify = vi.fn().mockImplementation(() => {
+        throw new Error('Invalid signature')
+      })
+
+      const result = extractJwtPayload('eyJ.badsig.token')
+
+      expect(result).toBeNull()
+      expect(getMockLogger().error).toHaveBeenCalledWith(
+        expect.objectContaining({ failureCategory: 'signature' }),
         'Invalid JWT token provided'
       )
     })
@@ -367,7 +414,8 @@ describe('jwt-auth', () => {
       expect(errorCall).toBeDefined()
       expect(errorCall[0]).toEqual({
         errorType: 'TokenError',
-        errorMessage: 'Invalid token'
+        errorMessage: 'Invalid token',
+        failureCategory: 'structure'
       })
 
       // Nothing logged for this error should contain token material.
@@ -414,6 +462,152 @@ describe('jwt-auth', () => {
       expect(serialised).not.toContain('CLIENT-REF-123')
       expect(serialised).not.toContain('GRANT-CODE-XYZ')
       expect(serialised).not.toContain('defra')
+    })
+  })
+
+  describe('extractJwtPayload - kid keyring', () => {
+    const fullyHardenedPayload = () => {
+      const iat = Math.floor(Date.now() / 1000)
+      return {
+        iss: 'fg-cw-frontend',
+        aud: ['agreements-ui', 'gas'],
+        sub: '123456',
+        iat,
+        exp: iat + 300,
+        source: 'entra',
+        sbi: '123456'
+      }
+    }
+
+    test('accepts a token with no kid using the default secret', () => {
+      setupMockConfig(true, { enforce: true })
+      setupMockJwt(fullyHardenedPayload(), null, {})
+
+      const result = extractJwtPayload('eyJ.nokid.token')
+
+      expect(result).not.toBeNull()
+      expect(Jwt.token.verify).toHaveBeenCalledWith(expect.any(Object), {
+        key: 'mock-jwt-secret',
+        algorithms: ['HS256']
+      })
+    })
+
+    test('accepts a token whose kid matches the default kid', () => {
+      setupMockConfig(true, { enforce: true })
+      setupMockJwt(fullyHardenedPayload(), null, { kid: 'agreements-hs256-1' })
+
+      const result = extractJwtPayload('eyJ.defaultkid.token')
+
+      expect(result).not.toBeNull()
+      expect(Jwt.token.verify).toHaveBeenCalledWith(expect.any(Object), {
+        key: 'mock-jwt-secret',
+        algorithms: ['HS256']
+      })
+    })
+
+    test('verifies a rotated kid using the keyring secret', () => {
+      setupMockConfig(true, {
+        enforce: true,
+        keyring: { 'agreements-hs256-2': 'rotated-secret' }
+      })
+      setupMockJwt(fullyHardenedPayload(), null, { kid: 'agreements-hs256-2' })
+
+      const result = extractJwtPayload('eyJ.rotatedkid.token')
+
+      expect(result).not.toBeNull()
+      expect(Jwt.token.verify).toHaveBeenCalledWith(expect.any(Object), {
+        key: 'rotated-secret',
+        algorithms: ['HS256']
+      })
+    })
+
+    test('rejects a token whose kid is not in the keyring', () => {
+      setupMockConfig(true, { enforce: true })
+      setupMockJwt(fullyHardenedPayload(), null, { kid: 'unknown-kid' })
+
+      const result = extractJwtPayload('eyJ.unknownkid.token')
+
+      expect(result).toBeNull()
+      expect(Jwt.token.verify).not.toHaveBeenCalled()
+      expect(getMockLogger().error).toHaveBeenCalledWith(
+        { kid: 'unknown-kid' },
+        'Caller token kid is not in the verification keyring (FGP-1307)'
+      )
+    })
+  })
+
+  describe('extractJwtPayload - enforcement', () => {
+    test('rejects a token missing hardened claims when enforcing', () => {
+      setupMockConfig(true, { enforce: true })
+      setupMockJwt({ source: 'defra', sbi: '123456' })
+
+      const result = extractJwtPayload('eyJ.missingclaims.token')
+
+      expect(result).toBeNull()
+      expect(getMockLogger().warn).toHaveBeenCalledWith(
+        expect.objectContaining({ missingClaims: expect.any(Array) }),
+        'Caller token is missing hardened claims (FGP-1307); rejected'
+      )
+    })
+
+    test('rejects a token whose audience excludes agreements-ui when enforcing', () => {
+      const iat = Math.floor(Date.now() / 1000)
+      setupMockConfig(true, { enforce: true })
+      setupMockJwt({
+        iss: 'fg-cw-frontend',
+        aud: ['gas'],
+        sub: '123456',
+        iat,
+        exp: iat + 300
+      })
+
+      const result = extractJwtPayload('eyJ.wrongaud.token')
+
+      expect(result).toBeNull()
+      expect(getMockLogger().warn).toHaveBeenCalledWith(
+        { aud: ['gas'] },
+        'Caller token audience does not include agreements-ui (FGP-1307); rejected'
+      )
+    })
+
+    test('rejects a token from an unknown issuer when enforcing', () => {
+      const iat = Math.floor(Date.now() / 1000)
+      setupMockConfig(true, { enforce: true })
+      setupMockJwt({
+        iss: 'attacker',
+        aud: ['agreements-ui'],
+        sub: '123456',
+        iat,
+        exp: iat + 300
+      })
+
+      const result = extractJwtPayload('eyJ.badiss.token')
+
+      expect(result).toBeNull()
+      expect(getMockLogger().warn).toHaveBeenCalledWith(
+        { iss: 'attacker' },
+        'Caller token issuer is not in the allowed producers list (FGP-1307); rejected'
+      )
+    })
+
+    test('accepts a fully hardened token when enforcing', () => {
+      const iat = Math.floor(Date.now() / 1000)
+      setupMockConfig(true, { enforce: true })
+      const payload = {
+        iss: 'grants-ui',
+        aud: ['agreements-ui', 'gas'],
+        sub: '123456',
+        iat,
+        exp: iat + 300,
+        source: 'defra',
+        sbi: '123456'
+      }
+      setupMockJwt(payload)
+
+      const result = extractJwtPayload('eyJ.valid.token')
+
+      expect(result).toEqual(payload)
+      expect(getMockLogger().warn).not.toHaveBeenCalled()
     })
   })
 })
