@@ -1,13 +1,11 @@
 export const encryptedAuthQueryName = 'x-encrypted-auth'
 
-// TODO (FGP-1307): stop accepting the caller token from the query string and
-// only accept it from the header. Query-string tokens leak into logs, browser
-// history and the Referer header. Left in place for now for backwards
-// compatibility; remove the request.query fallback below once all callers send
-// the token as a header.
+// FGP-1307: the caller token is verified from the request header ONLY. Query-string
+// tokens leak into logs, browser history and the Referer header, so they are no
+// longer accepted as caller identity. (URL emission of the token for the legacy
+// header-less path is retained for now and removed in a follow-up.)
 export const getAgreementAuthentication = (request) =>
-  request.headers?.[encryptedAuthQueryName] ||
-  request.query?.[encryptedAuthQueryName]
+  request.headers?.[encryptedAuthQueryName]
 
 export const getQueryAuthentication = (request) =>
   request.headers?.[encryptedAuthQueryName]

@@ -69,7 +69,8 @@ describe('GAS public agreement rendering', () => {
     })
     const printResponse = await server.inject({
       method: 'GET',
-      url: `${gasPublicAgreementPaths.print}?x-encrypted-auth=pdf-query-auth`
+      url: gasPublicAgreementPaths.print,
+      headers: { 'x-encrypted-auth': 'pdf-query-auth' }
     })
 
     expect(viewResponse.statusCode).toBe(200)

@@ -2,6 +2,7 @@ import { apiRequest, getBackend } from '#~/server/common/helpers/api.js'
 import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
 import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
 import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
+import { getAgreementAuthentication } from '#~/server/agreement/agreement-request.js'
 import { getGrantTypeFor } from '#~/server/grant-types/index.js'
 import path from 'node:path'
 
@@ -33,8 +34,8 @@ export const validateAcceptOfferController = {
 
     // Checkbox confirmed - now submit the accept-offer action to the API
     try {
-      const auth =
-        request.headers['x-encrypted-auth'] || request.query['x-encrypted-auth']
+      // FGP-1307: caller token is read from the request header only.
+      const auth = getAgreementAuthentication(request)
       const jwtPayload = extractJwtPayload(auth)
       const backend = getBackend(jwtPayload)
 
