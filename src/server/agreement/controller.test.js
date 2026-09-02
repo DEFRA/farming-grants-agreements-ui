@@ -198,7 +198,10 @@ describe('#agreementController', () => {
 
       const response = await server.inject({
         method: 'GET',
-        url: `${gasPublicAgreementPaths.print}?x-encrypted-auth=pdf-query-auth`
+        url: gasPublicAgreementPaths.print,
+        headers: {
+          'x-encrypted-auth': 'pdf-query-auth'
+        }
       })
 
       expect(response.statusCode).toBe(statusCodes.ok)
@@ -352,7 +355,7 @@ describe('#agreementController', () => {
       expect(fetch).not.toHaveBeenCalled()
     })
 
-    test('should call the backend API using x-encrypted-auth from query if header is missing', async () => {
+    test('ignores x-encrypted-auth in the query string (header-only intake, FGP-1307)', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({})
@@ -363,13 +366,9 @@ describe('#agreementController', () => {
         url: '/?x-encrypted-auth=query-auth'
       })
 
-      expect(fetch).toHaveBeenCalledWith('http://localhost:3555/', {
-        headers: {
-          'x-encrypted-auth': 'query-auth'
-        },
-        method: 'GET',
-        signal: expect.any(AbortSignal)
-      })
+      // The query-string token must not be treated as caller identity.
+      expect(extractJwtPayload).not.toHaveBeenCalledWith('query-auth')
+      expect(extractJwtPayload).toHaveBeenCalledWith(undefined)
     })
 
     test('should prioritise x-encrypted-auth header over query parameter', async () => {

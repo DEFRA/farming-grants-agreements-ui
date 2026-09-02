@@ -126,8 +126,11 @@ describe('generic GAS Agreement action routes', () => {
 
     const response = await server.inject({
       method: 'GET',
-      url: '/AGR_42/actions/recalculate-anything?view=latest&x-encrypted-auth=query-auth',
-      headers: { 'x-base-url': '/agreement' }
+      url: '/AGR_42/actions/recalculate-anything?view=latest',
+      headers: {
+        'x-base-url': '/agreement',
+        'x-encrypted-auth': 'query-auth'
+      }
     })
 
     expect(response.statusCode).toBe(200)
@@ -162,7 +165,7 @@ describe('generic GAS Agreement action routes', () => {
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
     )
     expect($('form').attr('action')).toBe(
-      '/agreement/AGR_42/actions/recalculate-anything?x-encrypted-auth=query-auth'
+      '/agreement/AGR_42/actions/recalculate-anything'
     )
     expect($('input[name="contactPreference"]').val()).toBe('email')
     expect($('input[name="anythingAtAll"]').val()).toBe('kept exactly')
