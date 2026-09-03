@@ -27,7 +27,7 @@ describe('getBackend', () => {
     }
   )
 
-  test.each(['FPTT329955480', 'WMP123456789'])(
+  test.each(['FPTT329955480', 'WMP123456789', 'FPTT123', 'WMP1'])(
     'routes recognised legacy agreement %s without a grant code to legacy',
     (agreementId) => {
       expect(getBackend({}, agreementId)).toBe('legacy')
@@ -37,8 +37,8 @@ describe('getBackend', () => {
   test.each([
     'PMF123456789',
     'FPTT-invalid',
-    'WMP123',
-    'FPTT1234567890',
+    'WMP-123',
+    'FPTT123abc',
     'wmp123456789'
   ])(
     'rejects unrecognised agreement number %s without a grant code',

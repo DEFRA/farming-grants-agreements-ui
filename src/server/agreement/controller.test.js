@@ -378,7 +378,7 @@ describe('#agreementController', () => {
       }
     )
 
-    test.each(['PMF123456789', 'FPTT-invalid', 'WMP123'])(
+    test.each(['PMF123456789', 'FPTT-invalid', 'WMP-123'])(
       'rejects unrecognised agreement number %s when the JWT has no grant code',
       async (agreementId) => {
         extractJwtPayload.mockReturnValue({ source: 'entra' })
