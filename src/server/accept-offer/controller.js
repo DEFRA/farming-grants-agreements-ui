@@ -37,7 +37,7 @@ export const validateAcceptOfferController = {
       // FGP-1307: caller token is read from the request header only.
       const auth = getAgreementAuthentication(request)
       const jwtPayload = extractJwtPayload(auth)
-      const backend = getBackend(jwtPayload)
+      const backend = getBackend(jwtPayload, agreementId)
 
       await apiRequest({
         agreementId,
