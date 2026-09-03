@@ -34,11 +34,20 @@ describe('getBackend', () => {
     }
   )
 
-  test('rejects an unrecognised agreement number without a grant code', () => {
-    expect(() => getBackend({}, 'PMF123456789')).toThrow(
-      'Agreement grant code is missing'
-    )
-  })
+  test.each([
+    'PMF123456789',
+    'FPTT-invalid',
+    'WMP123',
+    'FPTT1234567890',
+    'wmp123456789'
+  ])(
+    'rejects unrecognised agreement number %s without a grant code',
+    (agreementId) => {
+      expect(() => getBackend({}, agreementId)).toThrow(
+        'Agreement grant code is missing'
+      )
+    }
+  )
 })
 
 const createErrorResponse = (overrides = {}) => ({

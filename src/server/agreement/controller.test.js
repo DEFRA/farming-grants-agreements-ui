@@ -378,18 +378,21 @@ describe('#agreementController', () => {
       }
     )
 
-    test('rejects an unrecognised agreement number when the JWT has no grant code', async () => {
-      extractJwtPayload.mockReturnValue({ source: 'entra' })
+    test.each(['PMF123456789', 'FPTT-invalid', 'WMP123'])(
+      'rejects unrecognised agreement number %s when the JWT has no grant code',
+      async (agreementId) => {
+        extractJwtPayload.mockReturnValue({ source: 'entra' })
 
-      const response = await server.inject({
-        method: 'GET',
-        url: '/PMF123456789',
-        headers: { 'x-encrypted-auth': 'mock-auth' }
-      })
+        const response = await server.inject({
+          method: 'GET',
+          url: `/${agreementId}`,
+          headers: { 'x-encrypted-auth': 'mock-auth' }
+        })
 
-      expect(response.statusCode).toBe(statusCodes.unauthorized)
-      expect(fetch).not.toHaveBeenCalled()
-    })
+        expect(response.statusCode).toBe(statusCodes.unauthorized)
+        expect(fetch).not.toHaveBeenCalled()
+      }
+    )
 
     test('ignores x-encrypted-auth in the query string (header-only intake, FGP-1307)', async () => {
       fetch.mockResolvedValueOnce({

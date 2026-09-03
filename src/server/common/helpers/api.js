@@ -6,7 +6,7 @@ import { createLogger } from '#~/server/common/helpers/logging/logger.js'
 
 export const GAS = 'gas'
 const LEGACY = 'legacy'
-const LEGACY_AGREEMENT_NUMBER = /^(FPTT|WMP)/i
+const LEGACY_AGREEMENT_NUMBER = /^(?:FPTT|WMP)\d{9}$/
 const logger = createLogger()
 
 export const getBackend = (jwtPayload, agreementNumber) => {
