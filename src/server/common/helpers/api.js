@@ -9,11 +9,11 @@ const LEGACY = 'legacy'
 const LEGACY_AGREEMENT_NUMBER = /^(FPTT|WMP)/i
 const logger = createLogger()
 
-export const getBackend = (jwtPayload, agreementId) => {
+export const getBackend = (jwtPayload, agreementNumber) => {
   const grantCode = jwtPayload?.grantCode
 
   if (typeof grantCode !== 'string' || !grantCode.trim()) {
-    if (LEGACY_AGREEMENT_NUMBER.test(agreementId ?? '')) {
+    if (LEGACY_AGREEMENT_NUMBER.test(agreementNumber ?? '')) {
       return LEGACY
     }
 
