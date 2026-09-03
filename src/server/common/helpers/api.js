@@ -6,12 +6,17 @@ import { createLogger } from '#~/server/common/helpers/logging/logger.js'
 
 export const GAS = 'gas'
 const LEGACY = 'legacy'
+const LEGACY_AGREEMENT_NUMBER = /^(?:FPTT|WMP)\d+$/
 const logger = createLogger()
 
-export const getBackend = (jwtPayload) => {
+export const getBackend = (jwtPayload, agreementNumber) => {
   const grantCode = jwtPayload?.grantCode
 
   if (typeof grantCode !== 'string' || !grantCode.trim()) {
+    if (LEGACY_AGREEMENT_NUMBER.test(agreementNumber ?? '')) {
+      return LEGACY
+    }
+
     throw Boom.unauthorized('Agreement grant code is missing')
   }
 
