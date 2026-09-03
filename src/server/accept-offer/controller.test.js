@@ -317,10 +317,17 @@ describe('validateAcceptOfferController handler', () => {
   })
 
   test('emits ACCEPT_OFFER_SUBMITTED with success status after the API call when checkbox is confirmed', async () => {
+    const { getBackend: mockedGetBackend } = await import(
+      '#~/server/common/helpers/api.js'
+    )
     const h = createH()
 
     await validateAcceptOfferController.handler(createRequest('confirmed'), h)
 
+    expect(mockedGetBackend).toHaveBeenCalledWith(
+      { grantCode: 'MOCK' },
+      'FPTT123'
+    )
     expect(mockedAuditEvent).toHaveBeenCalledWith(
       expect.anything(),
       'ACCEPT_OFFER_SUBMITTED',

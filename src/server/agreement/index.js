@@ -52,7 +52,7 @@ const getAgreementData = async (request) => {
     )
   }
 
-  const backend = getBackend(jwtPayload)
+  const backend = getBackend(jwtPayload, agreementId)
   assertSupportedGasMode(backend, request.params.mode)
 
   return apiRequest({
