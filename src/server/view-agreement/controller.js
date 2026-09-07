@@ -1,9 +1,15 @@
 import { getBaseUrl } from '#~/server/common/helpers/base-url.js'
 import { auditEvent, AuditEvent } from '#~/server/common/helpers/audit-event.js'
 import { getGrantTypeFor } from '#~/server/grant-types/index.js'
+import { GAS } from '#~/server/common/helpers/api.js'
+import { configDrivenAgreementController } from '#~/server/config-driven-agreement/controller.js'
 
 export const viewAgreementController = {
   async handler(request, h) {
+    if (request.pre?.data?.source === GAS) {
+      return configDrivenAgreementController.handler(request, h)
+    }
+
     const { agreementData, auth } = request.pre?.data || {}
 
     if (

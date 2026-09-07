@@ -397,14 +397,15 @@ describe('#acceptOfferController', () => {
 
           const response = await server.inject({
             method: 'POST',
-            url: '/?x-encrypted-auth=query-auth',
+            url: '/',
+            headers: { 'x-encrypted-auth': 'query-auth' },
             payload: {
               action: 'validate-accept-offer',
               confirm: 'confirmed'
             }
           })
 
-          // Verify validation passed and POST was called with query param auth
+          // Verify validation passed and POST was called with header auth
           expect(apiRequestSpy).toHaveBeenCalledWith({
             agreementId: '',
             method: 'POST',
@@ -414,11 +415,9 @@ describe('#acceptOfferController', () => {
             jwtPayload: { grantCode: 'MOCK' }
           })
 
-          // Verify redirect to base URL with query string preserved
+          // Verify redirect to base URL
           expect(response.statusCode).toBe(302)
-          expect(response.headers.location).toBe(
-            '/?x-encrypted-auth=query-auth'
-          )
+          expect(response.headers.location).toBe('/')
 
           apiRequestSpy.mockRestore()
         })

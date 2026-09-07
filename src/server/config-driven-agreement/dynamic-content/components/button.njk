@@ -1,0 +1,9 @@
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% macro defraButton(params) %}
+  {{ govukButton({
+    text: params.text,
+    href: params.href,
+    classes: params.classes
+  }) }}
+{% endmacro %}

@@ -1,0 +1,7 @@
+{% macro defraGridRow(params, renderDefraComponent) %}
+  <div class="govuk-grid-row">
+    {% for component in params.components or [] %}
+      {{ renderDefraComponent(component) }}
+    {% endfor %}
+  </div>
+{% endmacro %}

@@ -18,6 +18,7 @@ Core delivery platform Node.js Frontend Template.
   - [Update dependencies](#update-dependencies)
   - [Formatting](#formatting)
     - [Windows prettier issue](#windows-prettier-issue)
+  - [Pull requests](#pull-requests)
 - [Docker](#docker)
   - [Development image](#development-image)
   - [Production image](#production-image)
@@ -32,8 +33,8 @@ Core delivery platform Node.js Frontend Template.
 
 ### Node.js
 
-Please install [Node.js](http://nodejs.org/) `>= v22` and [npm](https://nodejs.org/) `>= v9`. You will find it
-easier to use the Node Version Manager [nvm](https://github.com/creationix/nvm)
+Please install [Node.js](http://nodejs.org/) `>= v24.11.0` and [npm](https://nodejs.org/) `>= v9`.
+You will find it easier to use the Node Version Manager [nvm](https://github.com/creationix/nvm).
 
 To use the correct version of Node.js for this application, via nvm:
 
@@ -145,6 +146,10 @@ If you are having issues with formatting of line breaks on Windows update your g
 git config --global core.autocrlf false
 ```
 
+### Pull requests
+
+Use the format `TICKET-123: Summary` for every commit message and pull request title.
+
 ## Docker
 
 ### Development image
@@ -209,13 +214,16 @@ farming-grants-agreements-ui-redis-1                           "docker-entrypoin
 
 ## API endpoints
 
-| Endpoint              | Description                                                   |
-| :-------------------- | :------------------------------------------------------------ |
-| `GET: /health`        | Health                                                        |
-| `GET: /{agreementId}` | Get an agreement in HTML format based on agreementId          |
-| `GET: /`              | Get an agreement in HTML format based on the sbi in the token |
+| Endpoint                                    | Description                                                   |
+| :------------------------------------------ | :------------------------------------------------------------ |
+| `GET: /health`                              | Health                                                        |
+| `GET: /{agreementId}`                       | Get an agreement in HTML format based on agreementId          |
+| `GET: /`                                    | Get an agreement in HTML format based on the sbi in the token |
+| `GET: /{agreementId}/actions/{actionName}`  | Get a GAS-backed agreement action page                        |
+| `POST: /{agreementId}/actions/{actionName}` | Submit a GAS-backed agreement action                          |
 
-Pass the JWT token in the header as `x-encrypted-auth`.
+Pass the JWT token as `x-encrypted-auth` in the request header or query string.
+When both are present, the header takes priority.
 
 ### Generating a JWT for API calls (scripts/gen-auth-header.js)
 
@@ -226,6 +234,17 @@ Requirements:
 - Use the same JWT secret as the service (AGREEMENTS_JWT_SECRET). When running with Docker Compose, it defaults to `a-string-secret-at-least-256-bits-long` unless you override it in your environment.
 - The `source` claim must be one of `defra` (farmer) or `entra` (case worker).
 - When `source=defra`, you can include an `sbi` claim to test farmer-scoped endpoints.
+
+> **Caller-token hardening (FGP-1307):** incoming tokens are validated in warn-only
+> mode. A missing `exp`/`iat`, a non-numeric `iat`, a token lifetime (`exp - iat`)
+> outside the agreed range, an audience that excludes `agreements-ui`, or an `iss`
+> outside the producer allowlist is logged but still accepted. Both the producer
+> allowlist (`grants-ui`, `fg-cw-frontend`, `agreements-pdf`) and the maximum
+> agreed lifetime (300 seconds / 5 minutes) are fixed code constants, not
+> configuration — the same values apply in every environment, so there is nothing
+> to set in `cdp-app-config` and the allowlist cannot be misconfigured to an empty
+> "accept any issuer" list. Invalid tokens are logged with only
+> `errorType`/`errorMessage` — never the raw error object or the token itself.
 
 - The script validates `--source` and will exit with an error if the value is not `defra` or `entra` or if the secret is missing.
 

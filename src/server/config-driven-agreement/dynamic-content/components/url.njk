@@ -18,6 +18,6 @@
     {% if rel %}rel="{{ rel }}"{% endif %}
     {% if classes %}class="{{ classes }}"{% endif %}
   >
-    {{ text | escape }}
+    {{- text | escape -}}
   </a>
 {% endmacro %}
