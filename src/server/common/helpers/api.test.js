@@ -26,6 +26,28 @@ describe('getBackend', () => {
       )
     }
   )
+
+  test.each(['FPTT329955480', 'WMP123456789', 'FPTT123', 'WMP1'])(
+    'routes recognised legacy agreement %s without a grant code to legacy',
+    (agreementId) => {
+      expect(getBackend({}, agreementId)).toBe('legacy')
+    }
+  )
+
+  test.each([
+    'PMF123456789',
+    'FPTT-invalid',
+    'WMP-123',
+    'FPTT123abc',
+    'wmp123456789'
+  ])(
+    'rejects unrecognised agreement number %s without a grant code',
+    (agreementId) => {
+      expect(() => getBackend({}, agreementId)).toThrow(
+        'Agreement grant code is missing'
+      )
+    }
+  )
 })
 
 const createErrorResponse = (overrides = {}) => ({

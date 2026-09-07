@@ -355,6 +355,45 @@ describe('#agreementController', () => {
       expect(fetch).not.toHaveBeenCalled()
     })
 
+    test.each(['FPTT329955480', 'WMP123456789'])(
+      'routes legacy agreement %s without a grant code to the legacy backend',
+      async (agreementId) => {
+        extractJwtPayload.mockReturnValue({ source: 'entra' })
+        fetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+
+        await server.inject({
+          method: 'GET',
+          url: `/${agreementId}`,
+          headers: { 'x-encrypted-auth': 'mock-auth' }
+        })
+
+        expect(fetch).toHaveBeenCalledWith(
+          `http://localhost:3555/${agreementId}`,
+          {
+            headers: { 'x-encrypted-auth': 'mock-auth' },
+            method: 'GET',
+            signal: expect.any(AbortSignal)
+          }
+        )
+      }
+    )
+
+    test.each(['PMF123456789', 'FPTT-invalid', 'WMP-123'])(
+      'rejects unrecognised agreement number %s when the JWT has no grant code',
+      async (agreementId) => {
+        extractJwtPayload.mockReturnValue({ source: 'entra' })
+
+        const response = await server.inject({
+          method: 'GET',
+          url: `/${agreementId}`,
+          headers: { 'x-encrypted-auth': 'mock-auth' }
+        })
+
+        expect(response.statusCode).toBe(statusCodes.unauthorized)
+        expect(fetch).not.toHaveBeenCalled()
+      }
+    )
+
     test('ignores x-encrypted-auth in the query string (header-only intake, FGP-1307)', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
