@@ -8,7 +8,7 @@ import {
   vi
 } from 'vitest'
 
-import { apiRequest } from './api.js'
+import { apiRequest, gasActionRequest, getBackend } from './api.js'
 
 vi.mock('./jwt-auth.js', () => ({
   extractJwtPayload: vi.fn(),
@@ -16,6 +16,39 @@ vi.mock('./jwt-auth.js', () => ({
 }))
 
 const originalFetch = globalThis.fetch
+
+describe('getBackend', () => {
+  test.each([undefined, null, '', ' '])(
+    'does not default to legacy when grantCode is %j',
+    (grantCode) => {
+      expect(() => getBackend({ grantCode })).toThrow(
+        'Agreement grant code is missing'
+      )
+    }
+  )
+
+  test.each(['FPTT329955480', 'WMP123456789', 'FPTT123', 'WMP1'])(
+    'routes recognised legacy agreement %s without a grant code to legacy',
+    (agreementId) => {
+      expect(getBackend({}, agreementId)).toBe('legacy')
+    }
+  )
+
+  test.each([
+    'PMF123456789',
+    'FPTT-invalid',
+    'WMP-123',
+    'FPTT123abc',
+    'wmp123456789'
+  ])(
+    'rejects unrecognised agreement number %s without a grant code',
+    (agreementId) => {
+      expect(() => getBackend({}, agreementId)).toThrow(
+        'Agreement grant code is missing'
+      )
+    }
+  )
+})
 
 const createErrorResponse = (overrides = {}) => ({
   ok: false,
@@ -173,7 +206,8 @@ describe('apiRequest error handling', () => {
 
     const result = await apiRequest({
       ...baseRequest,
-      queryParams: { existing: 'param' },
+      agreementId: undefined,
+      queryParams: { mode: 'print' },
       jwtPayload,
       backend: 'gas'
     })
@@ -184,13 +218,19 @@ describe('apiRequest error handling', () => {
       expect.stringContaining('http://gas-api/agreements/current?'),
       expect.objectContaining({
         headers: expect.objectContaining({
-          Authorization: 'Bearer gas-token'
+          Authorization: 'Bearer gas-token',
+          'x-agreement-code': 'GAS001',
+          'x-agreement-client-ref': 'REF123',
+          'x-agreement-sbi': '123456789'
         })
       })
     )
 
     const fetchArgs = globalThis.fetch.mock.calls[0][1]
-    expect(fetchArgs.headers).not.toHaveProperty('x-encrypted-auth')
+    expect(fetchArgs.headers).toHaveProperty(
+      'x-encrypted-auth',
+      'mock-auth-token'
+    )
     expect(fetchArgs.headers).toHaveProperty(
       'Authorization',
       'Bearer gas-token'
@@ -198,16 +238,70 @@ describe('apiRequest error handling', () => {
 
     const url = globalThis.fetch.mock.calls[0][0]
     const searchParams = new URLSearchParams(url.split('?')[1])
-    expect(searchParams.get('existing')).toBe('param')
-    expect(searchParams.get('code')).toBe('GAS001')
-    expect(searchParams.get('clientRef')).toBe('REF123')
-    expect(searchParams.get('sbi')).toBe('123456789')
+    expect(searchParams.get('mode')).toBe('print')
+    expect(searchParams.has('code')).toBe(false)
+    expect(searchParams.has('clientRef')).toBe(false)
+    expect(searchParams.has('sbi')).toBe(false)
+
+    mockConfig.get = originalGet
+  })
+
+  test('constructs gas backend URL correctly for by-number GET', async () => {
+    const jwtPayload = {
+      source: 'defra',
+      grantCode: 'GAS001',
+      clientRef: 'REF123',
+      sbi: '123456789'
+    }
+
+    const mockConfig = (await import('#~/config/config.js')).config
+    const originalGet = mockConfig.get
+    mockConfig.get = vi.fn((key) => {
+      if (key === 'gasBackend.allowedGrantCodes') return ['GAS001']
+      if (key === 'gasBackend.url') return 'http://gas-api'
+      if (key === 'gasBackend.authToken') return 'gas-token'
+      return originalGet.call(mockConfig, key)
+    })
+
+    const backendResponse = {
+      ok: true,
+      json: vi.fn().mockResolvedValue({ data: 'gas-data' })
+    }
+    globalThis.fetch.mockResolvedValue(backendResponse)
+
+    const result = await apiRequest({
+      ...baseRequest,
+      agreementId: 'GAS123',
+      jwtPayload,
+      backend: 'gas'
+    })
+
+    expect(result).toEqual({ data: 'gas-data', source: 'gas' })
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'http://gas-api/agreements/GAS123/document',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer gas-token',
+          'x-agreement-source': 'defra',
+          'x-agreement-code': 'GAS001',
+          'x-agreement-sbi': '123456789'
+        })
+      })
+    )
+
+    const fetchArgs = globalThis.fetch.mock.calls[0][1]
+    expect(fetchArgs.headers).not.toHaveProperty('x-agreement-client-ref')
 
     mockConfig.get = originalGet
   })
 
   test('constructs gas backend URL correctly for POST', async () => {
-    const jwtPayload = { grantCode: 'GAS001' }
+    const jwtPayload = {
+      source: 'defra',
+      grantCode: 'GAS001',
+      sbi: '123456789'
+    }
 
     const mockConfig = (await import('#~/config/config.js')).config
     const originalGet = mockConfig.get
@@ -239,15 +333,45 @@ describe('apiRequest error handling', () => {
       expect.any(String),
       expect.objectContaining({
         headers: expect.objectContaining({
-          Authorization: 'Bearer gas-token'
+          Authorization: 'Bearer gas-token',
+          'x-agreement-source': 'defra',
+          'x-agreement-code': 'GAS001',
+          'x-agreement-sbi': '123456789'
         })
       })
     )
 
     const fetchArgs = globalThis.fetch.mock.calls[0][1]
-    expect(fetchArgs.headers).not.toHaveProperty('x-encrypted-auth')
+    expect(fetchArgs.headers).toHaveProperty(
+      'x-encrypted-auth',
+      'mock-auth-token'
+    )
 
     mockConfig.get = originalGet
+  })
+
+  test('uses the configured timeout for GAS action requests', async () => {
+    vi.useFakeTimers()
+    globalThis.fetch.mockImplementationOnce(
+      (url, { signal }) =>
+        new Promise((resolve, reject) => {
+          signal.addEventListener('abort', () => reject(signal.reason))
+        })
+    )
+
+    const responsePromise = gasActionRequest({
+      agreementId: 'GAS123',
+      actionName: 'arbitrary-action',
+      jwtPayload: { grantCode: 'GAS001' }
+    })
+
+    const rejection = expect(responsePromise).rejects.toThrow(
+      'Network timed out while fetching data'
+    )
+
+    await vi.advanceTimersByTimeAsync(30000)
+    await rejection
+    vi.useRealTimers()
   })
 
   test('constructs legacy backend URL correctly', async () => {

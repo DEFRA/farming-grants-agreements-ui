@@ -1,59 +1,91 @@
-{% set bodyClasses = "config-driven-agreement-page" ~ (" view-agreement-has-watermark" if hasWatermark else "") %}
+{% set bodyClasses = "config-driven-agreement-page" ~ (" view-agreement-has-watermark" if watermark else "") %}
 {% set mainClasses = "" %}
 
 {% extends "layouts/page.njk" %}
 
-{% from "govuk/components/button/macro.njk" import govukButton %}
-{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "config-driven-agreement/dynamic-content/macro.njk" import dynamicContent %}
+{% from "config-driven-agreement/document/watermark.njk" import defraWatermark %}
+
+{% block beforeContent %}
+  {{ super() }}
+  {% if backLink %}
+    {{ govukBackLink({
+      text: backLink.text or "Back",
+      href: backLink.href,
+      classes: "govuk-!-margin-bottom-0 govuk-!-display-none-print"
+    }) }}
+  {% endif %}
+{% endblock %}
 
 {% block content %}
-  <div class="govuk-grid-row">
-    <div class="{{ 'govuk-grid-column-full' if layout == 'document' else 'govuk-grid-column-two-thirds' }}">
-      {% if errors.length %}
-        {{ govukErrorSummary({
-          titleText: "There is a problem",
-          errorList: errors
-        }) }}
-      {% endif %}
-
-      {{ dynamicContent(components) }}
-
-      {% for action in actions %}
-        {% if action.href %}
-          {{ govukButton({
-            text: action.text,
-            href: action.href,
-            classes: action.classes
+  {% if errors.length or watermark %}
+    <div class="govuk-grid-row">
+      <div class="{{ 'govuk-grid-column-full' if layout == 'document' else 'govuk-grid-column-two-thirds' }}">
+        {% if errors.length %}
+          {{ govukErrorSummary({
+            titleText: "There is a problem",
+            errorList: errors
           }) }}
-        {% else %}
-          <form method="{{ action.method or 'POST' }}" action="{{ action.action }}">
-            {% for field in action.fields %}
-              <input type="hidden" name="{{ field.name }}" value="{{ field.value }}">
-            {% endfor %}
+        {% endif %}
 
-            {% if action.checkbox %}
-              {{ govukCheckboxes({
-                name: action.checkbox.name,
-                errorMessage: action.checkbox.errorMessage,
-                items: [{
-                  value: action.checkbox.value,
-                  text: action.checkbox.text,
-                  checked: action.checkbox.checked
-                }]
-              }) }}
+        {% if watermark %}
+          {{ defraWatermark(watermark) }}
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  {{ dynamicContent(components) }}
+
+  {% if layout == 'document' and sections.length %}
+    <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+
+    <div class="govuk-grid-row">
+      {% if showContents or print %}
+        <div class="govuk-grid-column-one-quarter">
+          <nav class="govuk-!-display-none-print" role="navigation"{% if showContents %} aria-labelledby="document-contents-title"{% else %} aria-label="Document controls"{% endif %}>
+            {% if showContents %}
+              <div id="contents">
+                <p id="document-contents-title" class="govuk-body-s">Contents</p>
+                <ul class="govuk-list toc">
+                  {% for section in sections %}
+                    <li><a href="#{{ section.id }}">{{ loop.index }}. {{ section.title }}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
             {% endif %}
 
-            {{ govukButton({
-              text: action.text,
-              name: action.name,
-              value: action.value,
-              classes: action.classes
-            }) }}
-          </form>
-        {% endif %}
-      {% endfor %}
+            {% if print %}
+              <div class="gem-c-print-link govuk-!-display-none-print govuk-!-margin-bottom-6 print-btn">
+                <button
+                  type="button"
+                  class="govuk-link govuk-body-s gem-c-print-link__button"
+                  data-module="print-link"
+                  style="--print-icon-url: url('{{ getAssetPath(baseUrl, 'images/govuk-icon-print.png') }}');">
+                  Print this page
+                </button>
+              </div>
+            {% endif %}
+          </nav>
+        </div>
+      {% endif %}
+
+      <div class="{{ 'govuk-grid-column-three-quarters' if showContents or print else 'govuk-grid-column-full' }}">
+        {% for section in sections %}
+          <section aria-labelledby="{{ section.id }}">
+            <h2 id="{{ section.id }}" class="govuk-heading-l">{{ loop.index }}. {{ section.title }}</h2>
+            {{ dynamicContent(section.components) }}
+          </section>
+        {% endfor %}
+      </div>
     </div>
-  </div>
+
+    <noscript>
+      <style>
+        .print-btn { display: none !important; }
+      </style>
+    </noscript>
+  {% endif %}
 {% endblock %}
