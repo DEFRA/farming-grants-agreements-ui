@@ -28,6 +28,7 @@ describe('#reviewOfferController', () => {
   const provider = createConsumerPact(import.meta.url)
 
   beforeAll(async () => {
+    config.set('gasBackend.legacyGrantCodes', ['FPTT'])
     server = await createServer()
     await server.initialize()
   })

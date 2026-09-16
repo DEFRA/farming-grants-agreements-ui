@@ -6,22 +6,27 @@ import { createLogger } from '#~/server/common/helpers/logging/logger.js'
 
 export const GAS = 'gas'
 const LEGACY = 'legacy'
-const LEGACY_AGREEMENT_NUMBER = /^(?:FPTT|WMP)\d+$/
 const logger = createLogger()
 
 export const getBackend = (jwtPayload, agreementNumber) => {
+  if (agreementNumber) {
+    const legacyAgreementNumberPrefixes = config.get(
+      'gasBackend.legacyAgreementNumberPrefixes'
+    )
+    return legacyAgreementNumberPrefixes.some((prefix) =>
+      agreementNumber.startsWith(prefix)
+    )
+      ? LEGACY
+      : GAS
+  }
+
   const grantCode = jwtPayload?.grantCode
-
   if (typeof grantCode !== 'string' || !grantCode.trim()) {
-    if (LEGACY_AGREEMENT_NUMBER.test(agreementNumber ?? '')) {
-      return LEGACY
-    }
-
     throw Boom.unauthorized('Agreement grant code is missing')
   }
 
-  const allowedGrantCodes = config.get('gasBackend.allowedGrantCodes')
-  return allowedGrantCodes.includes(grantCode) ? GAS : LEGACY
+  const legacyGrantCodes = config.get('gasBackend.legacyGrantCodes')
+  return legacyGrantCodes.includes(grantCode) ? LEGACY : GAS
 }
 
 const appendQueryParams = (url, queryParams) => {

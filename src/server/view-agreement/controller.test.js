@@ -24,6 +24,7 @@ describe('#viewAgreementController', () => {
   const provider = createConsumerPact(import.meta.url)
 
   beforeAll(async () => {
+    config.set('gasBackend.legacyAgreementNumberPrefixes', ['FPTT'])
     server = await createServer()
     await server.initialize()
   })

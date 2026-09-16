@@ -8,6 +8,8 @@ import {
   vi
 } from 'vitest'
 
+import { config } from '#~/config/config.js'
+
 import { apiRequest, gasActionRequest, getBackend } from './api.js'
 
 vi.mock('./jwt-auth.js', () => ({
@@ -18,8 +20,13 @@ vi.mock('./jwt-auth.js', () => ({
 const originalFetch = globalThis.fetch
 
 describe('getBackend', () => {
+  beforeEach(() => {
+    config.set('gasBackend.legacyAgreementNumberPrefixes', ['FPTT', 'WMP'])
+    config.set('gasBackend.legacyGrantCodes', ['FPTT', 'WMP'])
+  })
+
   test.each([undefined, null, '', ' '])(
-    'does not default to legacy when grantCode is %j',
+    'requires a grant code for current Agreement lookup when grantCode is %j',
     (grantCode) => {
       expect(() => getBackend({ grantCode })).toThrow(
         'Agreement grant code is missing'
@@ -27,27 +34,27 @@ describe('getBackend', () => {
     }
   )
 
-  test.each(['FPTT329955480', 'WMP123456789', 'FPTT123', 'WMP1'])(
-    'routes recognised legacy agreement %s without a grant code to legacy',
+  test.each(['FPTT329955480', 'WMP123456789', 'FPTT-invalid'])(
+    'routes configured legacy Agreement prefix %s to legacy',
     (agreementId) => {
-      expect(getBackend({}, agreementId)).toBe('legacy')
+      expect(getBackend({ grantCode: 'gas-grant' }, agreementId)).toBe('legacy')
     }
   )
 
-  test.each([
-    'PMF123456789',
-    'FPTT-invalid',
-    'WMP-123',
-    'FPTT123abc',
-    'wmp123456789'
-  ])(
-    'rejects unrecognised agreement number %s without a grant code',
+  test.each(['PMF123456789', 'NEW123', 'wmp123456789'])(
+    'routes unconfigured Agreement prefix %s to GAS without a grant code',
     (agreementId) => {
-      expect(() => getBackend({}, agreementId)).toThrow(
-        'Agreement grant code is missing'
-      )
+      expect(getBackend({}, agreementId)).toBe('gas')
     }
   )
+
+  test('routes configured legacy grant codes to legacy for current Agreement lookup', () => {
+    expect(getBackend({ grantCode: 'WMP' })).toBe('legacy')
+  })
+
+  test('routes unconfigured grant codes to GAS for current Agreement lookup', () => {
+    expect(getBackend({ grantCode: 'future-grant' })).toBe('gas')
+  })
 })
 
 const createErrorResponse = (overrides = {}) => ({
@@ -192,7 +199,6 @@ describe('apiRequest error handling', () => {
     const mockConfig = (await import('#~/config/config.js')).config
     const originalGet = mockConfig.get
     mockConfig.get = vi.fn((key) => {
-      if (key === 'gasBackend.allowedGrantCodes') return ['GAS001']
       if (key === 'gasBackend.url') return 'http://gas-api'
       if (key === 'gasBackend.authToken') return 'gas-token'
       return originalGet.call(mockConfig, key)
@@ -257,7 +263,6 @@ describe('apiRequest error handling', () => {
     const mockConfig = (await import('#~/config/config.js')).config
     const originalGet = mockConfig.get
     mockConfig.get = vi.fn((key) => {
-      if (key === 'gasBackend.allowedGrantCodes') return ['GAS001']
       if (key === 'gasBackend.url') return 'http://gas-api'
       if (key === 'gasBackend.authToken') return 'gas-token'
       return originalGet.call(mockConfig, key)
@@ -306,7 +311,6 @@ describe('apiRequest error handling', () => {
     const mockConfig = (await import('#~/config/config.js')).config
     const originalGet = mockConfig.get
     mockConfig.get = vi.fn((key) => {
-      if (key === 'gasBackend.allowedGrantCodes') return ['GAS001']
       if (key === 'gasBackend.url') return 'http://gas-api'
       if (key === 'gasBackend.authToken') return 'gas-token'
       return originalGet.call(mockConfig, key)
@@ -380,7 +384,7 @@ describe('apiRequest error handling', () => {
     const mockConfig = (await import('#~/config/config.js')).config
     const originalGet = mockConfig.get
     mockConfig.get = vi.fn((key) => {
-      if (key === 'gasBackend.allowedGrantCodes') return ['GAS001']
+      if (key === 'gasBackend.legacyGrantCodes') return ['LEGACY001']
       if (key === 'backend.url') return 'http://legacy-api'
       return originalGet.call(mockConfig, key)
     })
