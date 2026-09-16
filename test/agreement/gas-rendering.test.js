@@ -30,7 +30,7 @@ describe('GAS public agreement rendering', () => {
   beforeAll(async () => {
     config.set('gasBackend.url', gasBackendUrl)
     config.set('gasBackend.authToken', 'mock-gas-token')
-    config.set('gasBackend.allowedGrantCodes', [gasGrantCode])
+    config.set('gasBackend.legacyGrantCodes', [])
     server = await createServer()
     await server.initialize()
   })

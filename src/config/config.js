@@ -281,11 +281,17 @@ export const config = convict({
       env: 'GAS_API_AUTH_TOKEN',
       sensitive: true
     },
-    allowedGrantCodes: {
-      doc: 'List of grant codes allowed to use the GAS backend',
+    legacyAgreementNumberPrefixes: {
+      doc: 'Agreement number prefixes still served by the legacy backend',
       format: Array,
-      default: ['pigs-might-fly'],
-      env: 'GAS_ALLOWED_GRANT_CODES'
+      default: [],
+      env: 'LEGACY_AGREEMENT_NUMBER_PREFIXES'
+    },
+    legacyGrantCodes: {
+      doc: 'Grant codes still served by the legacy backend',
+      format: Array,
+      default: [],
+      env: 'LEGACY_GRANT_CODES'
     }
   },
   jwtSecret: {

@@ -35,7 +35,6 @@ vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
 }))
 
 const gasJwtPayload = {
-  grantCode: 'generic-gas-grant',
   clientRef: 'client-reference',
   sbi: '123456789',
   source: 'defra'
@@ -101,7 +100,8 @@ describe('generic GAS Agreement action routes', () => {
     originalFetch = globalThis.fetch
     config.set('gasBackend.url', 'http://gas.internal:3102')
     config.set('gasBackend.authToken', 'gas-service-token')
-    config.set('gasBackend.allowedGrantCodes', ['generic-gas-grant'])
+    config.set('gasBackend.legacyGrantCodes', [])
+    config.set('gasBackend.legacyAgreementNumberPrefixes', ['LEGACY'])
     globalThis.fetch = vi.fn()
     server = await createServer()
     await server.initialize()
@@ -144,7 +144,6 @@ describe('generic GAS Agreement action routes', () => {
           'x-encrypted-auth': 'query-auth',
           Authorization: 'Bearer gas-service-token',
           'x-agreement-source': 'defra',
-          'x-agreement-code': 'generic-gas-grant',
           'x-agreement-sbi': '123456789'
         },
         signal: expect.any(AbortSignal),
@@ -512,7 +511,6 @@ describe('generic GAS Agreement action routes', () => {
         'x-encrypted-auth': 'header-auth',
         Authorization: 'Bearer gas-service-token',
         'x-agreement-source': 'defra',
-        'x-agreement-code': 'generic-gas-grant',
         'x-agreement-sbi': '123456789'
       },
       body: JSON.stringify({

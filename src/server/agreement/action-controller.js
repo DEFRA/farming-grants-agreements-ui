@@ -34,7 +34,7 @@ export const getGasActionAuthentication = (request) => {
     )
   }
 
-  if (getBackend(jwtPayload) !== GAS) {
+  if (getBackend(jwtPayload, request.params.agreementId) !== GAS) {
     throw Boom.notFound('Agreement action not found')
   }
 
