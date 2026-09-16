@@ -22,7 +22,7 @@ const originalFetch = globalThis.fetch
 describe('getBackend', () => {
   beforeEach(() => {
     config.set('gasBackend.legacyAgreementNumberPrefixes', ['FPTT', 'WMP'])
-    config.set('gasBackend.legacyGrantCodes', ['FPTT', 'WMP'])
+    config.set('gasBackend.legacyGrantCodes', ['farm-payments', 'woodland'])
   })
 
   test.each([undefined, null, '', ' '])(
@@ -48,9 +48,12 @@ describe('getBackend', () => {
     }
   )
 
-  test('routes configured legacy grant codes to legacy for current Agreement lookup', () => {
-    expect(getBackend({ grantCode: 'WMP' })).toBe('legacy')
-  })
+  test.each(['farm-payments', 'woodland'])(
+    'routes configured legacy grant code %s to legacy for current Agreement lookup',
+    (grantCode) => {
+      expect(getBackend({ grantCode })).toBe('legacy')
+    }
+  )
 
   test('routes unconfigured grant codes to GAS for current Agreement lookup', () => {
     expect(getBackend({ grantCode: 'future-grant' })).toBe('gas')

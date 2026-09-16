@@ -17,7 +17,7 @@ import { config } from '#~/config/config.js'
 import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test-helpers.js'
 
 vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
-  extractJwtPayload: vi.fn(() => ({ grantCode: 'FPTT' }))
+  extractJwtPayload: vi.fn(() => ({ grantCode: 'farm-payments' }))
 }))
 
 const { like } = MatchersV2
@@ -28,7 +28,7 @@ describe('#reviewOfferController', () => {
   const provider = createConsumerPact(import.meta.url)
 
   beforeAll(async () => {
-    config.set('gasBackend.legacyGrantCodes', ['FPTT'])
+    config.set('gasBackend.legacyGrantCodes', ['farm-payments'])
     server = await createServer()
     await server.initialize()
   })

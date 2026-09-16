@@ -19,7 +19,7 @@ import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test
 import { reviewOffer } from './review-offer.js'
 
 vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
-  extractJwtPayload: vi.fn(() => ({ grantCode: 'WMP' }))
+  extractJwtPayload: vi.fn(() => ({ grantCode: 'woodland' }))
 }))
 
 const { like } = MatchersV2
@@ -30,7 +30,7 @@ describe('#reviewOfferController', () => {
   const provider = createConsumerPact(import.meta.url)
 
   beforeAll(async () => {
-    config.set('gasBackend.legacyGrantCodes', ['WMP'])
+    config.set('gasBackend.legacyGrantCodes', ['woodland'])
     server = await createServer()
     await server.initialize()
   })
