@@ -19,6 +19,7 @@ describe('#acceptOfferController', () => {
   const provider = createConsumerPact(import.meta.url)
 
   beforeAll(async () => {
+    config.set('gasBackend.legacyGrantCodes', ['MOCK'])
     server = await createServer()
     await server.initialize()
   })

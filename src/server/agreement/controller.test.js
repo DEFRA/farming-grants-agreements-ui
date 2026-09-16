@@ -30,7 +30,12 @@ describe('#agreementController', () => {
     config.set('backend.url', 'http://localhost:3555')
     config.set('gasBackend.url', gasBackendUrl)
     config.set('gasBackend.authToken', 'mock-gas-token')
-    config.set('gasBackend.allowedGrantCodes', [gasGrantCode])
+    config.set('gasBackend.legacyGrantCodes', [
+      'MOCK',
+      'farm-payments',
+      'woodland'
+    ])
+    config.set('gasBackend.legacyAgreementNumberPrefixes', ['FPTT', 'WMP'])
     globalThis.fetch = vi.fn()
     server = await createServer()
     await server.initialize()
@@ -90,7 +95,7 @@ describe('#agreementController', () => {
       expect(fetchArgs.headers).toHaveProperty('x-encrypted-auth', 'mock-auth')
     })
 
-    test('should call the GAS backend by agreement number when grantCode is "pigs-might-fly" and agreementId is provided', async () => {
+    test('routes an unconfigured Agreement prefix to GAS without a grant code', async () => {
       const mockPayload = {
         sub: '1234567890',
         name: 'John Doe',
@@ -98,8 +103,7 @@ describe('#agreementController', () => {
         iat: 1516239022,
         sbi: 106284736,
         source: 'defra',
-        clientRef: 'client-ref-001',
-        grantCode: gasGrantCode
+        clientRef: 'client-ref-001'
       }
       extractJwtPayload.mockReturnValue(mockPayload)
 
@@ -122,7 +126,6 @@ describe('#agreementController', () => {
           headers: expect.objectContaining({
             Authorization: 'Bearer mock-gas-token',
             'x-agreement-source': 'defra',
-            'x-agreement-code': gasGrantCode,
             'x-agreement-sbi': '106284736'
           }),
           method: 'GET'
@@ -248,7 +251,7 @@ describe('#agreementController', () => {
     test('leaves legacy agreement route suffixes unchanged', async () => {
       extractJwtPayload.mockReturnValue({
         source: 'entra',
-        grantCode: 'WMP'
+        grantCode: 'woodland'
       })
       fetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) })
 
@@ -267,7 +270,7 @@ describe('#agreementController', () => {
       )
     })
 
-    test('should call the legacy backend when grantCode is "FPTT"', async () => {
+    test('should call the legacy backend when grantCode is "farm-payments"', async () => {
       const mockPayload = {
         sub: '1234567890',
         name: 'John Doe',
@@ -276,7 +279,7 @@ describe('#agreementController', () => {
         sbi: 106284736,
         source: 'defra',
         clientRef: 'client-ref-001',
-        grantCode: 'FPTT'
+        grantCode: 'farm-payments'
       }
       extractJwtPayload.mockReturnValue(mockPayload)
 
@@ -305,7 +308,7 @@ describe('#agreementController', () => {
     test('preserves WMP view and print routing through the legacy backend', async () => {
       extractJwtPayload.mockReturnValue({
         source: 'entra',
-        grantCode: 'WMP'
+        grantCode: 'woodland'
       })
       fetch
         .mockResolvedValueOnce({ ok: true, json: async () => ({}) })
@@ -375,22 +378,6 @@ describe('#agreementController', () => {
             signal: expect.any(AbortSignal)
           }
         )
-      }
-    )
-
-    test.each(['PMF123456789', 'FPTT-invalid', 'WMP-123'])(
-      'rejects unrecognised agreement number %s when the JWT has no grant code',
-      async (agreementId) => {
-        extractJwtPayload.mockReturnValue({ source: 'entra' })
-
-        const response = await server.inject({
-          method: 'GET',
-          url: `/${agreementId}`,
-          headers: { 'x-encrypted-auth': 'mock-auth' }
-        })
-
-        expect(response.statusCode).toBe(statusCodes.unauthorized)
-        expect(fetch).not.toHaveBeenCalled()
       }
     )
 
