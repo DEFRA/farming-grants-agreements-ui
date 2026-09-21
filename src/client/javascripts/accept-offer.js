@@ -7,6 +7,10 @@ const ARIA_DISABLED_ATTR = 'aria-disabled'
  * Initialize checkbox-to-button functionality
  */
 function initCheckbox() {
+  if (typeof document === 'undefined') {
+    return
+  }
+
   // GOV.UK checkboxes component generates input with id based on name
   const checkbox =
     document.querySelector('#confirm') ||
