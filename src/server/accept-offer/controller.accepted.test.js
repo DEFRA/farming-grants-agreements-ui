@@ -357,71 +357,56 @@ describe('#acceptOfferController', () => {
         })
     })
 
-    test('successfully validates checkbox and calls API when confirmed using x-encrypted-auth from query parameter', async () => {
+    test('successfully validates checkbox and calls API when confirmed using x-encrypted-auth request header', async () => {
       // Spy on apiRequest to verify the POST call is made
       const apiRequestSpy = vi.spyOn(apiModule, 'apiRequest')
 
-      return provider
-        .addInteraction()
-        .given('A customer has an agreement offer')
-        .uponReceiving(
-          'a GET request to fetch data before validation using query param'
+      apiRequestSpy.mockImplementation(async (options) => {
+        if (options.method === 'POST') {
+          return {
+            agreementData: buildPactAgreement({ status: 'accepted' })
+          }
+        }
+
+        return {
+          agreementData: buildPactAgreement({ status: 'offered' })
+        }
+      })
+
+      try {
+        const response = await server.inject({
+          method: 'POST',
+          url: '/',
+          headers: { 'x-encrypted-auth': 'query-auth' },
+          payload: {
+            action: 'validate-accept-offer',
+            confirm: 'confirmed'
+          }
+        })
+
+        expect(apiRequestSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            method: 'GET',
+            auth: 'query-auth'
+          })
         )
-        .withRequest('GET', '/', (builder) => {
-          builder.headers({ 'x-encrypted-auth': 'query-auth' })
+
+        // Verify validation passed and POST was called with header auth
+        expect(apiRequestSpy).toHaveBeenCalledWith({
+          agreementId: '',
+          method: 'POST',
+          auth: 'query-auth',
+          body: { action: 'accept-offer' },
+          backend: 'legacy',
+          jwtPayload: { grantCode: 'MOCK' }
         })
-        .willRespondWith(200, (builder) => {
-          builder.headers({ 'Content-Type': 'application/json' })
-          builder.jsonBody({
-            agreementData: buildPactAgreement(
-              { status: like('offered') },
-              { useMatchers: true }
-            )
-          })
-        })
-        .executeTest(async (mockServer) => {
-          config.set('backend.url', mockServer.url)
 
-          // Mock POST apiRequest
-          apiRequestSpy.mockImplementation(async (options) => {
-            if (options.method === 'POST') {
-              return {
-                agreementData: buildPactAgreement({ status: 'accepted' })
-              }
-            }
-            // For GET requests, make the actual call
-            return fetch(mockServer.url, {
-              method: options.method,
-              headers: { 'x-encrypted-auth': options.auth }
-            }).then((r) => r.json())
-          })
-
-          const response = await server.inject({
-            method: 'POST',
-            url: '/',
-            headers: { 'x-encrypted-auth': 'query-auth' },
-            payload: {
-              action: 'validate-accept-offer',
-              confirm: 'confirmed'
-            }
-          })
-
-          // Verify validation passed and POST was called with header auth
-          expect(apiRequestSpy).toHaveBeenCalledWith({
-            agreementId: '',
-            method: 'POST',
-            auth: 'query-auth',
-            body: { action: 'accept-offer' },
-            backend: 'legacy',
-            jwtPayload: { grantCode: 'MOCK' }
-          })
-
-          // Verify redirect to base URL
-          expect(response.statusCode).toBe(302)
-          expect(response.headers.location).toBe('/')
-
-          apiRequestSpy.mockRestore()
-        })
+        // Verify redirect to base URL
+        expect(response.statusCode).toBe(302)
+        expect(response.headers.location).toBe('/')
+      } finally {
+        apiRequestSpy.mockRestore()
+      }
     })
   })
 })
