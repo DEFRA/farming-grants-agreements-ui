@@ -125,12 +125,12 @@ a:link,
   .dataset-info dd {
     margin-left: 0 !important;
     white-space: normal !important;
-    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   .dataset-info dt {
     white-space: normal !important;
-    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   .dataset-info--nowrap-labels dt {
