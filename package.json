@@ -80,7 +80,7 @@
     "@babel/preset-env": "8.0.5",
     "@commitlint/cli": "20.3.1",
     "@pact-foundation/pact": "16.3.0",
-    "@vitest/coverage-v8": "4.0.10",
+    "@vitest/coverage-v8": "4.1.11",
     "autoprefixer": "10.6.0",
     "babel-loader": "10.1.1",
     "cheerio": "1.1.0",
