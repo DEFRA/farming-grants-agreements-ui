@@ -112,13 +112,11 @@ describe('reviewOfferController handler fallbacks', () => {
       AuditEvent: { REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED' }
     }))
     ;({ reviewOfferController } = await import('./controller.js'))
-    const mod = await import(
-      '#~/server/grant-types/fptt/review-offer/review-offer.js'
-    )
+    const mod =
+      await import('#~/server/grant-types/fptt/review-offer/review-offer.js')
     mockedBuildReviewOfferModel = mod.reviewOffer.buildModel
-    ;({ auditEvent: mockedAuditEvent } = await import(
-      '#~/server/common/helpers/audit-event.js'
-    ))
+    ;({ auditEvent: mockedAuditEvent } =
+      await import('#~/server/common/helpers/audit-event.js'))
   })
 
   afterEach(() => {

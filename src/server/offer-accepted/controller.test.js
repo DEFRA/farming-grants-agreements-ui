@@ -278,9 +278,8 @@ describe('offerAcceptedController handler', () => {
       getConsentDetails: vi.fn(() => ({}))
     }))
     ;({ offerAcceptedController } = await import('./controller.js'))
-    ;({ auditEvent: mockedAuditEvent } = await import(
-      '#~/server/common/helpers/audit-event.js'
-    ))
+    ;({ auditEvent: mockedAuditEvent } =
+      await import('#~/server/common/helpers/audit-event.js'))
   })
 
   afterEach(() => {

@@ -578,9 +578,8 @@ describe('viewAgreementController agreement ended', () => {
     }))
 
     const { viewAgreementController } = await import('./controller.js')
-    const { auditEvent: mockedAuditEvent } = await import(
-      '#~/server/common/helpers/audit-event.js'
-    )
+    const { auditEvent: mockedAuditEvent } =
+      await import('#~/server/common/helpers/audit-event.js')
     const h = createH()
     const request = buildRequest({ status: 'terminated' })
 
@@ -610,9 +609,8 @@ describe('viewAgreementController audit events', () => {
     vi.doMock('#~/server/common/helpers/get-agreement-calculations.js', () => ({
       getAgreementCalculations: vi.fn(() => ({}))
     }))
-    ;({ auditEvent: mockedAuditEvent } = await import(
-      '#~/server/common/helpers/audit-event.js'
-    ))
+    ;({ auditEvent: mockedAuditEvent } =
+      await import('#~/server/common/helpers/audit-event.js'))
   })
 
   afterEach(() => {
@@ -648,9 +646,8 @@ describe('viewAgreementController audit events', () => {
 describe('viewAgreementController GAS delegation', () => {
   test('delegates to configDrivenAgreementController when source is GAS', async () => {
     const { viewAgreementController } = await import('./controller.js')
-    const { configDrivenAgreementController } = await import(
-      '#~/server/config-driven-agreement/controller.js'
-    )
+    const { configDrivenAgreementController } =
+      await import('#~/server/config-driven-agreement/controller.js')
 
     const h = createH()
     const request = {
