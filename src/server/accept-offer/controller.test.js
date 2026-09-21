@@ -92,9 +92,8 @@ describe('acceptOfferController handler', () => {
       getBackend: vi.fn(() => 'legacy')
     }))
     ;({ acceptOfferController } = await import('./controller.js'))
-    ;({ auditEvent: mockedAuditEvent } = await import(
-      '#~/server/common/helpers/audit-event.js'
-    ))
+    ;({ auditEvent: mockedAuditEvent } =
+      await import('#~/server/common/helpers/audit-event.js'))
   })
 
   afterEach(() => {
@@ -225,9 +224,8 @@ describe('validateAcceptOfferController handler', () => {
       getBackend: vi.fn(() => 'legacy')
     }))
     ;({ validateAcceptOfferController } = await import('./controller.js'))
-    ;({ auditEvent: mockedAuditEvent } = await import(
-      '#~/server/common/helpers/audit-event.js'
-    ))
+    ;({ auditEvent: mockedAuditEvent } =
+      await import('#~/server/common/helpers/audit-event.js'))
   })
 
   afterEach(() => {
@@ -318,9 +316,8 @@ describe('validateAcceptOfferController handler', () => {
   })
 
   test('emits ACCEPT_OFFER_SUBMITTED with success status after the API call when checkbox is confirmed', async () => {
-    const { getBackend: mockedGetBackend } = await import(
-      '#~/server/common/helpers/api.js'
-    )
+    const { getBackend: mockedGetBackend } =
+      await import('#~/server/common/helpers/api.js')
     const h = createH()
 
     await validateAcceptOfferController.handler(createRequest('confirmed'), h)
@@ -338,9 +335,8 @@ describe('validateAcceptOfferController handler', () => {
   })
 
   test('emits ACCEPT_OFFER_SUBMITTED with failure status when the API call throws', async () => {
-    const { apiRequest: mockedApiRequest } = await import(
-      '#~/server/common/helpers/api.js'
-    )
+    const { apiRequest: mockedApiRequest } =
+      await import('#~/server/common/helpers/api.js')
     mockedApiRequest.mockRejectedValueOnce(new Error('API error'))
     const h = createH()
 
