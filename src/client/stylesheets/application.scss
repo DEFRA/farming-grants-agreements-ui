@@ -45,6 +45,8 @@
     mix-blend-mode: multiply;
     -webkit-print-color-adjust: exact;
     break-inside: avoid;
+    // stylelint-disable-next-line property-no-deprecated
+    page-break-inside: avoid;
     print-color-adjust: exact;
   }
 

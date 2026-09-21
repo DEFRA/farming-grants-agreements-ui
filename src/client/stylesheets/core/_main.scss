@@ -125,7 +125,7 @@ a:link,
   .dataset-info dd {
     margin-left: 0 !important;
     white-space: normal !important;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   .dataset-info dt {
