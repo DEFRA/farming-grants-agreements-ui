@@ -89,6 +89,7 @@ describe('GAS public agreement rendering', () => {
           'x-agreement-source': 'entra',
           'x-agreement-code': gasGrantCode,
           'x-agreement-sbi': '300000000',
+          'x-user-context': 'caseworking-header-auth',
           'x-encrypted-auth': 'caseworking-header-auth'
         },
         method: 'GET'
@@ -103,6 +104,7 @@ describe('GAS public agreement rendering', () => {
           'x-agreement-source': 'entra',
           'x-agreement-code': gasGrantCode,
           'x-agreement-sbi': '300000000',
+          'x-user-context': 'pdf-query-auth',
           'x-encrypted-auth': 'pdf-query-auth'
         },
         method: 'GET'
