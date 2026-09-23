@@ -165,6 +165,7 @@ describe('#agreementController', () => {
         headers: {
           Authorization: 'Bearer mock-gas-token',
           'x-agreement-source': 'entra',
+          'x-user-context': 'caseworking-header-auth',
           'x-encrypted-auth': 'caseworking-header-auth',
           'x-agreement-code': gasGrantCode,
           'x-agreement-sbi': '300000000'
@@ -211,6 +212,7 @@ describe('#agreementController', () => {
       expect(extractJwtPayload).toHaveBeenCalledWith('pdf-query-auth')
       expect(fetch).toHaveBeenCalledWith(gasAgreementDocumentApiUrls.print, {
         headers: {
+          'x-user-context': 'pdf-query-auth',
           'x-encrypted-auth': 'pdf-query-auth',
           Authorization: 'Bearer mock-gas-token',
           'x-agreement-source': 'defra',
@@ -264,7 +266,10 @@ describe('#agreementController', () => {
       expect(fetch).toHaveBeenCalledWith(
         'http://localhost:3555/WMP123456789',
         expect.objectContaining({
-          headers: { 'x-encrypted-auth': 'mock-auth' },
+          headers: {
+            'x-user-context': 'mock-auth',
+            'x-encrypted-auth': 'mock-auth'
+          },
           method: 'GET'
         })
       )
@@ -298,6 +303,7 @@ describe('#agreementController', () => {
 
       expect(fetch).toHaveBeenCalledWith('http://localhost:3555/FPTT123', {
         headers: {
+          'x-user-context': 'mock-auth',
           'x-encrypted-auth': 'mock-auth'
         },
         method: 'GET',
@@ -329,7 +335,10 @@ describe('#agreementController', () => {
         1,
         'http://localhost:3555/WMP123456789',
         expect.objectContaining({
-          headers: { 'x-encrypted-auth': 'mock-auth' },
+          headers: {
+            'x-user-context': 'mock-auth',
+            'x-encrypted-auth': 'mock-auth'
+          },
           method: 'GET'
         })
       )
@@ -337,7 +346,10 @@ describe('#agreementController', () => {
         2,
         'http://localhost:3555/WMP123456789',
         expect.objectContaining({
-          headers: { 'x-encrypted-auth': 'mock-auth' },
+          headers: {
+            'x-user-context': 'mock-auth',
+            'x-encrypted-auth': 'mock-auth'
+          },
           method: 'GET'
         })
       )
@@ -373,7 +385,10 @@ describe('#agreementController', () => {
         expect(fetch).toHaveBeenCalledWith(
           `http://localhost:3555/${agreementId}`,
           {
-            headers: { 'x-encrypted-auth': 'mock-auth' },
+            headers: {
+              'x-user-context': 'mock-auth',
+              'x-encrypted-auth': 'mock-auth'
+            },
             method: 'GET',
             signal: expect.any(AbortSignal)
           }
@@ -413,6 +428,7 @@ describe('#agreementController', () => {
 
       expect(fetch).toHaveBeenCalledWith('http://localhost:3555/', {
         headers: {
+          'x-user-context': 'header-auth',
           'x-encrypted-auth': 'header-auth'
         },
         method: 'GET',
@@ -438,6 +454,7 @@ describe('#agreementController', () => {
         'http://localhost:3555/FPTT123456789',
         {
           headers: {
+            'x-user-context': 'mock-auth',
             'x-encrypted-auth': 'mock-auth'
           },
           method: 'GET',
@@ -464,6 +481,7 @@ describe('#agreementController', () => {
         'http://localhost:3555/FPTT123456789',
         {
           headers: {
+            'x-user-context': 'mock-auth',
             'x-encrypted-auth': 'mock-auth'
           },
           method: 'GET',
@@ -492,6 +510,7 @@ describe('#agreementController', () => {
       expect(fetch).toHaveBeenCalledWith('http://localhost:3555/', {
         headers: {
           'Content-Type': 'application/json',
+          'x-user-context': 'mock-auth',
           'x-encrypted-auth': 'mock-auth'
         },
         method: 'POST',
@@ -525,6 +544,7 @@ describe('#agreementController', () => {
         'http://localhost:3555/FPTT123456789',
         {
           headers: {
+            'x-user-context': 'mock-auth',
             'x-encrypted-auth': 'mock-auth'
           },
           method: 'GET',
@@ -556,6 +576,7 @@ describe('#agreementController', () => {
         'http://localhost:3555/FPTT123456789',
         {
           headers: {
+            'x-user-context': 'mock-auth',
             'x-encrypted-auth': 'mock-auth'
           },
           method: 'GET',
@@ -586,6 +607,7 @@ describe('#agreementController', () => {
         'http://localhost:3555/FPTT123456789',
         {
           headers: {
+            'x-user-context': 'mock-auth',
             'x-encrypted-auth': 'mock-auth'
           },
           method: 'GET',
@@ -634,6 +656,7 @@ describe('#agreementController', () => {
 
       expect(fetch).toHaveBeenCalledWith('http://localhost:3555/', {
         headers: {
+          'x-user-context': 'mock-auth',
           'x-encrypted-auth': 'mock-auth'
         },
         method: 'GET',
