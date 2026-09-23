@@ -103,11 +103,19 @@ const getHeaders = ({
   transportHeaders
 }) => {
   const headers = {
-    ...(backend === LEGACY && { 'x-encrypted-auth': auth }),
+    // FGP-1394: the caller-token header is being renamed from 'x-encrypted-auth'
+    // to 'x-user-context' (it carries a signed, not encrypted, value). Send both
+    // names so downstream services can migrate independently; drop the old name
+    // once all consumers accept 'x-user-context'.
+    ...(backend === LEGACY && {
+      'x-user-context': auth,
+      'x-encrypted-auth': auth
+    }),
     // FGP-1307: forward the verified caller token to GAS (alongside the
     // existing service bearer and x-agreement-* headers) so GAS can verify the
     // caller independently. Additive/backwards-compatible for now.
-    ...(backend === GAS && auth && { 'x-encrypted-auth': auth }),
+    ...(backend === GAS &&
+      auth && { 'x-user-context': auth, 'x-encrypted-auth': auth }),
     ...(backend === GAS &&
       getGasAgreementHeaders(agreementContext, includeClientRef)),
     ...(method.toUpperCase() === 'POST' && {

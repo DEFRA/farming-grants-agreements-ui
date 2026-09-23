@@ -141,6 +141,7 @@ describe('generic GAS Agreement action routes', () => {
       {
         method: 'GET',
         headers: {
+          'x-user-context': 'query-auth',
           'x-encrypted-auth': 'query-auth',
           Authorization: 'Bearer gas-service-token',
           'x-agreement-source': 'defra',
@@ -508,6 +509,7 @@ describe('generic GAS Agreement action routes', () => {
         'Content-Type': 'application/json',
         'If-Match': '"AGR_42:7"',
         'Idempotency-Key': idempotencyKey,
+        'x-user-context': 'header-auth',
         'x-encrypted-auth': 'header-auth',
         Authorization: 'Bearer gas-service-token',
         'x-agreement-source': 'defra',
