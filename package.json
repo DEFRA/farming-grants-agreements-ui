@@ -102,7 +102,7 @@
     "stylelint": "17.15.0",
     "stylelint-config-gds": "3.0.0",
     "terser-webpack-plugin": "5.6.1",
-    "vitest": "5.0.0",
+    "vitest": "5.0.1",
     "vitest-fetch-mock": "0.4.5",
     "webpack": "5.110.3",
     "webpack-assets-manifest": "6.5.2",
