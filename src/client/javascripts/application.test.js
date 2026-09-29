@@ -6,7 +6,6 @@ const govukComponents = {
   Button: Symbol('Button'),
   Checkboxes: Symbol('Checkboxes'),
   ErrorSummary: Symbol('ErrorSummary'),
-  Header: Symbol('Header'),
   Radios: Symbol('Radios'),
   SkipLink: Symbol('SkipLink')
 }
@@ -64,16 +63,15 @@ describe('application.js', () => {
 
     await loadApplication()
 
-    expect(createAllMock).toHaveBeenCalledTimes(6)
+    expect(createAllMock).toHaveBeenCalledTimes(5)
     expect(createAllMock).toHaveBeenNthCalledWith(1, govukComponents.Button)
     expect(createAllMock).toHaveBeenNthCalledWith(2, govukComponents.Checkboxes)
     expect(createAllMock).toHaveBeenNthCalledWith(
       3,
       govukComponents.ErrorSummary
     )
-    expect(createAllMock).toHaveBeenNthCalledWith(4, govukComponents.Header)
-    expect(createAllMock).toHaveBeenNthCalledWith(5, govukComponents.Radios)
-    expect(createAllMock).toHaveBeenNthCalledWith(6, govukComponents.SkipLink)
+    expect(createAllMock).toHaveBeenNthCalledWith(4, govukComponents.Radios)
+    expect(createAllMock).toHaveBeenNthCalledWith(5, govukComponents.SkipLink)
   })
 
   it('progressively enables a form submit control when its requirements are met', async () => {
