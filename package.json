@@ -79,7 +79,7 @@
     "@babel/core": "8.0.6",
     "@babel/preset-env": "8.0.6",
     "@commitlint/cli": "20.3.1",
-    "@pact-foundation/pact": "16.3.0",
+    "@pact-foundation/pact": "17.1.4",
     "@vitest/coverage-v8": "5.0.1",
     "autoprefixer": "10.6.1",
     "babel-loader": "10.1.1",
