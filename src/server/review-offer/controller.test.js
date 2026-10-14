@@ -1,11 +1,14 @@
 import { vi } from 'vitest'
-
 import { MatchersV2 } from '@pact-foundation/pact'
 
 import { createServer } from '#~/server/server.js'
 import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test__/pact-agreement.fixture.js'
 import { config } from '#~/config/config.js'
-import { createConsumerPact } from '#~/contracts/consumer/pact-test-helpers.js'
+import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test-helpers.js'
+
+vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
+  extractJwtPayload: vi.fn(() => ({ grantCode: 'MOCK' }))
+}))
 
 const { like } = MatchersV2
 
@@ -15,6 +18,7 @@ describe('#reviewOfferController', () => {
   const provider = createConsumerPact(import.meta.url)
 
   beforeAll(async () => {
+    config.set('gasBackend.legacyGrantCodes', ['MOCK'])
     server = await createServer()
     await server.initialize()
   })
@@ -53,6 +57,14 @@ describe('#reviewOfferController', () => {
 
         expect(statusCode).toBe(200)
         expect(result).toContain('Review your agreement offer')
+        expect(result).toContain('If you need to amend your agreement offer')
+        expect(result).toContain(
+          'Contact the Rural Payments Agency (RPA) to explain:'
+        )
+        expect(result).toContain('the changes you want to make')
+        expect(result).toContain('why you want to make the changes')
+        expect(result).toContain('020 8026 2395')
+        expect(result).toContain('farmpayments@rpa.gov.uk')
         expect(result).toContain(
           'Mason House Farm Clitheroe Rd, Bashall Eaves, Bartindale Road, Clitheroe, BB7 3DD'
         )
@@ -80,20 +92,31 @@ describe('reviewOfferController handler fallbacks', () => {
 
   beforeEach(async () => {
     vi.resetModules()
-    vi.doMock('#~/server/common/helpers/build-review-offer-model.js', () => ({
-      buildReviewOfferModel: vi.fn()
-    }))
+    vi.doMock(
+      '#~/server/grant-types/fptt/review-offer/review-offer.js',
+      async () => {
+        const actual = await vi.importActual(
+          '#~/server/grant-types/fptt/review-offer/review-offer.js'
+        )
+        return {
+          ...actual,
+          reviewOffer: {
+            ...actual.reviewOffer,
+            buildModel: vi.fn()
+          }
+        }
+      }
+    )
     vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
       auditEvent: vi.fn(),
       AuditEvent: { REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED' }
     }))
     ;({ reviewOfferController } = await import('./controller.js'))
-    ;({ buildReviewOfferModel: mockedBuildReviewOfferModel } = await import(
-      '#~/server/common/helpers/build-review-offer-model.js'
-    ))
-    ;({ auditEvent: mockedAuditEvent } = await import(
-      '#~/server/common/helpers/audit-event.js'
-    ))
+    const mod =
+      await import('#~/server/grant-types/fptt/review-offer/review-offer.js')
+    mockedBuildReviewOfferModel = mod.reviewOffer.buildModel
+    ;({ auditEvent: mockedAuditEvent } =
+      await import('#~/server/common/helpers/audit-event.js'))
   })
 
   afterEach(() => {
@@ -105,14 +128,17 @@ describe('reviewOfferController handler fallbacks', () => {
     mockedBuildReviewOfferModel.mockReturnValue({ any: 'thing' })
     const h = createH()
 
-    await reviewOfferController.handler({}, h)
+    await reviewOfferController.handler(
+      { pre: { data: { agreementData: { code: 'frps-private-beta' } } } },
+      h
+    )
 
-    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({})
+    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
+      agreementData: { code: 'frps-private-beta' }
+    })
     expect(h.view).toHaveBeenCalledWith(
-      'review-offer/index',
-      expect.objectContaining({
-        pageTitle: 'Review your agreement offer'
-      })
+      'grant-types/fptt/review-offer/review-offer',
+      { any: 'thing' }
     )
   })
 
@@ -120,14 +146,17 @@ describe('reviewOfferController handler fallbacks', () => {
     mockedBuildReviewOfferModel.mockReturnValue({})
     const h = createH()
 
-    await reviewOfferController.handler({ pre: {} }, h)
+    await reviewOfferController.handler(
+      { pre: { data: { agreementData: { code: 'frps-private-beta' } } } },
+      h
+    )
 
-    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({})
+    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
+      agreementData: { code: 'frps-private-beta' }
+    })
     expect(h.view).toHaveBeenCalledWith(
-      'review-offer/index',
-      expect.objectContaining({
-        pageTitle: 'Review your agreement offer'
-      })
+      'grant-types/fptt/review-offer/review-offer',
+      {}
     )
   })
 
@@ -138,19 +167,19 @@ describe('reviewOfferController handler fallbacks', () => {
     const request = {
       pre: {
         data: {
-          other: 'value'
+          agreementData: { code: 'frps-private-beta' }
         }
       }
     }
 
     await reviewOfferController.handler(request, h)
 
-    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({})
+    expect(mockedBuildReviewOfferModel).toHaveBeenCalledWith({
+      agreementData: { code: 'frps-private-beta' }
+    })
     expect(h.view).toHaveBeenCalledWith(
-      'review-offer/index',
-      expect.objectContaining({
-        pageTitle: 'Review your agreement offer'
-      })
+      'grant-types/fptt/review-offer/review-offer',
+      {}
     )
   })
 
@@ -158,6 +187,7 @@ describe('reviewOfferController handler fallbacks', () => {
     mockedBuildReviewOfferModel.mockReturnValue({})
     const h = createH()
     const agreementData = {
+      code: 'frps-private-beta',
       agreementNumber: 'FPTT123',
       identifiers: { sbi: '106284736' }
     }

@@ -265,6 +265,67 @@ export const config = convict({
       default: 30000,
       env: 'BACKEND_TIMEOUT'
     }
+  },
+  gasBackend: {
+    url: {
+      doc: 'The GAS backend base URL',
+      format: String,
+      default: 'http://localhost:3102',
+      env: 'GAS_BACKEND_URL'
+    },
+    authToken: {
+      doc: 'The GAS backend API auth token',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'GAS_API_AUTH_TOKEN',
+      sensitive: true
+    },
+    legacyAgreementNumberPrefixes: {
+      doc: 'Agreement number prefixes still served by the legacy backend',
+      format: Array,
+      default: [],
+      env: 'LEGACY_AGREEMENT_NUMBER_PREFIXES'
+    },
+    legacyGrantCodes: {
+      doc: 'Grant codes still served by the legacy backend',
+      format: Array,
+      default: [],
+      env: 'LEGACY_GRANT_CODES'
+    }
+  },
+  jwtSecret: {
+    doc: 'JWT Secret',
+    format: String,
+    nullable: true,
+    default: null,
+    env: 'AGREEMENTS_JWT_SECRET'
+  },
+  jwtDefaultKid: {
+    doc: 'Logical key id (kid) that the default AGREEMENTS_JWT_SECRET is stored under, and that is assumed when an incoming caller token carries no kid header (e.g. grants-ui)',
+    format: String,
+    default: 'agreements-hs256-1',
+    env: 'AGREEMENTS_JWT_DEFAULT_KID'
+  },
+  jwtKeyring: {
+    doc: 'Optional JSON object of additional caller-token verification secrets keyed by kid, e.g. {"agreements-hs256-2":"<secret>"}. Used to support key rotation via kid overlap alongside AGREEMENTS_JWT_SECRET',
+    format: Object,
+    default: {},
+    sensitive: true,
+    env: 'AGREEMENTS_JWT_KEYRING'
+  },
+  callerTokenEnforce: {
+    doc: 'When true, caller-token claim checks (iss/aud/sub/exp/lifetime and unknown kid) reject the request. When false (the default), they are warn-only (backwards-compatible). Feature-flag driven so enforcement can be rolled forward or back per environment',
+    format: Boolean,
+    default: false,
+    env: 'CALLER_TOKEN_ENFORCE'
+  },
+  snsTopicArnAudit: {
+    doc: 'SNS Topic ARN for audit events',
+    format: String,
+    nullable: true,
+    default: null,
+    env: 'SNS_TOPIC_ARN_AUDIT'
   }
 })
 

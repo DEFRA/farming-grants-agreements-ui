@@ -1,0 +1,15 @@
+{% macro defraHeading(params) %}
+  {%- set text = params.text or '' %}
+  {%- set level = (params.level | int) or 1 %}
+  {%- set classes = params.classes or '' %}
+  {%- set id = params.id or '' %}
+
+  {%- if level < 1 or level > 6 %}{% set level = 1 %}{% endif %}
+
+  {%- set defaultSizes = ["xl", "l", "m", "s", "s", "s"] %}
+  {%- set size = params.size or defaultSizes[level-1] %}
+
+  <h{{ level }}{% if id %} id="{{ id }}"{% endif %} class="govuk-heading-{{ size }}{% if classes %} {{ classes }}{% endif %}">
+    {{ text | escape }}
+  </h{{ level }}>
+{% endmacro %}

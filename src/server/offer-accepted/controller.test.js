@@ -1,16 +1,21 @@
+import { vi } from 'vitest'
 import { MatchersV2 } from '@pact-foundation/pact'
 
 import { createServer } from '#~/server/server.js'
 import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test__/pact-agreement.fixture.js'
 import { config } from '#~/config/config.js'
-import { createConsumerPact } from '#~/contracts/consumer/pact-test-helpers.js'
+import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test-helpers.js'
+
+vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
+  extractJwtPayload: vi.fn(() => ({ grantCode: 'MOCK' }))
+}))
 
 const { like } = MatchersV2
 const heferLink =
   '/farm-payments/fptt-information#sec-5-check-if-your-land-is-eligible-for-FPTT-actions'
 const sssiLink =
   '/farm-payments/fptt-information#sec-10-get-all-necessary-regulatory-consents-permissions-and-licences-in-place'
-const heferListItem = `a <a href="${heferLink}" class="govuk-link" rel="noopener noreferrer" target="_blank">Historic Environment Farm Environment Record (HEFER)</a> from Historic England`
+const heferListItem = `a <a href="${heferLink}" class="govuk-link" rel="noopener noreferrer" target="_blank">Historic Environment Farm Environment Record (HEFER) (opens in new tab)</a> from Historic England`
 const heferOnlyHeading =
   'You must get an SFI Historic Environment Farm Environment Record (SFI HEFER) from Historic England'
 const heferOnlyBody =
@@ -20,7 +25,7 @@ const sssiOnlyHeading = 'You must have SSSI consent'
 const sssiOnlyBody =
   "You are applying for actions on land that's a site of special scientific interest (SSSI). You must get SSSI consent from Natural England."
 const sssiOnlyGuidance = `href="${sssiLink}" class="govuk-link" rel="noopener noreferrer" target="_blank">Read the guidance on SSSI consent (opens in new tab).</a>`
-const sssiListItem = `<a href="${sssiLink}" class="govuk-link" rel="noopener noreferrer" target="_blank">SSSI consent</a> from Natural England`
+const sssiListItem = `<a href="${sssiLink}" class="govuk-link" rel="noopener noreferrer" target="_blank">SSSI consent (opens in new tab)</a> from Natural England`
 
 describe('#offerAcceptedController', () => {
   let server
@@ -28,6 +33,7 @@ describe('#offerAcceptedController', () => {
   const provider = createConsumerPact(import.meta.url)
 
   beforeAll(async () => {
+    config.set('gasBackend.legacyGrantCodes', ['MOCK'])
     server = await createServer()
     await server.initialize()
   })
@@ -71,7 +77,7 @@ describe('#offerAcceptedController', () => {
         expect(result).toContain('Agreement offer accepted')
         expect(result).toContain('The start date for this agreement is')
         expect(result).toContain('1 September 2025')
-        expect(result).toContain('FPTT987654321')
+        expect(result).toContain('FPTT123456789')
       })
   })
 
@@ -239,6 +245,107 @@ describe('#offerAcceptedController', () => {
         expect(result).not.toContain('You must get consent to do your actions')
         expect(result).not.toContain(`href="${sssiLink}"`)
         expect(result).not.toContain(`href="${heferLink}"`)
+        expect(result).not.toContain("What you've agreed")
       })
+  })
+})
+
+describe('offerAcceptedController handler', () => {
+  let offerAcceptedController
+  let mockedAuditEvent
+
+  const agreementData = {
+    agreementNumber: 'FPTT123',
+    code: 'frps-private-beta',
+    payment: { agreementStartDate: '2025-09-01' },
+    consentObjects: []
+  }
+
+  const createH = () => ({
+    view: vi.fn((template, context) => ({ template, context }))
+  })
+
+  beforeEach(async () => {
+    vi.resetModules()
+    vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
+      auditEvent: vi.fn(),
+      AuditEvent: { OFFER_ACCEPTED_VIEWED: 'OFFER_ACCEPTED_VIEWED' }
+    }))
+    vi.doMock('#~/server/common/helpers/get-first-payment-date.js', () => ({
+      getFirstPaymentDate: vi.fn(() => '5 December 2025')
+    }))
+    vi.doMock('#~/server/common/helpers/get-consent-details.js', () => ({
+      getConsentDetails: vi.fn(() => ({}))
+    }))
+    ;({ offerAcceptedController } = await import('./controller.js'))
+    ;({ auditEvent: mockedAuditEvent } =
+      await import('#~/server/common/helpers/audit-event.js'))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('emits OFFER_ACCEPTED_VIEWED with agreementData when the screen is rendered', async () => {
+    const h = createH()
+    const request = { pre: { data: { agreementData } }, params: {} }
+
+    await offerAcceptedController.handler(request, h)
+
+    expect(mockedAuditEvent).toHaveBeenCalledWith(
+      request,
+      'OFFER_ACCEPTED_VIEWED',
+      agreementData
+    )
+    expect(h.view).toHaveBeenCalledWith(
+      'grant-types/fptt/offer-accepted/offer-accepted',
+      expect.objectContaining({
+        pageTitle: 'Offer accepted',
+        panelTitle: 'Agreement offer accepted'
+      })
+    )
+  })
+
+  test('renders WMP-safe confirmation through the WMP grant-code view', async () => {
+    const h = createH()
+    const wmpAgreementData = {
+      agreementNumber: 'WMP123',
+      code: 'woodland',
+      payment: { agreementStartDate: '2026-04-16' },
+      consentObjects: []
+    }
+    const request = { pre: { data: { agreementData: wmpAgreementData } } }
+
+    await offerAcceptedController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'grant-types/wmp/offer-accepted/offer-accepted',
+      expect.objectContaining({
+        pageTitle: 'Offer accepted',
+        panelTitle: 'Agreement offer accepted',
+        termsHref:
+          'https://www.gov.uk/government/publications/capital-grants-agreements-terms-and-conditions-2026'
+      })
+    )
+  })
+
+  test('throws bad request for unsupported agreement codes', async () => {
+    const h = createH()
+    const request = {
+      pre: {
+        data: {
+          agreementData: {
+            agreementNumber: 'UNKNOWN123',
+            code: 'unknown',
+            payment: { agreementStartDate: '2026-04-16' }
+          }
+        }
+      }
+    }
+
+    await expect(offerAcceptedController.handler(request, h)).rejects.toThrow(
+      'Unsupported agreement code: unknown'
+    )
   })
 })

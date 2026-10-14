@@ -19,12 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -33,11 +33,11 @@ jobs:
         run: npm ci
 
       - name: Validate PR title with commitlint
-        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
         run: echo "${{ github.event.pull_request.title }}" | npx commitlint --verbose
 
       - name: Validate PR commits with commitlint
-        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
         run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
       - name: Test code and Create Test Coverage Reports
@@ -74,12 +74,12 @@ jobs:
           echo "::add-mask::$PACT_PASS"
 
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: npm
@@ -91,6 +91,7 @@ jobs:
         env:
           PACT_PUBLISH_VERIFICATION: false
         run: |
+          npm run build:frontend
           SERVICE_VERSION=$(git describe --tags --abbrev=0) \
           PACT_BROKER_USERNAME="${PACT_BROKER_USERNAME:-$PACT_USER}" \
           PACT_BROKER_PASSWORD="${PACT_BROKER_PASSWORD:-$PACT_PASS}" \

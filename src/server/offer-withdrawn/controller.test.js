@@ -1,9 +1,14 @@
 import { MatchersV2 } from '@pact-foundation/pact'
+import { vi } from 'vitest'
 
 import { createServer } from '#~/server/server.js'
 import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test__/pact-agreement.fixture.js'
 import { config } from '#~/config/config.js'
-import { createConsumerPact } from '#~/contracts/consumer/pact-test-helpers.js'
+import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test-helpers.js'
+
+vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
+  extractJwtPayload: vi.fn(() => ({ grantCode: 'MOCK' }))
+}))
 
 const { like } = MatchersV2
 
@@ -13,6 +18,7 @@ describe('#offerWithdrawnController', () => {
   const provider = createConsumerPact(import.meta.url)
 
   beforeAll(async () => {
+    config.set('gasBackend.legacyGrantCodes', ['MOCK'])
     server = await createServer()
     await server.initialize()
   })

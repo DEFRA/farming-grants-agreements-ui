@@ -54,6 +54,7 @@ export async function createServer() {
       strictHeader: false
     }
   })
+
   await server.register([
     requestLogger,
     requestTracing,

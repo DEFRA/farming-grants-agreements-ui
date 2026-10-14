@@ -5,9 +5,12 @@ const ARIA_DISABLED_ATTR = 'aria-disabled'
 
 /**
  * Initialize checkbox-to-button functionality
- * Exported for testing purposes
  */
-export function initCheckbox() {
+function initCheckbox() {
+  if (typeof document === 'undefined') {
+    return
+  }
+
   // GOV.UK checkboxes component generates input with id based on name
   const checkbox =
     document.querySelector('#confirm') ||
@@ -50,9 +53,9 @@ export function initCheckbox() {
 
 // Auto-initialize when loaded in browser
 /* c8 ignore start */
-if (globalThis.window !== undefined) {
+if (typeof globalThis.addEventListener === 'function') {
   // Wait for both DOM and GOV.UK Frontend to be ready
-  globalThis.window.addEventListener('load', function () {
+  globalThis.addEventListener('load', function () {
     // Add small delay to ensure GOV.UK Frontend has initialized
     setTimeout(initCheckbox, 100)
   })

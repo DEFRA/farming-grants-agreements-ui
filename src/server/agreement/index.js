@@ -1,19 +1,83 @@
+import Boom from '@hapi/boom'
 import { agreementController } from './controller.js'
-import { apiRequest } from '#~/server/common/helpers/api.js'
+import { apiRequest, GAS, getBackend } from '#~/server/common/helpers/api.js'
+import { extractJwtPayload } from '#~/server/common/helpers/jwt-auth.js'
 import { viewAgreementController } from '#~/server/view-agreement/controller.js'
+import {
+  agreementActionController,
+  getGasActionAuthentication
+} from './action-controller.js'
+import {
+  getAgreementAuthentication,
+  getGasQueryParams
+} from './agreement-request.js'
+
+const getAgreementMethod = (payload) =>
+  payload?.action === 'accept-offer' ? 'POST' : 'GET'
+
+const getAgreementBody = (method, payload) =>
+  method === 'POST' ? payload : undefined
+
+const getAgreementQueryParams = (request, backend) => {
+  if (backend === GAS) {
+    return {}
+  }
+
+  const queryParams = getGasQueryParams(request)
+  delete queryParams.mode
+
+  if (request.params.mode === 'print') {
+    queryParams.mode = 'print'
+  }
+
+  return queryParams
+}
+
+const assertSupportedGasMode = (backend, mode) => {
+  if (backend === GAS && mode && mode !== 'print') {
+    throw Boom.notFound('Agreement route not found')
+  }
+}
 
 const getAgreementData = async (request) => {
   const { agreementId = '' } = request.params
-  const action = request?.payload?.action
-  const method = action === 'accept-offer' ? 'POST' : 'GET'
+  const method = getAgreementMethod(request.payload)
+  const authToken = getAgreementAuthentication(request)
+
+  const jwtPayload = extractJwtPayload(authToken)
+
+  if (!jwtPayload) {
+    throw Boom.unauthorized(
+      'Your account is not authorised to view/accept this offer agreement'
+    )
+  }
+
+  const backend = getBackend(jwtPayload, agreementId)
+  assertSupportedGasMode(backend, request.params.mode)
 
   return apiRequest({
     agreementId,
     method,
-    auth:
-      request.headers['x-encrypted-auth'] || request.query['x-encrypted-auth'],
-    body: method === 'POST' ? request.payload : undefined
+    auth: authToken,
+    body: getAgreementBody(method, request.payload),
+    backend,
+    jwtPayload,
+    queryParams: getAgreementQueryParams(request, backend)
   })
+}
+
+const gasActionPre = [
+  {
+    method: getGasActionAuthentication,
+    assign: 'actionAuthentication'
+  }
+]
+
+const gasActionPayload = {
+  allow: 'application/x-www-form-urlencoded',
+  output: 'data',
+  parse: true,
+  maxBytes: 64 * 1024
 }
 
 /**
@@ -33,6 +97,23 @@ export const agreement = {
             pre: [{ method: getAgreementData, assign: 'data' }]
           },
           ...agreementController
+        },
+        {
+          method: 'GET',
+          path: '/{agreementId}/actions/{actionName}',
+          options: {
+            pre: gasActionPre
+          },
+          handler: agreementActionController.get
+        },
+        {
+          method: 'POST',
+          path: '/{agreementId}/actions/{actionName}',
+          options: {
+            pre: gasActionPre,
+            payload: gasActionPayload
+          },
+          handler: agreementActionController.post
         },
         {
           method: 'GET',

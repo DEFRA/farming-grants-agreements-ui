@@ -1,0 +1,12 @@
+{% macro defraContainer(params, renderDefraComponent) %}
+  {%- set items = params.items or [] %}
+  {%- set classes = params.classes or '' %}
+  {%- set label = params.label or '' %}
+  {%- set id = params.id or '' %}
+
+  <div{% if id %} id="{{ id }}"{% endif %} class="defra-container{% if classes %} {{ classes }}{% endif %}">
+    {% for item in items %}
+      {{ renderDefraComponent(item) }}
+    {% endfor %}
+  </div>
+{% endmacro %}

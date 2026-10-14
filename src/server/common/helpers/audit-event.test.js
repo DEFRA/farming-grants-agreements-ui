@@ -1,11 +1,23 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
+const TEST_TOPIC_ARN =
+  'arn:aws:sns:eu-west-2:332499610595:fcp_audit_farming_grants_agreements_ui'
+
 describe('AuditEvent', () => {
   let AuditEvent
 
   beforeEach(async () => {
     vi.resetModules()
-    vi.doMock('@defra/cdp-auditing', () => ({ audit: vi.fn() }))
+    vi.doMock('@aws-sdk/client-sns', () => ({
+      SNSClient: function SNSClient() {},
+      PublishCommand: function PublishCommand(params) {
+        this.TopicArn = params.TopicArn
+        this.Message = params.Message
+      }
+    }))
+    vi.doMock('#~/config/config.js', () => ({
+      config: { get: vi.fn() }
+    }))
     ;({ AuditEvent } = await import('./audit-event.js'))
   })
 
@@ -24,6 +36,9 @@ describe('AuditEvent', () => {
     expect(AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED).toBe(
       'ACCEPT_OFFER_DECLARATION_CONFIRMED'
     )
+    expect(AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED).toBe(
+      'ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED'
+    )
     expect(AuditEvent.ACCEPT_OFFER_SUBMITTED).toBe('ACCEPT_OFFER_SUBMITTED')
   })
 
@@ -36,15 +51,58 @@ describe('AuditEvent', () => {
 })
 
 describe('auditEvent', () => {
-  let audit
+  let mockSend
   let auditEvent
   let AuditEvent
 
+  const createRequest = (overrides = {}) => ({
+    params: { agreementId: 'AGR123' },
+    auth: { credentials: { sessionId: 'session-abc' } },
+    headers: {},
+    info: { remoteAddress: '10.0.0.1' },
+    logger: { error: vi.fn() },
+    ...overrides
+  })
+
+  const callAuditEvent = (
+    request,
+    event,
+    agreementData = { identifiers: {} },
+    status = 'success'
+  ) => {
+    const client = { send: mockSend }
+    auditEvent(request, event, agreementData, status, client)
+  }
+
+  const getPublishedPayload = () => {
+    const command = mockSend.mock.calls[0][0]
+    return JSON.parse(command.Message)
+  }
+
   beforeEach(async () => {
     vi.resetModules()
-    vi.doMock('@defra/cdp-auditing', () => ({ audit: vi.fn() }))
+    mockSend = vi.fn().mockResolvedValue({})
+    vi.doMock('@aws-sdk/client-sns', () => ({
+      SNSClient: function SNSClient() {},
+      PublishCommand: function PublishCommand(params) {
+        this.TopicArn = params.TopicArn
+        this.Message = params.Message
+      }
+    }))
+    vi.doMock('#~/config/config.js', () => ({
+      config: {
+        get: vi.fn((key) => {
+          if (key === 'snsTopicArnAudit') {
+            return TEST_TOPIC_ARN
+          }
+          if (key === 'cdpEnvironment') {
+            return 'test'
+          }
+          return undefined
+        })
+      }
+    }))
     ;({ auditEvent, AuditEvent } = await import('./audit-event.js'))
-    ;({ audit } = await import('@defra/cdp-auditing'))
   })
 
   afterEach(() => {
@@ -52,50 +110,266 @@ describe('auditEvent', () => {
     vi.clearAllMocks()
   })
 
-  test('calls audit with event and extracted agreement context', () => {
-    const request = { params: { agreementId: 'AGR123' } }
+  test('does nothing when snsTopicArnAudit is null', async () => {
+    vi.resetModules()
+    vi.doMock('@aws-sdk/client-sns', () => ({
+      SNSClient: function SNSClient() {},
+      PublishCommand: function PublishCommand(params) {
+        this.TopicArn = params.TopicArn
+        this.Message = params.Message
+      }
+    }))
+    vi.doMock('#~/config/config.js', () => ({
+      config: { get: vi.fn().mockReturnValue(null) }
+    }))
+    const { auditEvent: nullAuditEvent, AuditEvent: NullAuditEvent } =
+      await import('./audit-event.js')
+
+    nullAuditEvent(
+      createRequest(),
+      NullAuditEvent.REVIEW_OFFER_VIEWED,
+      {},
+      'success',
+      { send: mockSend }
+    )
+
+    await Promise.resolve()
+    expect(mockSend).not.toHaveBeenCalled()
+  })
+
+  test('does not prefix the environment when running locally', async () => {
+    vi.resetModules()
+    vi.doMock('@aws-sdk/client-sns', () => ({
+      SNSClient: function SNSClient() {},
+      PublishCommand: function PublishCommand(params) {
+        this.TopicArn = params.TopicArn
+        this.Message = params.Message
+      }
+    }))
+    vi.doMock('#~/config/config.js', () => ({
+      config: {
+        get: vi.fn((key) => {
+          if (key === 'snsTopicArnAudit') {
+            return TEST_TOPIC_ARN
+          }
+          if (key === 'cdpEnvironment') {
+            return 'local'
+          }
+          return undefined
+        })
+      }
+    }))
+    const { auditEvent: localAuditEvent, AuditEvent: LocalAuditEvent } =
+      await import('./audit-event.js')
+
+    localAuditEvent(
+      createRequest(),
+      LocalAuditEvent.REVIEW_OFFER_VIEWED,
+      { identifiers: {} },
+      'success',
+      { send: mockSend }
+    )
+
+    await Promise.resolve()
+    const command = mockSend.mock.calls[0][0]
+    expect(JSON.parse(command.Message).environment).toBe('local')
+  })
+
+  test('publishes to the configured SNS topic ARN', async () => {
+    callAuditEvent(createRequest(), AuditEvent.REVIEW_OFFER_VIEWED, {
+      identifiers: {}
+    })
+
+    await Promise.resolve()
+    expect(mockSend).toHaveBeenCalledOnce()
+    const command = mockSend.mock.calls[0][0]
+    expect(command.TopicArn).toBe(TEST_TOPIC_ARN)
+    expect(command.Message).toEqual(expect.any(String))
+  })
+
+  test('publishes the correct top-level fields', async () => {
     const agreementData = {
       agreementNumber: 'FPTT987654321',
-      identifiers: { sbi: '106284736' }
+      correlationId: 'corr-xyz',
+      identifiers: {}
     }
 
-    auditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, agreementData)
+    callAuditEvent(
+      createRequest(),
+      AuditEvent.REVIEW_OFFER_VIEWED,
+      agreementData
+    )
 
-    expect(audit).toHaveBeenCalledWith({
-      event: 'REVIEW_OFFER_VIEWED',
-      agreement: {
-        agreementId: 'AGR123',
-        agreementNumber: 'FPTT987654321',
-        sbi: '106284736'
+    await Promise.resolve()
+    const payload = getPublishedPayload()
+    expect(payload).toMatchObject({
+      sessionid: 'session-abc',
+      correlationid: 'corr-xyz',
+      datetime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+      environment: 'cdp-test',
+      ip: '10.0.0.1'
+    })
+  })
+
+  test('publishes the correct security fields', async () => {
+    callAuditEvent(createRequest(), AuditEvent.REVIEW_OFFER_VIEWED, {
+      identifiers: {}
+    })
+
+    await Promise.resolve()
+    const payload = getPublishedPayload()
+    expect(payload.security).toMatchObject({
+      pmccode: '0706',
+      details: {
+        transactioncode: '2301',
+        message: 'User viewed the review offer screen',
+        additionalinfo: 'agreementId: AGR123'
       }
     })
   })
 
-  test('handles missing request params gracefully', () => {
-    auditEvent({}, AuditEvent.REVIEW_OFFER_VIEWED, {})
+  test('published audit contains accounts and entities', async () => {
+    const agreementData = {
+      agreementNumber: 'FPTT987',
+      identifiers: { sbi: '123', frn: 'FRN1' }
+    }
 
-    expect(audit).toHaveBeenCalledWith({
-      event: 'REVIEW_OFFER_VIEWED',
-      agreement: {
-        agreementId: undefined,
-        agreementNumber: undefined,
-        sbi: undefined
-      }
-    })
+    callAuditEvent(
+      createRequest(),
+      AuditEvent.REVIEW_OFFER_VIEWED,
+      agreementData
+    )
+
+    await Promise.resolve()
+    const payload = getPublishedPayload()
+    expect(payload.audit.accounts).toEqual({ sbi: '123', frn: 'FRN1' })
+    expect(payload.audit.accounts).not.toHaveProperty('crn')
+    expect(payload.audit.entities).toEqual([
+      { entity: 'agreement', action: 'read', entityid: 'FPTT987' }
+    ])
   })
 
-  test('handles omitted agreementData gracefully', () => {
-    const request = { params: { agreementId: 'AGR123' } }
+  test('builds accounts omitting undefined fields', async () => {
+    const agreementData = { identifiers: { sbi: '123456789', frn: 'FRN1' } }
 
-    auditEvent(request, AuditEvent.REVIEW_OFFER_CONTINUED)
+    callAuditEvent(
+      createRequest(),
+      AuditEvent.REVIEW_OFFER_VIEWED,
+      agreementData
+    )
 
-    expect(audit).toHaveBeenCalledWith({
-      event: 'REVIEW_OFFER_CONTINUED',
-      agreement: {
-        agreementId: 'AGR123',
-        agreementNumber: undefined,
-        sbi: undefined
-      }
+    await Promise.resolve()
+    const payload = getPublishedPayload()
+    expect(payload.audit.accounts).toEqual({ sbi: '123456789', frn: 'FRN1' })
+    expect(payload.audit.accounts).not.toHaveProperty('crn')
+  })
+
+  test('entities id falls back to agreementId from params when agreementNumber is absent', async () => {
+    callAuditEvent(createRequest(), AuditEvent.REVIEW_OFFER_VIEWED, {
+      identifiers: {}
     })
+
+    await Promise.resolve()
+    const payload = getPublishedPayload()
+    expect(payload.audit.entities[0].entityid).toBe('AGR123')
+  })
+
+  test('passes failure status through', async () => {
+    callAuditEvent(
+      createRequest(),
+      AuditEvent.ACCEPT_OFFER_SUBMITTED,
+      { identifiers: {} },
+      'failure'
+    )
+
+    await Promise.resolve()
+    const payload = getPublishedPayload()
+    expect(payload.audit.status).toBe('failure')
+  })
+
+  test('uses correct action per event in entities', async () => {
+    const cases = [
+      [AuditEvent.REVIEW_OFFER_VIEWED, 'read'],
+      [AuditEvent.REVIEW_OFFER_CONTINUED, 'read'],
+      [AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED, 'submitted'],
+      [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED, 'submitted'],
+      [AuditEvent.ACCEPT_OFFER_SUBMITTED, 'accepted'],
+      [AuditEvent.OFFER_ACCEPTED_VIEWED, 'read'],
+      [AuditEvent.AGREEMENT_VIEWED, 'read']
+    ]
+
+    for (const [event, expectedAction] of cases) {
+      mockSend.mockClear()
+      callAuditEvent(createRequest(), event)
+      await Promise.resolve()
+      const payload = getPublishedPayload()
+      expect(payload.audit.entities[0].action).toBe(expectedAction)
+    }
+  })
+
+  test('uses correct transaction code per event', async () => {
+    const cases = [
+      [AuditEvent.REVIEW_OFFER_VIEWED, '2301'],
+      [AuditEvent.REVIEW_OFFER_CONTINUED, '2302'],
+      [AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED, '2307'],
+      [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED, '2303'],
+      [AuditEvent.ACCEPT_OFFER_SUBMITTED, '2304']
+    ]
+
+    for (const [event, expectedCode] of cases) {
+      mockSend.mockClear()
+      callAuditEvent(createRequest(), event)
+      await Promise.resolve()
+      const payload = getPublishedPayload()
+      expect(payload.security.details.transactioncode).toBe(expectedCode)
+    }
+  })
+
+  test('logs error when SNS publish fails', async () => {
+    mockSend.mockRejectedValueOnce(new Error('SNS down'))
+    const request = createRequest()
+
+    callAuditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, { identifiers: {} })
+
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(request.logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ err: expect.any(Error) }),
+      'Failed to publish audit event to SNS'
+    )
+  })
+
+  test('prefers x-forwarded-for over remoteAddress for ip', async () => {
+    const request = createRequest({
+      headers: { 'x-forwarded-for': '203.0.113.5' }
+    })
+
+    callAuditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, { identifiers: {} })
+
+    await Promise.resolve()
+    const payload = getPublishedPayload()
+    expect(payload.ip).toBe('203.0.113.5')
+  })
+
+  test('extracts the first ip from x-forwarded-for when multiple are present', async () => {
+    const request = createRequest({
+      headers: { 'x-forwarded-for': '203.0.113.5, 10.0.0.1, 172.16.0.1' }
+    })
+
+    callAuditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, { identifiers: {} })
+
+    await Promise.resolve()
+    const payload = getPublishedPayload()
+    expect(payload.ip).toBe('203.0.113.5')
+  })
+
+  test('handles missing auth gracefully', async () => {
+    const request = createRequest({ auth: undefined })
+
+    callAuditEvent(request, AuditEvent.REVIEW_OFFER_VIEWED, { identifiers: {} })
+
+    await Promise.resolve()
+    const payload = getPublishedPayload()
+    expect(payload.sessionid).toBeUndefined()
   })
 })

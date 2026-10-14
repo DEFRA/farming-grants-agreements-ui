@@ -1,30 +1,158 @@
-import { audit } from '@defra/cdp-auditing'
+import { PublishCommand, SNSClient } from '@aws-sdk/client-sns'
+
+import { config } from '#~/config/config.js'
+
+const snsClient = new SNSClient({})
+
+/**
+ * Maps the app's `cdpEnvironment` value to the FCP Audit schema's environment
+ * vocabulary (e.g. `dev` -> `cdp-dev`). `local` is unchanged; all other values
+ * gain a `cdp-` prefix.
+ * @param {string} cdpEnvironment
+ * @returns {string}
+ */
+const mapEnvironment = (cdpEnvironment) =>
+  cdpEnvironment === 'local' ? 'local' : `cdp-${cdpEnvironment}`
 
 export const AuditEvent = Object.freeze({
   REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED',
   REVIEW_OFFER_CONTINUED: 'REVIEW_OFFER_CONTINUED',
   ACCEPT_OFFER_DECLARATION_CONFIRMED: 'ACCEPT_OFFER_DECLARATION_CONFIRMED',
-  ACCEPT_OFFER_SUBMITTED: 'ACCEPT_OFFER_SUBMITTED'
+  ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED:
+    'ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED',
+  ACCEPT_OFFER_SUBMITTED: 'ACCEPT_OFFER_SUBMITTED',
+  OFFER_ACCEPTED_VIEWED: 'OFFER_ACCEPTED_VIEWED',
+  AGREEMENT_VIEWED: 'AGREEMENT_VIEWED'
 })
 
+// Human-readable description for each audit event, used in security.details.message
+const eventMessages = {
+  [AuditEvent.REVIEW_OFFER_VIEWED]: 'User viewed the review offer screen',
+  [AuditEvent.REVIEW_OFFER_CONTINUED]:
+    'User continued from review offer to accept offer screen',
+  [AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED]:
+    'User confirmed the declaration on the accept offer screen',
+  [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED]:
+    'User submitted the Accept offer form but the "I have read the information (checkbox)" has not been selected',
+  [AuditEvent.ACCEPT_OFFER_SUBMITTED]: 'User selected Accept offer',
+  [AuditEvent.OFFER_ACCEPTED_VIEWED]: 'User viewed the offer accepted screen',
+  [AuditEvent.AGREEMENT_VIEWED]: 'User viewed the agreement'
+}
+
+// Transaction code for each audit event, used in security.details.transactioncode
+const eventTransactionCodes = {
+  [AuditEvent.REVIEW_OFFER_VIEWED]: '2301',
+  [AuditEvent.REVIEW_OFFER_CONTINUED]: '2302',
+  [AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED]: '2307',
+  [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED]: '2303',
+  [AuditEvent.ACCEPT_OFFER_SUBMITTED]: '2304',
+  [AuditEvent.OFFER_ACCEPTED_VIEWED]: '2305',
+  [AuditEvent.AGREEMENT_VIEWED]: '2306'
+}
+
+// Allowed action values for audit.action per event
+const eventActions = {
+  [AuditEvent.REVIEW_OFFER_VIEWED]: 'read',
+  [AuditEvent.REVIEW_OFFER_CONTINUED]: 'read',
+  [AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED]: 'submitted',
+  [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED]: 'submitted',
+  [AuditEvent.ACCEPT_OFFER_SUBMITTED]: 'accepted',
+  [AuditEvent.OFFER_ACCEPTED_VIEWED]: 'read',
+  [AuditEvent.AGREEMENT_VIEWED]: 'read'
+}
+
 /**
- * Extracts non-PII agreement context from the request and agreement data.
+ * Builds the full audit payload conforming to the agreed schema.
+ * Fields marked UNKNOWN require future work to source from decoded auth or other context.
+ * Fields marked HARDCODED are fixed values pending clarification with the audit team.
+ *
  * @param {import('@hapi/hapi').Request} request
+ * @param {AuditEvent[keyof AuditEvent]} event
  * @param {object} [agreementData]
- * @returns {{ agreementId: string, agreementNumber: string, sbi: string }}
+ * @param {'success'|'failure'} [status]
  */
-const getAgreementContext = (request, agreementData = {}) => ({
-  agreementId: request.params?.agreementId,
-  agreementNumber: agreementData.agreementNumber,
-  sbi: agreementData.identifiers?.sbi
+const buildAuditPayload = (
+  request,
+  event,
+  agreementData = {},
+  status = 'success'
+) => ({
+  user: request.payload?.requesterUsername,
+  sessionid: request.auth?.credentials?.sessionId,
+  correlationid: agreementData.correlationId,
+  datetime: new Date().toISOString(),
+  environment: mapEnvironment(config.get('cdpEnvironment')),
+  version: '0.1.0',
+  application: 'Grants',
+  component: config.get('serviceName'),
+  ip:
+    request.headers['x-forwarded-for']?.split(',')[0].trim() ??
+    request.info?.remoteAddress,
+
+  security: {
+    pmccode: '0706', // Consider all actions an internal or external user can execute, for example the menu options available to them
+    priority: '0', // 0 = happens all the time; 5 = unusual; 9 = very rare
+    details: {
+      transactioncode: eventTransactionCodes[event],
+      message: eventMessages[event],
+      additionalinfo: `agreementId: ${request.params?.agreementId}`
+    }
+  },
+
+  audit: {
+    eventtype: 'GrantsAcceptAgreement',
+    accounts: {
+      ...(agreementData.identifiers.sbi !== undefined && {
+        sbi: agreementData.identifiers.sbi
+      }),
+      ...(agreementData.identifiers.frn !== undefined && {
+        frn: agreementData.identifiers.frn
+      }),
+      ...(agreementData.identifiers.crn !== undefined && {
+        crn: agreementData.identifiers.crn
+      })
+    },
+    entities: [
+      {
+        entity: 'agreement',
+        action: eventActions[event],
+        entityid: agreementData.agreementNumber ?? request.params?.agreementId
+      }
+    ],
+    status,
+    details: agreementData
+  }
 })
 
 /**
- * Records an audit event enriched with agreement context.
+ * Records an audit event enriched with request and agreement context.
  * @param {import('@hapi/hapi').Request} request
  * @param {AuditEvent[keyof AuditEvent]} event
  * @param {object} [agreementData] - Agreement data from the API pre-handler
+ * @param {'success'|'failure'} [status] - Outcome of the action being audited
  */
-export const auditEvent = (request, event, agreementData = {}) => {
-  audit({ event, agreement: getAgreementContext(request, agreementData) })
+export const auditEvent = (
+  request,
+  event,
+  agreementData = {},
+  status = 'success',
+  client = snsClient
+) => {
+  const topicArn = config.get('snsTopicArnAudit')
+  if (!topicArn) {
+    return
+  }
+
+  const payload = buildAuditPayload(request, event, agreementData, status)
+
+  client
+    .send(
+      new PublishCommand({
+        TopicArn: topicArn,
+        Message: JSON.stringify(payload)
+      })
+    )
+    .catch((err) => {
+      request.logger?.error({ err }, 'Failed to publish audit event to SNS')
+    })
 }

@@ -19,7 +19,7 @@
   {# serviceName being used in govukHeader will be @deprecated in v6. It has moved to govukServiceNavigation - https://github.com/alphagov/govuk-frontend/blob/main/CHANGELOG.md#move-service-name-and-navigation-links-from-the-govuk-header-to-service-navigation-component #}
   {{ govukHeader({
     homepageUrl: "https://www.gov.uk/",
-    classes: "app-header",
+    classes: "app-header govuk-!-display-none-print",
     containerClasses: "govuk-width-container",
     serviceUrl: buildUrl(serviceUrl),
     useTudorCrown: true
@@ -31,6 +31,7 @@
 
   <aside class="govuk-width-container">
     {{ govukPhaseBanner({
+      classes: "govuk-!-display-none-print",
       tag: {
         text: "Beta"
       },
@@ -86,6 +87,7 @@
   {% endif %}
 
   {{ govukFooter({
+    classes: "govuk-!-display-none-print",
     meta: {
       items: footerLinks
     },

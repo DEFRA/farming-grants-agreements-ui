@@ -1,0 +1,68 @@
+{% set bodyClasses = "accept-offer-page" %}
+{% set mainClasses = "" %}
+{% set pageScript = "accept-offer.js" %}
+{% extends 'layouts/page.njk' %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+
+{% block content %}
+  <!-- Back Link -->
+  <a href="{{ buildUrl(baseUrl) }}" class="govuk-back-link govuk-!-margin-bottom-0 govuk-!-display-none-print">Back</a>
+  <!-- Main Heading and Content -->
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+      <p class="govuk-body">Your agreement will consist of the:</p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>agreement document</li>
+        <li><a href="{{ buildUrl(serviceUrl, 'farm-payments/terms-and-conditions') }}" class="govuk-link" rel="noopener noreferrer" target="_blank">Farm payments technical test terms and conditions (opens in new tab)</a></li>
+        <li>actions you have selected</li>
+      </ul>
+
+      <p class="govuk-body">By accepting this offer, you confirm on your own behalf or, where applicable, on behalf of the agreement holder, that:</p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>you will comply with the obligations under your agreement</li>
+        <li>the information you gave and the declarations you made in your application remain true and accurate to the best of your knowledge and belief</li>
+        <li>you have full capacity and authority to enter into the agreement</li>
+        <li>you are not aware of any circumstances which would render you ineligible or otherwise prevent you from complying with your obligations under the agreement</li>
+        <li>your obligations under the agreement do not and will not duplicate or conflict in whole or in part with any other legal or contractual obligations you are subject to</li>
+        <li>you will at all times comply with all relevant law (as defined in the Farm payments technical test terms and conditions) in the performance of your obligations under the agreement</li>
+      </ul>
+
+     <p class="govuk-body">Check the Farm payments technical test terms and conditions to understand what can happen if you deliberately give wrong or incomplete information, or do not report changes as soon as possible.</p>
+     <p class="govuk-body">In addition to the confirmations above, if you are accepting this offer on behalf of the agreement holder, you confirm you are duly authorised and have the capacity to:</p>
+      <ul class="govuk-list govuk-list--bullet">
+         <li>accept this agreement on the agreement holder's behalf</li>
+         <li>enter into the agreement on the agreement holder's behalf</li>
+       </ul>
+
+      <!-- Accept Button -->
+      <form method="post" action="{{ buildUrl(baseUrl) }}" id="accept-offer-form">
+        {{ govukCheckboxes({
+          idPrefix: "confirm",
+          name: "confirm",
+          errorMessage: errorMessage,
+          items: [
+            {
+              value: "confirmed",
+              text: "I confirm I have read the information in this section and accept this agreement offer. I accept it either on my own or my organisation's behalf, or as someone duly authorised to act on behalf of the agreement holder."
+            }
+          ]
+        }) }}
+
+        {{ govukButton({
+          text: "Accept offer",
+          name: "action",
+          value: "validate-accept-offer",
+          attributes: {
+            id: "accept-offer-button"
+          }
+        }) }}
+      </form>
+
+      {% set section = { message: 'Contact the Rural Payments Agency (RPA) by phone or email for help and support.' } %}
+      {% include "partials/help/update.njk" %}
+    </div>
+  </div>
+{% endblock %}

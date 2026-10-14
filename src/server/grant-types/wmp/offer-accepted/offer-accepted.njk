@@ -1,0 +1,34 @@
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-two-thirds">
+        <div class="govuk-panel govuk-panel--confirmation">
+          <h1 class="govuk-panel__title">
+            {{ panelTitle }}
+          </h1>
+          <div class="govuk-panel__body">
+            The start date for this agreement is<br/>
+            {{ agreement.payment.agreementStartDate | formatDate('d MMMM yyyy') }}
+          </div>
+        </div>
+
+        <div class="govuk-panel__body">
+          <p class="govuk-body">Your agreement number is {{ agreement.agreementNumber }}.</p>
+
+          <p class="govuk-body">You can view:</p>
+          <ul class="govuk-list govuk-list--bullet">
+            <li>your <a href="{{ buildUrl(baseUrl, agreement.agreementNumber) }}" class="govuk-link" rel="noopener noreferrer" target="_blank">agreement document</a></li>
+            <li>the <a href="{{ termsHref }}" class="govuk-link">Capital grants agreements: terms and conditions 2026</a></li>
+          </ul>
+
+          <h2 class="govuk-heading-m">If you need help</h2>
+          <p class="govuk-body">Contact the Rural Payments Agency (RPA) by phone or email.</p>
+          {% include "partials/help/wmp-rpa-contact-details.njk" %}
+        </div>
+      </div>
+
+
+    </div>
+{% endblock %}

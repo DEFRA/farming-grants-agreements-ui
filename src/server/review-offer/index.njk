@@ -200,6 +200,8 @@
     </tbody>
   </table>
 
+  {% include "partials/help/review-offer-update.njk" %}
+
   <form method="POST" action="{{ buildUrl(baseUrl) }}">
     {{ govukButton({
       text: "Continue",

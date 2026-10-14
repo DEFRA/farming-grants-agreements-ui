@@ -2,9 +2,7 @@ import {
   calculateFirstPaymentForParcelItem,
   calculateSubsequentPaymentForParcelItem,
   calculateFirstPaymentForAgreementLevelItem,
-  calculateSubsequentPaymentForAgreementLevelItem,
-  calculateTotalFirstPayment,
-  calculateTotalSubsequentPayment
+  calculateSubsequentPaymentForAgreementLevelItem
 } from './payment-calculations.js'
 
 describe('payment calculations', () => {
@@ -115,56 +113,6 @@ describe('payment calculations', () => {
       expect(calculateSubsequentPaymentForAgreementLevelItem(null, '10')).toBe(
         0
       )
-    })
-  })
-
-  describe('calculateTotalFirstPayment', () => {
-    const mockPayments = [
-      { firstPaymentPence: 1000 },
-      { firstPaymentPence: 2000 },
-      { firstPaymentPence: 1500 }
-    ]
-
-    it('should sum all first payments', () => {
-      expect(calculateTotalFirstPayment(mockPayments)).toBe(4500)
-    })
-
-    it('should handle missing firstPaymentPence values', () => {
-      const paymentsWithMissing = [
-        { firstPaymentPence: 1000 },
-        {},
-        { firstPaymentPence: 2000 }
-      ]
-      expect(calculateTotalFirstPayment(paymentsWithMissing)).toBe(3000)
-    })
-
-    it('should handle empty array', () => {
-      expect(calculateTotalFirstPayment([])).toBe(0)
-    })
-  })
-
-  describe('calculateTotalSubsequentPayment', () => {
-    const mockPayments = [
-      { subsequentPaymentPence: 1200 },
-      { subsequentPaymentPence: 2400 },
-      { subsequentPaymentPence: 1800 }
-    ]
-
-    it('should sum all subsequent payments', () => {
-      expect(calculateTotalSubsequentPayment(mockPayments)).toBe(5400)
-    })
-
-    it('should handle missing subsequentPaymentPence values', () => {
-      const paymentsWithMissing = [
-        { subsequentPaymentPence: 1200 },
-        {},
-        { subsequentPaymentPence: 2400 }
-      ]
-      expect(calculateTotalSubsequentPayment(paymentsWithMissing)).toBe(3600)
-    })
-
-    it('should handle empty array', () => {
-      expect(calculateTotalSubsequentPayment([])).toBe(0)
     })
   })
 })

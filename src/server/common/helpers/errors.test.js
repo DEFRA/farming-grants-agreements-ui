@@ -1,8 +1,12 @@
 import { vi } from 'vitest'
 
-import { catchAll } from './errors.js'
 import { createServer } from '#~/server/server.js'
 import { statusCodes } from '#~/server/common/constants/status-codes.js'
+import { errorHandler } from './errors.js'
+
+vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
+  extractJwtPayload: vi.fn(() => ({ grantCode: 'ANY' }))
+}))
 
 describe('#errors', () => {
   let server
@@ -30,7 +34,20 @@ describe('#errors', () => {
 })
 
 describe('#catchAll', () => {
+  let catchAll
   const mockLogger = { info: vi.fn(), error: vi.fn() }
+
+  beforeAll(async () => {
+    const mockServer = {
+      ext: vi.fn((event, handler) => {
+        if (event === 'onPreResponse') {
+          catchAll = handler
+        }
+      })
+    }
+    await errorHandler.register(mockServer)
+  })
+
   let mockErrorResponse
   const errorPage = 'error/index.njk'
   const mockRequest = (statusCode) => {

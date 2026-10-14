@@ -55,35 +55,9 @@ const calculateSubsequentPaymentForAgreementLevelItem = (
   )
 }
 
-/**
- * Calculate total first payment from payments array
- * @param {Array} payments - Array of payment objects
- * @returns {number} Total first payment in pence
- */
-const calculateTotalFirstPayment = (payments) => {
-  return payments.reduce(
-    (sum, payment) => sum + (payment.firstPaymentPence || 0),
-    0
-  )
-}
-
-/**
- * Calculate total subsequent payment from payments array
- * @param {Array} payments - Array of payment objects
- * @returns {number} Total subsequent payment in pence
- */
-const calculateTotalSubsequentPayment = (payments) => {
-  return payments.reduce(
-    (sum, payment) => sum + (payment.subsequentPaymentPence || 0),
-    0
-  )
-}
-
 export {
   calculateFirstPaymentForParcelItem,
   calculateSubsequentPaymentForParcelItem,
   calculateFirstPaymentForAgreementLevelItem,
-  calculateSubsequentPaymentForAgreementLevelItem,
-  calculateTotalFirstPayment,
-  calculateTotalSubsequentPayment
+  calculateSubsequentPaymentForAgreementLevelItem
 }

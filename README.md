@@ -18,11 +18,11 @@ Core delivery platform Node.js Frontend Template.
   - [Update dependencies](#update-dependencies)
   - [Formatting](#formatting)
     - [Windows prettier issue](#windows-prettier-issue)
+  - [Pull requests](#pull-requests)
 - [Docker](#docker)
   - [Development image](#development-image)
   - [Production image](#production-image)
   - [Docker Compose](#docker-compose)
-  - [Viewing messages in LocalStack SQS](#viewing-messages-in-localstack-sqs)
   - [The Google Analytics trackingId secret configuration GA_TRACKING_ID(googleAnalytics.trackingId)](#the-google-analytics-trackingid-secret-configuration-ga_tracking_idgoogleanalyticstrackingid)
   - [Dependabot](#dependabot)
   - [SonarCloud](#sonarcloud)
@@ -33,8 +33,8 @@ Core delivery platform Node.js Frontend Template.
 
 ### Node.js
 
-Please install [Node.js](http://nodejs.org/) `>= v22` and [npm](https://nodejs.org/) `>= v9`. You will find it
-easier to use the Node Version Manager [nvm](https://github.com/creationix/nvm)
+Please install [Node.js](http://nodejs.org/) `>= v24.11.0` and [npm](https://nodejs.org/) `>= v9`.
+You will find it easier to use the Node Version Manager [nvm](https://github.com/creationix/nvm).
 
 To use the correct version of Node.js for this application, via nvm:
 
@@ -146,6 +146,10 @@ If you are having issues with formatting of line breaks on Windows update your g
 git config --global core.autocrlf false
 ```
 
+### Pull requests
+
+Use the format `TICKET-123: Summary` for every commit message and pull request title.
+
 ## Docker
 
 ### Development image
@@ -186,7 +190,7 @@ docker run -p 3000:3000 farming-grants-agreements-ui
 
    - `JWT_ENABLED=true`
 
-2. Start the stack (MongoDB, LocalStack and this service):
+2. Start the stack (Mock server and this service):
 
    ```bash
    docker compose up -d --build
@@ -201,7 +205,7 @@ docker run -p 3000:3000 farming-grants-agreements-ui
    NAME                                                           COMMAND                  STATE     PORTS
 farming-grants-agreements-ui-farming-grants-agreements-api-1   "/sbin/tini -- node ."   running   3000/tcp, 0.0.0.0:3555->3555/tcp, [::]:3555->3555/tcp
 farming-grants-agreements-ui-farming-grants-agreements-ui-1    "/sbin/tini -- node …"   running   127.0.0.1:3000->3000/tcp
-farming-grants-agreements-ui-localstack-1                      "docker-entrypoint.sh"   running   0.0.0.0:4510-4559->4510-4559/tcp, [::]:4510-4559->4510-4559/tcp, 0.0.0.0:4566->4566/tcp, [::]:4566->4566/tcp, 5678/tcp
+farming-grants-agreements-ui-mock-server-1                      "docker-entrypoint.sh"   running   0.0.0.0:4510-4559->4510-4559/tcp, [::]:4510-4559->4510-4559/tcp, 0.0.0.0:4566->4566/tcp, [::]:4566->4566/tcp, 5678/tcp
 farming-grants-agreements-ui-mongodb-1                         "docker-entrypoint.s…"   running   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
 farming-grants-agreements-ui-redis-1                           "docker-entrypoint.s…"   running   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
 ```
@@ -210,13 +214,20 @@ farming-grants-agreements-ui-redis-1                           "docker-entrypoin
 
 ## API endpoints
 
-| Endpoint              | Description                                                   |
-| :-------------------- | :------------------------------------------------------------ |
-| `GET: /health`        | Health                                                        |
-| `GET: /{agreementId}` | Get an agreement in HTML format based on agreementId          |
-| `GET: /`              | Get an agreement in HTML format based on the sbi in the token |
+| Endpoint                                    | Description                                                   |
+| :------------------------------------------ | :------------------------------------------------------------ |
+| `GET: /health`                              | Health                                                        |
+| `GET: /{agreementId}`                       | Get an agreement in HTML format based on agreementId          |
+| `GET: /`                                    | Get an agreement in HTML format based on the sbi in the token |
+| `GET: /{agreementId}/actions/{actionName}`  | Get a GAS-backed agreement action page                        |
+| `POST: /{agreementId}/actions/{actionName}` | Submit a GAS-backed agreement action                          |
 
-Pass the JWT token in the header as `x-encrypted-auth`.
+Pass the JWT token as `x-user-context` in the request header, or in the request
+query string using the old `x-encrypted-auth` name. The header was previously
+named `x-encrypted-auth` (it carries a signed, not encrypted, value); this
+service still accepts the old header name as a fallback when `x-user-context`
+is absent, so producers can migrate independently. When a header is present it
+takes priority over the query string.
 
 ### Generating a JWT for API calls (scripts/gen-auth-header.js)
 
@@ -227,6 +238,17 @@ Requirements:
 - Use the same JWT secret as the service (AGREEMENTS_JWT_SECRET). When running with Docker Compose, it defaults to `a-string-secret-at-least-256-bits-long` unless you override it in your environment.
 - The `source` claim must be one of `defra` (farmer) or `entra` (case worker).
 - When `source=defra`, you can include an `sbi` claim to test farmer-scoped endpoints.
+
+> **Caller-token hardening (FGP-1307):** incoming tokens are validated in warn-only
+> mode. A missing `exp`/`iat`, a non-numeric `iat`, a token lifetime (`exp - iat`)
+> outside the agreed range, an audience that excludes `agreements-ui`, or an `iss`
+> outside the producer allowlist is logged but still accepted. Both the producer
+> allowlist (`grants-ui`, `fg-cw-frontend`, `agreements-pdf`) and the maximum
+> agreed lifetime (300 seconds / 5 minutes) are fixed code constants, not
+> configuration — the same values apply in every environment, so there is nothing
+> to set in `cdp-app-config` and the allowlist cannot be misconfigured to an empty
+> "accept any issuer" list. Invalid tokens are logged with only
+> `errorType`/`errorMessage` — never the raw error object or the token itself.
 
 - The script validates `--source` and will exit with an error if the value is not `defra` or `entra` or if the secret is missing.
 
@@ -267,32 +289,10 @@ Example decoded payload:
 
 A local environment with:
 
-- Localstack for AWS services (S3, SQS)
 - Redis
-- MongoDB
+- Mock server
 - This service.
 - The backend service.
-
-### Viewing messages in LocalStack SQS
-
-By default, our LocalStack monitor only shows message counts (`ApproximateNumberOfMessages`, `ApproximateNumberOfMessagesNotVisible`) for each queue. This is intentional, so we don’t interfere with the application’s consumers — pulling messages removes them from visibility until they are deleted or the visibility timeout expires.
-
-If you want to peek at the actual messages (for debugging or development only), you can run:
-
-```bash
-docker compose exec localstack sh -lc '
-  QURL=$(awslocal sqs get-queue-url \
-    --queue-name record_agreement_status_update \
-    --query QueueUrl --output text)
-
-  awslocal sqs receive-message \
-    --queue-url "$QURL" \
-    --max-number-of-messages 10 \
-    --wait-time-seconds 1 \
-    --message-attribute-names All \
-    --attribute-names All
-'
-```
 
 ### The Google Analytics trackingId secret configuration GA_TRACKING_ID(googleAnalytics.trackingId)
 

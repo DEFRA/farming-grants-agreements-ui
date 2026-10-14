@@ -1,0 +1,22 @@
+{% macro defraDetails(params, renderDefraComponent) %}
+  {%- set summaryItems = params.summaryItems or [] %}
+  {%- set items = params.items or [] %}
+  {%- set id = params.id or '' %}
+  {%- set classes = params.classes or '' %}
+  {%- set open = params.open or false %}
+
+  <details class="govuk-details{% if classes %} {{ classes }}{% endif %}"{% if id %} id="{{ id }}"{% endif %}{% if open %} open{% endif %}>
+    <summary class="govuk-details__summary">
+      <span class="govuk-details__summary-text">
+        {% for item in summaryItems %}
+          {{ renderDefraComponent(item) }}
+        {% endfor %}
+      </span>
+    </summary>
+    <div class="govuk-details__text">
+      {% for item in items %}
+        {{ renderDefraComponent(item) }}
+      {% endfor %}
+    </div>
+  </details>
+{% endmacro %}

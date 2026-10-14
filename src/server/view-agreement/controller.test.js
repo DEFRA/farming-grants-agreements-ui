@@ -1,11 +1,20 @@
 import { vi } from 'vitest'
-
 import { MatchersV2 } from '@pact-foundation/pact'
 
 import { createServer } from '#~/server/server.js'
 import { buildPactAgreement } from '#~/server/common/helpers/sample-data/__test__/pact-agreement.fixture.js'
 import { config } from '#~/config/config.js'
-import { createConsumerPact } from '#~/contracts/consumer/pact-test-helpers.js'
+import { createConsumerPact } from '#~/contracts/consumer/test-helpers/pact-test-helpers.js'
+
+vi.mock('#~/server/common/helpers/jwt-auth.js', () => ({
+  extractJwtPayload: vi.fn(() => ({ grantCode: 'MOCK' }))
+}))
+
+vi.mock('#~/server/config-driven-agreement/controller.js', () => ({
+  configDrivenAgreementController: {
+    handler: vi.fn()
+  }
+}))
 
 const { like } = MatchersV2
 
@@ -15,6 +24,7 @@ describe('#viewAgreementController', () => {
   const provider = createConsumerPact(import.meta.url)
 
   beforeAll(async () => {
+    config.set('gasBackend.legacyAgreementNumberPrefixes', ['FPTT'])
     server = await createServer()
     await server.initialize()
   })
@@ -30,7 +40,7 @@ describe('#viewAgreementController', () => {
       .uponReceiving(
         'a request from the customer to view their agreement details'
       )
-      .withRequest('GET', '/FPTT987654321', (builder) => {
+      .withRequest('GET', '/FPTT123456789', (builder) => {
         builder.headers({ 'x-encrypted-auth': 'mock-auth' })
       })
       .willRespondWith(200, (builder) => {
@@ -47,13 +57,19 @@ describe('#viewAgreementController', () => {
 
         const { statusCode, result } = await server.inject({
           method: 'GET',
-          url: '/FPTT987654321',
+          url: '/FPTT123456789',
           headers: {
             'x-encrypted-auth': 'mock-auth'
           }
         })
 
         expect(statusCode).toBe(200)
+        expect(result).not.toContain(
+          'If you need to amend your agreement offer'
+        )
+        expect(result).not.toContain(
+          'Contact the Rural Payments Agency (RPA) to explain:'
+        )
         expect(result).toContain('J&amp;S Hartley FPTT')
         expect(result).toContain(
           'You, J&amp;S Hartley, of Mason House Farm Clitheroe Rd, Bashall Eaves, Bartindale Road, Clitheroe, BB7 3DD'
@@ -74,14 +90,61 @@ describe('#viewAgreementController', () => {
         expect(result).toContain('£320.06')
       })
   })
+
+  test('does not show the review-offer RPA amendment guidance on the printable draft agreement', async () => {
+    return await provider
+      .addInteraction()
+      .given('A customer has an agreement offer')
+      .uponReceiving(
+        'a request from the customer to view the printable draft agreement'
+      )
+      .withRequest('GET', '/FPTT123456789', (builder) => {
+        builder.headers({ 'x-encrypted-auth': 'mock-auth' })
+      })
+      .willRespondWith(200, (builder) => {
+        builder.headers({ 'Content-Type': 'application/json' })
+        builder.jsonBody({
+          agreementData: buildPactAgreement(
+            { status: like('offered') },
+            { useMatchers: true }
+          )
+        })
+      })
+      .executeTest(async (mockServer) => {
+        config.set('backend.url', mockServer.url)
+
+        const { statusCode, result } = await server.inject({
+          method: 'GET',
+          url: '/FPTT123456789/print',
+          headers: {
+            'x-encrypted-auth': 'mock-auth'
+          }
+        })
+
+        expect(statusCode).toBe(200)
+        expect(result).toContain(
+          'Farm payments technical test agreement document'
+        )
+        expect(result).not.toContain(
+          'If you need to amend your agreement offer'
+        )
+        expect(result).not.toContain(
+          'Contact the Rural Payments Agency (RPA) to explain:'
+        )
+        expect(result).not.toContain('the changes you want to make')
+        expect(result).not.toContain('why you want to make the changes')
+      })
+  })
 })
 
 // Shared test helper to build request objects for all test scenarios
 function buildRequest({
+  code = 'frps-private-beta',
   status = 'accepted',
   authSource = null,
   mode = undefined,
-  host = 'this-site.uk'
+  host = 'this-site.uk',
+  agreementData = {}
 } = {}) {
   const baseUrl = `https://${host}`
   return {
@@ -97,20 +160,40 @@ function buildRequest({
           auth: { source: authSource }
         }),
         agreementData: {
+          code,
+          agreementNumber: 'TEST123',
+          identifiers: {
+            sbi: '123456789'
+          },
           status,
+          updatedAt: '2026-02-02T00:00:00.000Z',
           payment: {
             agreementStartDate: '2026-01-01',
-            agreementEndDate: '2027-01-01'
+            agreementEndDate: '2027-01-01',
+            parcelItems: {},
+            agreementLevelItems: {},
+            payments: []
+          },
+          application: {
+            parcel: []
           },
           applicant: {
             business: {
+              name: 'Mock Biz',
               address: {
                 line1: 'Line 1',
                 city: 'AnyTown',
                 postalCode: 'AA1 1AA'
               }
+            },
+            customer: {
+              name: {
+                first: 'Pat',
+                last: 'Jones'
+              }
             }
-          }
+          },
+          ...agreementData
         }
       }
     }
@@ -159,7 +242,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.isDraftAgreement).toBe(true)
@@ -185,7 +268,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.isDraftAgreement).toBe(false)
@@ -210,7 +293,7 @@ describe('viewAgreementController.agreementStatus (unit)', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.isDraftAgreement).toBe(false)
@@ -278,7 +361,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -299,7 +382,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -320,7 +403,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -341,7 +424,7 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
@@ -362,12 +445,241 @@ describe('viewAgreementController.redirect', () => {
     const { context } = await viewAgreementController.handler(request, h)
 
     expect(h.view).toHaveBeenCalledWith(
-      'view-agreement/index',
+      'grant-types/fptt/view-agreement/view-agreement',
       expect.any(Object)
     )
     expect(context.pageTitle).toBe(
       'Farm payments technical test agreement document'
     )
     expect(h.redirect).not.toHaveBeenCalled()
+  })
+})
+
+describe('viewAgreementController agreement ended', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    vi.doMock('#~/server/common/helpers/get-agreement-calculations.js', () => ({
+      getAgreementCalculations: vi.fn(() => ({
+        agreement: { applicant: { business: { name: 'Mock Biz' } } },
+        payment: {}
+      })),
+      getAdditionalAnnualPayments: vi.fn(() => ({ annualPayments: [] }))
+    }))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('renders agreement-ended template when status is terminated', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({ status: 'terminated' })
+
+    await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/agreement-ended',
+      expect.objectContaining({ pageTitle: 'Agreement ended' })
+    )
+  })
+
+  test('renders FPTT grant-specific template when status is accepted', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({ status: 'accepted' })
+
+    await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'grant-types/fptt/view-agreement/view-agreement',
+      expect.any(Object)
+    )
+  })
+
+  test('renders WMP grant-specific template when status is accepted', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({
+      code: 'woodland',
+      status: 'accepted',
+      agreementData: {
+        agreementName: 'Test Woodland Name WMP',
+        clientRef: 'WMP-20260507133228-24643',
+        signatureDate: '2026-05-07T12:53:16.162Z',
+        applicant: {
+          business: {
+            name: 'Example Farm Ltd',
+            address: {
+              line1: 'Farm House',
+              city: 'York',
+              postalCode: 'YO1 1AA'
+            }
+          },
+          customer: {
+            name: {
+              title: 'Mr',
+              first: 'John',
+              last: 'Doe'
+            }
+          }
+        },
+        application: {
+          parcel: [{ parcelId: 'SD4841-4684', area: { quantity: 25.3874 } }]
+        },
+        actionApplications: [
+          {
+            code: 'WMP1',
+            parcelId: 'SD4841-4684',
+            appliedFor: { quantity: 25.3874 }
+          }
+        ],
+        payment: {
+          agreementStartDate: '2026-05-07',
+          agreementEndDate: '2027-05-07',
+          agreementTotalPence: 157500,
+          agreementLevelItems: {
+            1: {
+              code: 'PA3',
+              description: 'PA3: Woodland management plan',
+              annualPaymentPence: 157500
+            }
+          },
+          parcelItems: {},
+          payments: []
+        }
+      }
+    })
+
+    await viewAgreementController.handler(request, h)
+
+    expect(h.view).toHaveBeenCalledWith(
+      'grant-types/wmp/view-agreement/view-agreement',
+      expect.objectContaining({
+        pageTitle: 'Woodland Management Plan PA3 agreement document',
+        agreementName: 'Test Woodland Name WMP'
+      })
+    )
+  })
+
+  test('emits AGREEMENT_VIEWED when rendering agreement-ended template', async () => {
+    vi.resetModules()
+    vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
+      auditEvent: vi.fn(),
+      AuditEvent: { AGREEMENT_VIEWED: 'AGREEMENT_VIEWED' }
+    }))
+    vi.doMock('#~/server/common/helpers/get-agreement-calculations.js', () => ({
+      getAgreementCalculations: vi.fn(() => ({
+        agreement: { applicant: { business: { name: 'Mock Biz' } } },
+        payment: {}
+      })),
+      getAdditionalAnnualPayments: vi.fn(() => ({ annualPayments: [] }))
+    }))
+
+    const { viewAgreementController } = await import('./controller.js')
+    const { auditEvent: mockedAuditEvent } =
+      await import('#~/server/common/helpers/audit-event.js')
+    const h = createH()
+    const request = buildRequest({ status: 'terminated' })
+
+    await viewAgreementController.handler(request, h)
+
+    expect(mockedAuditEvent).toHaveBeenCalledWith(
+      request,
+      'AGREEMENT_VIEWED',
+      request.pre.data.agreementData
+    )
+    expect(h.view).toHaveBeenCalledWith(
+      'view-agreement/agreement-ended',
+      expect.any(Object)
+    )
+  })
+})
+
+describe('viewAgreementController audit events', () => {
+  let mockedAuditEvent
+
+  beforeEach(async () => {
+    vi.resetModules()
+    vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
+      auditEvent: vi.fn(),
+      AuditEvent: { AGREEMENT_VIEWED: 'AGREEMENT_VIEWED' }
+    }))
+    vi.doMock('#~/server/common/helpers/get-agreement-calculations.js', () => ({
+      getAgreementCalculations: vi.fn(() => ({}))
+    }))
+    ;({ auditEvent: mockedAuditEvent } =
+      await import('#~/server/common/helpers/audit-event.js'))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('emits AGREEMENT_VIEWED with agreementData when the agreement is rendered', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({ status: 'accepted' })
+
+    await viewAgreementController.handler(request, h)
+
+    expect(mockedAuditEvent).toHaveBeenCalledWith(
+      request,
+      'AGREEMENT_VIEWED',
+      request.pre.data.agreementData
+    )
+  })
+
+  test('does not emit AGREEMENT_VIEWED when redirecting', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({ status: 'offered', authSource: 'defra' })
+
+    await viewAgreementController.handler(request, h)
+
+    expect(mockedAuditEvent).not.toHaveBeenCalled()
+  })
+})
+
+describe('viewAgreementController GAS delegation', () => {
+  test('delegates to configDrivenAgreementController when source is GAS', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const { configDrivenAgreementController } =
+      await import('#~/server/config-driven-agreement/controller.js')
+
+    const h = createH()
+    const request = {
+      pre: {
+        data: {
+          source: 'gas'
+        }
+      }
+    }
+
+    const expectedResponse = { some: 'response' }
+    configDrivenAgreementController.handler.mockReturnValue(expectedResponse)
+
+    const result = await viewAgreementController.handler(request, h)
+
+    expect(configDrivenAgreementController.handler).toHaveBeenCalledWith(
+      request,
+      h
+    )
+    expect(result).toBe(expectedResponse)
+  })
+
+  test('destructures data when pre.data is present but not GAS', async () => {
+    const { viewAgreementController } = await import('./controller.js')
+    const h = createH()
+    const request = buildRequest({
+      code: 'frps-private-beta',
+      status: 'accepted'
+    })
+    request.pre.data.source = 'legacy'
+
+    await viewAgreementController.handler(request, h)
+    expect(h.view).toHaveBeenCalled()
   })
 })

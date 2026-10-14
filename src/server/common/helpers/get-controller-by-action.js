@@ -7,6 +7,7 @@ import {
 } from '#~/server/accept-offer/controller.js'
 import { offerAcceptedController } from '#~/server/offer-accepted/controller.js'
 import { offerWithdrawnController } from '#~/server/offer-withdrawn/controller.js'
+import { viewAgreementController } from '#~/server/view-agreement/controller.js'
 
 export const getControllerByAction = (agreementStatus) => {
   let chooseControllerByActionOffer
@@ -25,8 +26,13 @@ export const getControllerByAction = (agreementStatus) => {
     }
   } else if (agreementStatus === 'accepted') {
     chooseControllerByActionOffer = () => offerAcceptedController
-  } else if (agreementStatus === 'withdrawn') {
+  } else if (
+    agreementStatus === 'withdrawn' ||
+    agreementStatus === 'cancelled'
+  ) {
     chooseControllerByActionOffer = () => offerWithdrawnController
+  } else if (agreementStatus === 'terminated') {
+    chooseControllerByActionOffer = () => viewAgreementController
   } else {
     throw Boom.badRequest(`Agreement is in an unknown state`)
   }

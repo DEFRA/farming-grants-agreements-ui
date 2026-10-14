@@ -1,0 +1,379 @@
+{% set bodyClasses = "view-offer-page" ~ (" view-agreement-has-watermark" if isDraftAgreement or isWithdrawnAgreement or isCancelledAgreement or isTerminatedAgreement else "") %}
+{% set mainClasses = "" %}
+{% extends 'layouts/page.njk' %}
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
+
+{% block content %}
+
+  {% if isDraftAgreement %}
+    {% set html %}
+      <h2 class="govuk-notification-banner__heading">This is a draft version of your agreement</h2>
+      <p>You will receive the final agreement once you accept your agreement offer.</p>
+      <p>Your agreement will start on the first day of the month after you accept your offer and end on the agreement end date, subject to the provisions for early termination set out in the
+        <a href="https://www.gov.uk/government/publications/capital-grants-agreements-terms-and-conditions-2026/capital-grants-agreements-terms-and-conditions-2026" class="govuk-link" target="_blank" rel="noopener noreferrer">Capital grants agreements: Terms and Conditions 2026</a></p>
+
+    {% endset %}
+
+    {{ govukNotificationBanner({
+      html: html
+    }) }}
+  {% elif isWithdrawnAgreement %}
+    {% set html %}
+      <p class="govuk-notification-banner__heading">This agreement offer has been withdrawn.</p>
+    {% endset %}
+
+    {{ govukNotificationBanner({
+      html: html
+    }) }}
+  {% elif isCancelledAgreement %}
+    {% set html %}
+      <p class="govuk-notification-banner__heading">This agreement offer has been cancelled.</p>
+    {% endset %}
+
+    {{ govukNotificationBanner({
+      html: html
+    }) }}
+  {% elif isTerminatedAgreement %}
+    {% set html %}
+      <p class="govuk-notification-banner__heading">This agreement offer has been terminated.</p>
+    {% endset %}
+
+    {{ govukNotificationBanner({
+      html: html
+    }) }}
+  {% endif %}
+
+  {% if isDraftAgreement or isWithdrawnAgreement or isCancelledAgreement or isTerminatedAgreement %}
+    {% if isDraftAgreement %}
+      {% set watermarkLabel = 'DRAFT' %}
+      {% set watermarkHeader = 'Draft Agreement' %}
+    {% elif isCancelledAgreement %}
+      {% set watermarkLabel = 'CANCELLED' %}
+      {% set watermarkHeader = 'Cancelled Agreement' %}
+    {% elif isTerminatedAgreement %}
+      {% set watermarkLabel = 'TERMINATED' %}
+      {% set watermarkHeader = 'Terminated Agreement' %}
+    {% else %}
+      {% set watermarkLabel = 'WITHDRAWN' %}
+      {% set watermarkHeader = 'Withdrawn Agreement' %}
+    {% endif %}
+    <div class="print-watermark{{ ' print-watermark--withdrawn' if isWithdrawnAgreement or isCancelledAgreement or isTerminatedAgreement else '' }}" aria-hidden="true">{{ watermarkLabel }}</div>
+    <div class="print-watermark-header" aria-hidden="true">{{ watermarkHeader }}</div>
+  {% endif %}
+
+  <div class="with-watermark">
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-full">
+        <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+        <dl class="govuk-body dataset-info">
+          <dd>Agreement holder</dd>
+          <dt>{{ agreementHolderName }}</dt>
+
+          <dd>SBI</dd>
+          <dt>{{ sbi }}</dt>
+
+          <dd>Address</dd>
+          <dt>{{ address }}</dt>
+
+          <dd>Agreement name</dd>
+          <dt>{{ agreementName }}</dt>
+
+          <dd>Agreement number</dd>
+          <dt>{{ agreementNumber }}</dt>
+
+          <dd>Agreement start date</dd>
+          <dt>{{ agreementStartDate }}</dt>
+
+          <dd>Agreement end date</dd>
+          <dt>{{ agreementEndDate }}</dt>
+        </dl>
+      </div>
+    </div>
+
+    <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-one-quarter">
+        <nav class="govuk-!-display-none-print" role="navigation" aria-labelledby="subsection-title">
+          <div id="contents">
+            <p class="govuk-body-s">Contents</p>
+            <ul class="govuk-list toc">
+              <li data-test-id="contentsIntroLink"><a href="#intro" rel="noopener noreferrer">1. Introduction and overview</a></li>
+              <li data-test-id="contentsPartiesLink"><a href="#parties" rel="noopener noreferrer">2. Parties to the agreement</a></li>
+              <li data-test-id="contentsLandLink"><a href="#land" rel="noopener noreferrer">3. Land covered by the agreement</a></li>
+              <li data-test-id="contentsItemsLink"><a href="#items" rel="noopener noreferrer">4. Summary of capital items</a></li>
+              <li data-test-id="contentsPaymentLink"><a href="#payment" rel="noopener noreferrer">5. Payments</a></li>
+              <li data-test-id="contentsScheduleLink"><a href="#schedule" rel="noopener noreferrer">6. Agreement duration</a></li>
+              <li data-test-id="contentsSignatureLink"><a href="#signature" rel="noopener noreferrer">7. Electronic signature</a></li>
+              <li data-test-id="contentsProtectionLink"><a href="#protection" rel="noopener noreferrer">8. Data protection</a></li>
+            </ul>
+          </div>
+
+          <div class="gem-c-print-link govuk-!-display-none-print govuk-!-margin-bottom-6 print-btn">
+            <button
+              class="govuk-link govuk-body-s gem-c-print-link__button"
+              data-module="print-link"
+              data-print-link-module-started="true"
+              style="--print-icon-url: url('{{ getAssetPath(baseUrl, 'images/govuk-icon-print.png') }}');">
+              Print this page
+            </button>
+          </div>
+        </nav>
+      </div>
+
+      <noscript>
+        <style>
+          .print-btn { display: none !important; }
+        </style>
+      </noscript>
+
+      <div class="govuk-grid-column-three-quarters">
+        <h2 id="intro" class="govuk-heading-l" data-test-id="introSubHeader">1. Introduction and overview</h2>
+
+        <p class="govuk-body">
+          This is the Countryside Stewardship Woodland Management Plan (WMP) agreement document.
+          It sets out the agreement holder specific details for a Countryside Stewardship
+          WMP agreement. The agreement document should be read in conjunction with the following
+          documents (which together form the Countryside Stewardship Agreement):
+        </p>
+
+        <ul class="govuk-list govuk-list--bullet govuk-!-padding-left-8">
+          <li><a href="https://www.gov.uk/government/publications/capital-grants-agreements-terms-and-conditions-2026/capital-grants-agreements-terms-and-conditions-2026" class="govuk-link" target="_blank" rel="noopener noreferrer">the Capital grants agreements: terms and conditions 2026</a>
+          </li>
+          <li>The supporting documents specified in this agreement document</li>
+        </ul>
+
+        <p class="govuk-body">
+          All elements and details in this agreement document are binding on the agreement holder, unless it expressly says they are "not binding".
+        </p>
+
+        <h3 class="govuk-heading-m">Objectives (not binding)</h3>
+
+        <p class="govuk-body">
+          Produce a WMP in accordance with the requirements of the <a href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026" class="govuk-link" target="_blank" rel="noopener noreferrer">PA3: Woodland management plan 2026</a> on GOV.UK. You must submit your plan to the Forestry Commission for approval.
+        </p>
+
+
+        <h3 class="govuk-heading-m">Outcomes</h3>
+
+        <p class="govuk-body">
+          Produce a UK Forestry Standard (UKFS) compliant WMP, plan of operations and plan maps using the Forestry Commission template
+          and associated guidance notes from the
+          <a href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026/applicants-guide-pa3-woodland-management-plan-2026"
+          class="govuk-link" rel="noopener noreferrer" target="_blank">Applicant's guide: PA3 Woodland Management Plan 2026 </a> on GOV.UK. A full account of historical features,
+          important habitats, landscape and tree features must be included.
+        </p>
+
+        <p class="govuk-body">
+          Where a felling licence is required, the plan of operations will include all proposed thinning and felling for the next 10 years,
+          as well as the necessary detail to meet the requirements of all relevant legislation.
+        </p>
+
+        <p class="govuk-body">
+          If the area covered by the WMP includes a Site of Special Scientific Interest (SSSI),
+          Natural England will need to be consulted over its content while it is being drafted.
+          Proposals must be agreed by the Forestry Commission and Natural England, and a supplementary notice of operations for the SSSI may need to be completed.
+          If the supplementary notice is not included in the WMP, the applicant will be required to seek consent from Natural England separately.
+        </p>
+
+        <p class="govuk-body">
+          If the WMP includes a scheduled monument or areas covered by Registered Parks or Gardens Grade II,
+          Historic England will need to be consulted. This should be done during drafting to determine what actions may be required by
+          Historic England to give full consent to operations included in the WMP.
+        </p>
+
+        <p class="govuk-body">
+          Once your Countryside Stewardship agreement has been issued, the draft WMP must be submitted for approval to your
+          local Forestry Commission admin hub. Submit your draft WMP in electronic form with supporting maps and photographs,
+          accompanied by a completed plan submission proforma.
+        </p>
+
+         <p class="govuk-body">
+          The maps supplied with the draft WMP should include further detail in line with the technical guidance available (see above).
+          You are strongly advised to submit your plan to the Forestry Commission within one year from the start of your Countryside Stewardship agreement.
+          Plans submitted later than this risk not being approved within the three-year Countryside Stewardship agreement period.
+         </p>
+
+         <p class="govuk-body">
+          All relevant persons that have a direct interest in the land within the WMP should be allowed to see the draft plan
+           (for example, gamekeepers or other central or local government organisations). This is so that, where appropriate,
+           they can advise on any conflict and allow adjustments to the WMP within the three-year Countryside Stewardship agreement period.
+         </p>
+
+        <h2 id="parties" class="govuk-heading-l" data-test-id="partiesSubHeader">2. Parties to the agreement</h2>
+
+        <p class="govuk-body">This agreement is between:</p>
+
+        <p class="govuk-body">
+          {{ applicantName }}, of {{ agreementHolderName }}, {{ address }} (the agreement holder),
+          and the Rural Payments Agency, PO Box 324, Worksop, S95 1DF (the Authority acting as a delivery body on behalf
+          of the Department for Environment, Food and Rural Affairs).
+        </p>
+
+        <h2 id="land" class="govuk-heading-l" data-test-id="landSubHeader">3. Land covered by the agreement</h2>
+
+        <p class="govuk-body">The "Agreement Land" comprises the following land parcels.</p>
+
+        <table class="govuk-table govuk-table--small-text-until-tablet" data-test-id="landTable">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">Parcel Number</th>
+              <th scope="col" class="govuk-table__header">Total parcel area (ha)</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for parcel in landParcels %}
+              <tr class="govuk-table__row" data-test-id="landTableRow{{ loop.index }}">
+                <td class="govuk-table__cell" data-test-id="landTableCell{{ loop.index }}_0">{{ parcel.parcelId }}</td>
+                <td class="govuk-table__cell" data-test-id="landTableCell{{ loop.index }}_1">{{ parcel.areaHa }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <p class="govuk-body">
+          The Countryside Stewardship terms and conditions contain separate obligations in relation to the "Agreement Land".
+        </p>
+
+        <h2 id="items" class="govuk-heading-l" data-test-id="actionsSubHeader">4. Summary of Capital items</h2>
+
+        <p class="govuk-body">
+          The following is a summary of the capital items which the agreement holder is required to deliver under the agreement:
+        </p>
+
+        <table class="govuk-table govuk-table--small-text-until-tablet table-bordered" data-test-id="capitalItemsTable">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">Item code</th>
+              <th scope="col" class="govuk-table__header">Item title</th>
+              <th scope="col" class="govuk-table__header">Total parcel area (ha)</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for item in capitalItems %}
+              <tr class="govuk-table__row" data-test-id="capitalItemsTableRow{{ loop.index }}">
+                <td
+                  class="govuk-table__cell"
+                  data-test-id="capitalItemsTableCell{{ loop.index }}_0">
+                  {{ item.code }}
+                </td>
+                <td
+                  class="govuk-table__cell"
+                  data-test-id="capitalItemsTableCell{{ loop.index }}_1">
+                  {{ item.description }}
+                </td>
+                <td
+                  class="govuk-table__cell"
+                  data-test-id="capitalItemsTableCell{{ loop.index }}_2">
+                  {{ item.quantity }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <h3 class="govuk-heading-m">Aim (not binding) </h3>
+        <p class="govuk-body">
+          To produce a WMP for sustainable forest management in accordance with the UK Forestry Standard.
+        </p>
+
+        <h3 class="govuk-heading-m">Eligibility</h3>
+
+        <ol class="govuk-list govuk-list--number govuk-!-padding-left-8">
+          <li>
+            Any woodland holding over 0.5ha in area that does not currently have a management plan in place. The plan shall cover all the woodland on the holding.
+          </li>
+          <li>
+            The WMP must cover all the woodland on the holding, including all newly-planted woodland.
+            The amount paid will be calculated on the entire eligible area of woodland on the holding.
+            This calculation can include up to an additional 20% of newly-planted woodland (this means woodland that is under 10 years old at the time of application).
+            Areas over 20% will be deducted from the total area for payment but must still be covered in the management plan.
+          </li>
+        </ol>
+
+        <p class="govuk-body">
+          You can find more information about eligibility in the <a href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026/applicants-guide-pa3-woodland-management-plan-2026#whocan-apply-and-what-land-is-eligible" class="govuk-link" target="_blank" rel="noopener noreferrer">
+            Applicant’s guide: PA3 Woodland management plan 2026 guidance on </a> on GOV.UK.
+        </p>
+
+        <h3 class="govuk-heading-m">Specifications</h3>
+        <p class="govuk-body">
+          Create the management plan using the Forestry Commission template (available on the Forestry Commission website or by request).
+        </p>
+
+        <h2 id="payment" class="govuk-heading-l" data-test-id="paymentSubHeader">5. Payments</h2>
+
+        <p class="govuk-body">
+          The following table sets out the anticipated total payments payable to the agreement holder as long as they comply with the agreement.
+        </p>
+
+        <p class="govuk-body">
+          These figures are correct as at the agreement start date and may vary as a result of the processes set out in the Countryside Stewardship terms and conditions and
+          <a href="https://www.gov.uk/government/publications/pa3-woodland-management-plan-2026/applicants-guide-pa3-woodland-management-plan-2026#whocan-apply-and-what-land-is-eligible" class="govuk-link" target="_blank" rel="noopener noreferrer">Applicant’s guide: PA3 Woodland management plan 2026 guidance. </a>
+        </p>
+
+        <p class="govuk-body">
+          Examples of where the figures may change include amendments to change the size of a parcel and adjustments to a payment rate to eliminate greening double funding.
+        </p>
+
+         <p class="govuk-body">
+          These figures are provided to help the agreement holder determine what publicity obligations will apply to them. For further details on publicity obligations,
+          please see the <a href="https://www.gov.uk/government/publications/capital-grants-agreements-terms-and-conditions-2026/capital-grants-agreements-terms-and-conditions-2026" class="govuk-link" target="_blank" rel="noopener noreferrer">Capital grants agreements: terms and conditions 2026. </a>
+         </p>
+
+        <table class="govuk-table govuk-table--small-text-until-tablet table-bordered" data-test-id="paymentsTable">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">Agreement total</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell"><strong>{{ agreementTotalPayment }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="govuk-body">
+          The capital items must be completed by the relevant agreement end date and the relevant grant must be claimed by agreement end date.
+          The grant paid will be based on the value included in the payment claim, but will not exceed the agreement total indicated above.
+          Refer to the Countryside Stewardship terms and conditions, claim form and associated instructions for details of the minimum claim value
+          and what constitutes a valid capital claim.
+        </p>
+
+        <h2 id="schedule" class="govuk-heading-l" data-test-id="scheduleSubHeader">6. Agreement duration</h2>
+
+        <p class="govuk-body">
+          The agreement will commence on the agreement start date and end on the agreement end date,
+          subject to the provisions for early termination set out in the Countryside Stewardship terms and conditions.
+        </p>
+
+        <dl
+          class="govuk-body dataset-info"
+          style="grid-template-columns: max-content 1fr;"
+        >
+          <dt style="white-space: nowrap;">Agreement Start Date:</dt>
+          <dd>{{ agreementStartDate }}</dd>
+
+          <dt style="white-space: nowrap;">Agreement End Date:</dt>
+          <dd>{{ agreementEndDate }}</dd>
+        </dl>
+
+        <h2 id="signature" class="govuk-heading-l" data-test-id="signatureSubHeader">7. Electronic signature</h2>
+
+        <p class="govuk-body">
+          The agreement comprising this agreement document, the terms and conditions and the actions has been accepted by {{ applicantName }} – {{ businessName }}
+          {% if acceptedOn %} on {{ acceptedOn }}{% endif %}
+        </p>
+
+        <h2 id="protection" class="govuk-heading-l" data-test-id="protectionSubHeader">8. Data protection</h2>
+
+        <p class="govuk-body">
+          The Department for Environment, Food and Rural Affairs (Defra) is the data controller for personal data you give to RPA.
+          For information on how we handle personal data see Condition 18 of the terms and conditions.
+        </p>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

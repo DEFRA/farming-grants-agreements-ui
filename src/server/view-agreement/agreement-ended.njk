@@ -1,0 +1,19 @@
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+  <div class="govuk-grid-row" role="main">
+    <div class="govuk-grid-column-two-thirds">
+      <div class="govuk-panel govuk-panel--confirmation">
+        <h1 class="govuk-panel__title">Agreement ended</h1>
+        <div class="govuk-panel__body">
+          This agreement ended early on<br/>
+          {{ agreementEndDate | formatDate('d MMMM yyyy') }}
+        </div>
+      </div>
+
+      <p class="govuk-body">The Rural Payments Agency (RPA) have written to you to confirm why and when the agreement ended.</p>
+
+      {% include "partials/help/help.njk" %}
+    </div>
+  </div>
+{% endblock %}

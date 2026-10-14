@@ -1,0 +1,136 @@
+import { formatPenceCurrency } from '#~/config/nunjucks/filters/format-currency.js'
+import {
+  formatAgreementDate,
+  formatApplicantName,
+  getAgreementStatusFlags,
+  shouldMaskAgreementPartyDetails
+} from '#~/server/grant-types/shared/view-agreement.js'
+
+export const viewAgreement = {
+  template: 'grant-types/wmp/view-agreement/view-agreement',
+  buildModel: ({ agreementData }) => {
+    const statusFlags = getAgreementStatusFlags(agreementData)
+    const shouldMask = shouldMaskAgreementPartyDetails(statusFlags)
+    const partyDetails = buildPartyDetails(agreementData)
+    const payment = agreementData.payment ?? {}
+    const agreementName = getAgreementName(agreementData)
+
+    return {
+      pageTitle: 'Woodland Management Plan PA3 agreement document',
+      agreementName,
+      agreementNumber: getAgreementNumber(agreementData),
+      ...partyDetails,
+      sbi: agreementData.identifiers?.sbi ?? '',
+      agreementStartDate: formatAgreementDate(
+        payment.agreementStartDate,
+        shouldMask
+      ),
+      agreementEndDate: formatAgreementDate(
+        payment.agreementEndDate,
+        shouldMask
+      ),
+      landParcels: mapWmpLandParcels(agreementData),
+      capitalItems: mapWmpCapitalItems(agreementData),
+      agreementTotalPayment: formatPenceCurrency(payment.agreementTotalPence),
+      acceptedOn: getAcceptedOn(agreementData, statusFlags),
+      isDraftAgreement: statusFlags.isDraftAgreement,
+      isAgreementAccepted: statusFlags.isAgreementAccepted,
+      isWithdrawnAgreement: statusFlags.isWithdrawnAgreement,
+      isCancelledAgreement: statusFlags.isCancelledAgreement,
+      isTerminatedAgreement: statusFlags.isTerminatedAgreement
+    }
+  }
+}
+
+// Agreement holder, applicant name and address represent the
+// person/business the agreement is for and are required even on draft
+// documents (matches SFI behaviour), so they are not masked.
+const buildPartyDetails = (agreementData) => {
+  const applicant = agreementData.applicant ?? {}
+  const business = applicant.business ?? {}
+  const customer = applicant.customer ?? {}
+  const customerName = formatApplicantName(customer)
+  const businessName = business.name ?? ''
+
+  return {
+    // Agreement holder is the business/organisation entering into the agreement
+    // with the RPA (confirmed by product), matching FPTT behaviour.
+    agreementHolderName: businessName,
+    applicantName: customerName,
+    businessName,
+    address: buildAddress(business.address ?? {})
+  }
+}
+
+const getAcceptedOn = (agreementData, statusFlags) =>
+  statusFlags.isAgreementAccepted
+    ? formatAgreementDate(agreementData.signatureDate, false)
+    : ''
+
+const buildAddress = (address = {}) =>
+  [
+    address.line1,
+    address.line2,
+    address.line3,
+    address.line4,
+    address.line5,
+    address.street,
+    address.city,
+    address.postalCode
+  ]
+    .filter(Boolean)
+    .join(', ')
+
+const mapWmpCapitalItems = (agreementData = {}) => {
+  const items = Object.values(agreementData.payment?.agreementLevelItems ?? {})
+  const parcels = Array.isArray(agreementData.application?.parcel)
+    ? agreementData.application.parcel
+    : []
+
+  return items.map((item) => ({
+    code: item.code,
+    description: item.description,
+    quantity: formatArea(getCapitalItemQuantity(item, parcels))
+  }))
+}
+
+const getCapitalItemQuantity = (item, parcels = []) => {
+  const matchingAction = parcels
+    .flatMap((parcel) => (Array.isArray(parcel.actions) ? parcel.actions : []))
+    .find((action) => action.code === item.code)
+
+  return matchingAction?.appliedFor?.quantity
+}
+
+const toFiniteNumber = (value) => {
+  if (
+    value === null ||
+    value === undefined ||
+    (typeof value === 'string' && value.trim() === '')
+  ) {
+    return undefined
+  }
+
+  const decimalValue = value.$numberDecimal ?? value
+  const numberValue = Number(decimalValue)
+  return Number.isFinite(numberValue) ? numberValue : undefined
+}
+
+const formatArea = (value) => {
+  const numberValue = toFiniteNumber(value)
+  return numberValue === undefined ? '' : Number(numberValue.toFixed(4))
+}
+
+const mapWmpLandParcels = (agreementData = {}) => {
+  const applicationParcels = agreementData.application?.parcel ?? []
+  return applicationParcels.map((parcel) => ({
+    parcelId: parcel.parcelId,
+    areaHa: formatArea(parcel.area?.quantity ?? parcel.areaHa)
+  }))
+}
+
+const getAgreementNumber = (agreementData = {}) =>
+  agreementData.agreementNumber || agreementData.clientRef || ''
+
+const getAgreementName = (agreementData = {}) =>
+  agreementData.agreementName || 'Woodland Management Plan PA3'

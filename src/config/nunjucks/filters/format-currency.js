@@ -31,5 +31,5 @@ export const formatPenceCurrency = (
     }
     return formatted
   }
-  return value.toString().replace(/[^0-9.-]+/g, '')
+  return value.toString().replaceAll(/[^0-9.-]+/g, '')
 }
