@@ -17,6 +17,7 @@ const mapEnvironment = (cdpEnvironment) =>
 export const AuditEvent = Object.freeze({
   REVIEW_OFFER_VIEWED: 'REVIEW_OFFER_VIEWED',
   REVIEW_OFFER_CONTINUED: 'REVIEW_OFFER_CONTINUED',
+  ACCEPT_OFFER_DECLARATION_CONFIRMED: 'ACCEPT_OFFER_DECLARATION_CONFIRMED',
   ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED:
     'ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED',
   ACCEPT_OFFER_SUBMITTED: 'ACCEPT_OFFER_SUBMITTED',
@@ -29,6 +30,8 @@ const eventMessages = {
   [AuditEvent.REVIEW_OFFER_VIEWED]: 'User viewed the review offer screen',
   [AuditEvent.REVIEW_OFFER_CONTINUED]:
     'User continued from review offer to accept offer screen',
+  [AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED]:
+    'User confirmed the declaration on the accept offer screen',
   [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED]:
     'User submitted the Accept offer form but the "I have read the information (checkbox)" has not been selected',
   [AuditEvent.ACCEPT_OFFER_SUBMITTED]: 'User selected Accept offer',
@@ -40,6 +43,7 @@ const eventMessages = {
 const eventTransactionCodes = {
   [AuditEvent.REVIEW_OFFER_VIEWED]: '2301',
   [AuditEvent.REVIEW_OFFER_CONTINUED]: '2302',
+  [AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED]: '2307',
   [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED]: '2303',
   [AuditEvent.ACCEPT_OFFER_SUBMITTED]: '2304',
   [AuditEvent.OFFER_ACCEPTED_VIEWED]: '2305',
@@ -50,6 +54,7 @@ const eventTransactionCodes = {
 const eventActions = {
   [AuditEvent.REVIEW_OFFER_VIEWED]: 'read',
   [AuditEvent.REVIEW_OFFER_CONTINUED]: 'read',
+  [AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED]: 'submitted',
   [AuditEvent.ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED]: 'submitted',
   [AuditEvent.ACCEPT_OFFER_SUBMITTED]: 'accepted',
   [AuditEvent.OFFER_ACCEPTED_VIEWED]: 'read',

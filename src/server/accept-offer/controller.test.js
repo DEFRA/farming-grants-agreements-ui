@@ -85,7 +85,12 @@ describe('acceptOfferController handler', () => {
     vi.resetModules()
     vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
       auditEvent: vi.fn(),
-      AuditEvent: { REVIEW_OFFER_CONTINUED: 'REVIEW_OFFER_CONTINUED' }
+      AuditEvent: {
+        REVIEW_OFFER_CONTINUED: 'REVIEW_OFFER_CONTINUED',
+        ACCEPT_OFFER_DECLARATION_CONFIRMED:
+          'ACCEPT_OFFER_DECLARATION_CONFIRMED',
+        ACCEPT_OFFER_SUBMITTED: 'ACCEPT_OFFER_SUBMITTED'
+      }
     }))
     vi.doMock('#~/server/common/helpers/api.js', () => ({
       apiRequest: vi.fn(),
@@ -203,6 +208,7 @@ describe('acceptOfferController handler', () => {
 describe('validateAcceptOfferController handler', () => {
   let validateAcceptOfferController
   let mockedAuditEvent
+  let mockedApiRequest
 
   const createH = () => ({
     view: vi.fn((template, context) => ({ template, context })),
@@ -214,6 +220,8 @@ describe('validateAcceptOfferController handler', () => {
     vi.doMock('#~/server/common/helpers/audit-event.js', () => ({
       auditEvent: vi.fn(),
       AuditEvent: {
+        ACCEPT_OFFER_DECLARATION_CONFIRMED:
+          'ACCEPT_OFFER_DECLARATION_CONFIRMED',
         ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED:
           'ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED',
         ACCEPT_OFFER_SUBMITTED: 'ACCEPT_OFFER_SUBMITTED'
@@ -226,6 +234,8 @@ describe('validateAcceptOfferController handler', () => {
     ;({ validateAcceptOfferController } = await import('./controller.js'))
     ;({ auditEvent: mockedAuditEvent } =
       await import('#~/server/common/helpers/audit-event.js'))
+    ;({ apiRequest: mockedApiRequest } =
+      await import('#~/server/common/helpers/api.js'))
   })
 
   afterEach(() => {
@@ -248,15 +258,66 @@ describe('validateAcceptOfferController handler', () => {
     query: {}
   })
 
-  test('emits ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED with agreementData when checkbox is not ticked', async () => {
+  test('emits declaration confirmed and offer submitted when checkbox is confirmed', async () => {
+    const { getBackend: mockedGetBackend } =
+      await import('#~/server/common/helpers/api.js')
     const h = createH()
+    const request = createRequest('confirmed')
 
-    await validateAcceptOfferController.handler(createRequest(undefined), h)
+    await validateAcceptOfferController.handler(request, h)
+
+    expect(mockedGetBackend).toHaveBeenCalledWith(
+      { grantCode: 'MOCK' },
+      'FPTT123'
+    )
+    expect(mockedAuditEvent).toHaveBeenCalledWith(
+      request,
+      'ACCEPT_OFFER_DECLARATION_CONFIRMED',
+      agreementData
+    )
+    expect(mockedAuditEvent).toHaveBeenCalledWith(
+      request,
+      'ACCEPT_OFFER_SUBMITTED',
+      agreementData,
+      'success'
+    )
+  })
+
+  test('emits declaration confirmed before offer submitted', async () => {
+    const h = createH()
+    const request = createRequest('confirmed')
+    const callOrder = []
+    mockedAuditEvent.mockImplementation((_, event) => callOrder.push(event))
+
+    await validateAcceptOfferController.handler(request, h)
+
+    expect(callOrder).toEqual([
+      'ACCEPT_OFFER_DECLARATION_CONFIRMED',
+      'ACCEPT_OFFER_SUBMITTED'
+    ])
+  })
+
+  test('emits declaration not confirmed when checkbox is not ticked', async () => {
+    const h = createH()
+    const request = createRequest(undefined)
+
+    await validateAcceptOfferController.handler(request, h)
 
     expect(mockedAuditEvent).toHaveBeenCalledWith(
-      expect.anything(),
+      request,
       'ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED',
       agreementData
+    )
+    expect(mockedAuditEvent).not.toHaveBeenCalledWith(
+      expect.anything(),
+      'ACCEPT_OFFER_DECLARATION_CONFIRMED',
+      expect.anything()
+    )
+    expect(mockedAuditEvent).not.toHaveBeenCalledWith(
+      expect.anything(),
+      'ACCEPT_OFFER_SUBMITTED',
+      expect.anything(),
+      expect.anything()
     )
   })
 
@@ -288,22 +349,20 @@ describe('validateAcceptOfferController handler', () => {
     )
   })
 
-  test('emits ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED with agreementData when confirm value is invalid', async () => {
+  test('emits declaration not confirmed when confirm value is invalid', async () => {
     const h = createH()
+    const request = createRequest('invalid-value')
 
-    await validateAcceptOfferController.handler(
-      createRequest('invalid-value'),
-      h
-    )
+    await validateAcceptOfferController.handler(request, h)
 
     expect(mockedAuditEvent).toHaveBeenCalledWith(
-      expect.anything(),
+      request,
       'ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED',
       agreementData
     )
   })
 
-  test('does not emit ACCEPT_OFFER_DECLARATION_NOT_CONFIRMED when checkbox is confirmed', async () => {
+  test('does not emit declaration not confirmed when checkbox is confirmed', async () => {
     const h = createH()
 
     await validateAcceptOfferController.handler(createRequest('confirmed'), h)
@@ -315,53 +374,28 @@ describe('validateAcceptOfferController handler', () => {
     )
   })
 
-  test('emits ACCEPT_OFFER_SUBMITTED with success status after the API call when checkbox is confirmed', async () => {
-    const { getBackend: mockedGetBackend } =
-      await import('#~/server/common/helpers/api.js')
-    const h = createH()
-
-    await validateAcceptOfferController.handler(createRequest('confirmed'), h)
-
-    expect(mockedGetBackend).toHaveBeenCalledWith(
-      { grantCode: 'MOCK' },
-      'FPTT123'
-    )
-    expect(mockedAuditEvent).toHaveBeenCalledWith(
-      expect.anything(),
-      'ACCEPT_OFFER_SUBMITTED',
-      agreementData,
-      'success'
-    )
-  })
-
   test('emits ACCEPT_OFFER_SUBMITTED with failure status when the API call throws', async () => {
-    const { apiRequest: mockedApiRequest } =
-      await import('#~/server/common/helpers/api.js')
     mockedApiRequest.mockRejectedValueOnce(new Error('API error'))
     const h = createH()
+    const request = createRequest('confirmed')
 
     await expect(
-      validateAcceptOfferController.handler(createRequest('confirmed'), h)
+      validateAcceptOfferController.handler(request, h)
     ).rejects.toThrow('API error')
 
     expect(mockedAuditEvent).toHaveBeenCalledWith(
-      expect.anything(),
+      request,
       'ACCEPT_OFFER_SUBMITTED',
       agreementData,
       'failure'
     )
   })
 
-  test('does not emit ACCEPT_OFFER_SUBMITTED when checkbox is not confirmed', async () => {
+  test('does not call API when checkbox is not confirmed', async () => {
     const h = createH()
 
     await validateAcceptOfferController.handler(createRequest(undefined), h)
 
-    expect(mockedAuditEvent).not.toHaveBeenCalledWith(
-      expect.anything(),
-      'ACCEPT_OFFER_SUBMITTED',
-      expect.anything(),
-      expect.anything()
-    )
+    expect(mockedApiRequest).not.toHaveBeenCalled()
   })
 })

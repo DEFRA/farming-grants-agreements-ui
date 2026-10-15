@@ -32,6 +32,12 @@ export const validateAcceptOfferController = {
       })
     }
 
+    auditEvent(
+      request,
+      AuditEvent.ACCEPT_OFFER_DECLARATION_CONFIRMED,
+      agreementData
+    )
+
     // Checkbox confirmed - now submit the accept-offer action to the API
     try {
       // FGP-1307: caller token is read from the request header only.
