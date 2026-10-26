@@ -36,6 +36,7 @@ jobs:
         uses: DEFRA/cdp-build-action/build@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          push-dockerhub: false
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
