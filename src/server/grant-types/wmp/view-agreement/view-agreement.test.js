@@ -110,7 +110,8 @@ describe('wmp viewAgreement', () => {
       agreementHolderName: 'Example Farm Ltd',
       applicantName: 'Mr John Doe',
       businessName: 'Example Farm Ltd',
-      address: '5 Example Lane, Example Lane, Example Lane, Exampleton, ZZ99 5ZZ',
+      address:
+        '5 Example Lane, Example Lane, Example Lane, Exampleton, ZZ99 5ZZ',
       sbi: '900000005',
       agreementStartDate: '7 May 2026',
       agreementEndDate: '7 May 2027',
