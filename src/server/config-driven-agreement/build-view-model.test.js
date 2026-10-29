@@ -24,6 +24,16 @@ describe('buildViewModel', () => {
     })
   })
 
+  it('passes through the GAS service title', () => {
+    expect(
+      buildViewModel({ serviceTitle: 'Woodland Management Plan' }).serviceTitle
+    ).toBe('Woodland Management Plan')
+  })
+
+  it('omits the service title when GAS does not send one', () => {
+    expect(buildViewModel({})).not.toHaveProperty('serviceTitle')
+  })
+
   it('rewrites a resolved Back link for the agreement UI route', () => {
     expect(
       buildViewModel(
