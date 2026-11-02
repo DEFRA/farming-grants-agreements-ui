@@ -229,6 +229,9 @@ export const buildViewModel = (
 
   return {
     ...buildPageViewModel(renderModel, page),
+    // Only set when GAS sends one: an undefined key would replace the
+    // configured serviceTitle in the global view context.
+    ...(renderModel.serviceTitle && { serviceTitle: renderModel.serviceTitle }),
     backLink: buildBackLink(page.backLink, baseUrl, queryAuthentication),
     agreement: renderModel.agreement,
     components: buildComponentUrls(

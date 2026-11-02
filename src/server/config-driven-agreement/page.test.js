@@ -1,6 +1,7 @@
 import { load } from 'cheerio'
 import { describe, expect, test, vi } from 'vitest'
 
+import { config } from '#~/config/config.js'
 import { nunjucksConfig } from '#~/config/nunjucks/nunjucks.js'
 import { configDrivenAgreementController } from './controller.js'
 
@@ -26,6 +27,7 @@ const renderGasAgreement = (renderModel) => {
     view: vi.fn((template, model) => {
       renderedPage = environment.render(`${template}.njk`, {
         ...nunjucksConfig.options.context,
+        serviceTitle: config.get('serviceTitle'),
         getAssetPath: () => '',
         buildUrl: (url) => url,
         ...model
@@ -88,6 +90,35 @@ const documentModel = {
 }
 
 describe('config-driven GAS agreement page', () => {
+  test('renders the GAS service title in the service navigation', () => {
+    const $ = renderGasAgreement({
+      ...defaultModel,
+      serviceTitle: 'Woodland Management Plan'
+    })
+
+    expect($('.govuk-service-navigation').text().trim()).toBe(
+      'Woodland Management Plan'
+    )
+  })
+
+  test('falls back to the configured service title', () => {
+    const $ = renderGasAgreement(defaultModel)
+
+    expect($('.govuk-service-navigation').text().trim()).toBe('Farm payments')
+  })
+
+  test('escapes the service title', () => {
+    const $ = renderGasAgreement({
+      ...defaultModel,
+      serviceTitle: '<script>alert(1)</script>'
+    })
+
+    expect($('.govuk-service-navigation script')).toHaveLength(0)
+    expect($('.govuk-service-navigation').text().trim()).toBe(
+      '<script>alert(1)</script>'
+    )
+  })
+
   test('renders the configured Back link in the UI shell before agreement content', () => {
     const $ = renderGasAgreement({
       ...defaultModel,
