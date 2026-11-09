@@ -1,12 +1,15 @@
+import { globalIgnores } from 'eslint/config'
 import neostandard from 'neostandard'
 import importX from 'eslint-plugin-import-x'
 
-const config = neostandard({
-  env: ['node', 'vitest'],
-  ignores: [...neostandard.resolveIgnoresFromGitignore()],
-  noJsx: true,
-  noStyle: true
-})
+const config = [
+  globalIgnores(neostandard.resolveIgnoresFromGitignore()),
+  ...neostandard({
+    env: ['node', 'vitest'],
+    noJsx: true,
+    noStyle: true
+  })
+]
 
 config.push({
   files: ['**/*.js'],
