@@ -109,6 +109,9 @@
     "webpack-cli": "7.2.3"
   },
   "overrides": {
+    "hapi-pulse": {
+      "joi": "^18.3.2"
+    },
     "tmp": "^0.2.7",
     "useragent": "npm:useragent-ng@^2.4.5"
   }
