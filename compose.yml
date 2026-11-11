@@ -4,7 +4,7 @@ include:
 
 services:
   redis:
-    image: redis:7.2.3-alpine3.18
+    image: redis:7.2.17-alpine3.22
     ports:
       - '6379:6379'
     restart: always
@@ -17,7 +17,7 @@ services:
       - cdp-tenant
 
   mock-server:
-    image: pactfoundation/pact-stub-server:0.7.0
+    image: pactfoundation/pact-stub-server:0.7.1
     profiles:
       - mock
     restart: unless-stopped
