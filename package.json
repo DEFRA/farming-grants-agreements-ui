@@ -78,7 +78,7 @@
   "devDependencies": {
     "@babel/core": "8.0.9",
     "@babel/preset-env": "8.0.7",
-    "@commitlint/cli": "20.3.1",
+    "@commitlint/cli": "21.2.4",
     "@pact-foundation/pact": "17.1.4",
     "@vitest/coverage-v8": "5.0.5",
     "autoprefixer": "10.6.2",
